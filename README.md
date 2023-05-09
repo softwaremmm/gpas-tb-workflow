@@ -18,7 +18,7 @@ This repo includes a set of mock-up bioinformatics tools that mimic the command 
 To run this workflow, clone it:
 
 ```
-https://github.com/GlobalPathogenAnalysisService/test-tb-workflow.git
+git clone https://github.com/GlobalPathogenAnalysisService/test-tb-workflow.git
 ```
 
 and create an `in_bucket` in the directory it is run from:
