@@ -25,6 +25,7 @@ params.catalogue = "./data/mtb_catalogue.vcf"
 params.outdir = "$params.outputs_bucket/$params.sample_id/$params.run_id/"
 params.push = false
 params.restApiUrl = "http://localhost:5000"
+params.db_path = ""
 
 
 process preprocess {
@@ -128,6 +129,9 @@ process push_resistance_report {
         curl -X POST --header "Content-Type: application/json" --data @resistance_report.json ${params.restApiUrl}/report
         """
 }
+
+sub_workflows_folder = "${projectDir}/sub_workflows/"
+include { fastqc } from "${subwork_folder}/fn5_pipeline/main" 
 
 workflow {
     // Preprocess samples
