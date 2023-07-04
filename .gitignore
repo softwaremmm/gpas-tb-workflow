@@ -2,3 +2,4 @@ workspace/
 .nextflow/
 .nextflow.log*
 nextflow
+.rtx.toml

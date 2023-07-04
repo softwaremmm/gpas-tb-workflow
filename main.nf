@@ -19,7 +19,7 @@ if ("$EXECUTOR" != 'k8s') {
 params.sample_id = 1
 params.run_id = 1
 
-params.reads = "$params.uploads_bucket/$params.sample_id/$params.run_id/*_R{1,2}.fastq.gz"
+params.reads = "$params.uploads_bucket/$params.sample_id/*_R{1,2}.fastq.gz"
 params.minimap2_index = "./data/h37rv.mmi"
 params.catalogue = "./data/mtb_catalogue.vcf"
 params.outdir = "$params.outputs_bucket/$params.sample_id/$params.run_id/"
