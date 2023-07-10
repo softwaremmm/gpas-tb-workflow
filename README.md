@@ -40,3 +40,11 @@ To run the pipeline, the mock-up `bin` directory needs to be in the path:
 ```
 PATH=./bin/:$PATH ../nextflow run .
 ```
+
+## Running the Pipeline Locally
+
+Running the nextflow pipeline you can run as:
+
+```bash
+nextflow run . -profile local
+```
