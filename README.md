@@ -10,6 +10,18 @@ From https://www.nextflow.io/docs/latest/getstarted.html:
 wget -qO- https://get.nextflow.io | bash
 ```
 
+This workflow makes use of submodules, use the following command to clone
+```
+git clone --recurse-submodules git@github.com:GlobalPathogenAnalysisService/test-tb-workflow.git
+```
+
+To update the submodules if changes have been made use the following command
+```
+git submodule update --remote
+```
+
+See https://git-scm.com/book/en/v2/Git-Tools-Submodules for more information about 
+submodules
 
 ## Running
 
