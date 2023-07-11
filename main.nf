@@ -1,6 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+// CURRENTLY NOT WORKING, IN DEVELOPMENT
 
 // Kubernetes Related Buckets
 if (workflow.profile != 'kubernetes') {
@@ -23,16 +24,33 @@ if (workflow.profile != 'kubernetes') {
 params.sample_id = 1
 params.run_id = 1
 
-params.reads = "$params.uploads_bucket/$params.sample_id/*_R{1,2}.fastq.gz"
+// the location in the buckets for the current run
+params.outdir = "$params.outputs_bucket/$params.sample_id/$params.run_id/"
+params.indir = "$params.inputs_bucket/$params.sample_id/$params.run_id/"
+params.updir = "$params.uploads_bucket/$params.sample_id/"
+params.reldir = "$params.relatedness_bucket/$params.sample_id/$params.run_id/"
+params.knowdir = "$params.knowledge_bucket/$params.sample_id/$params.run_id/"
+
+// files for the current run locations
+params.reads = "$params.indir/*_{1,2}.fastq.gz"
 params.minimap2_index = "./data/h37rv.mmi"
 params.catalogue = "./data/mtb_catalogue.vcf"
 
-params.outdir = "$params.outputs_bucket/$params.sample_id/$params.run_id/"
-
+// sub workflows import
 subwork_folder = "${projectDir}/sub_workflows"
-include { find_neighbour_5 } from "${subwork_folder}/fn5_pipeline/main"
+include { find_neighbour_5 } from "${subwork_folder}/fn5_pipeline/main.nf"
+include { run_clockwork } from "${subwork_folder}/clockwork_pipeline/main.nf"
 
-workflow run_fn5 {
+workflow call_clockwork {
+
+    container "lhr.ocir.io/lrbvkel2wjot/oxfordmmm/clockwork:latest"
+
+    Channel
+            .fromFilePairs("$params.reads", checkIfExists:true, flat:true)
+            | run_clockwork
+}
+
+workflow call_fn5 {
 
     container "lhr.ocir.io/lrbvkel2wjot/oxfordmmm/fn5:latest"
 
@@ -42,5 +60,5 @@ workflow run_fn5 {
 
 workflow {
     main:
-        run_fn5()
+        call_clockwork()
 }

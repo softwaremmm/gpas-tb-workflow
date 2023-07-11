@@ -1,4 +1,5 @@
-workspace/
 .nextflow/
 .nextflow.log*
 nextflow
+work
+trace.txt

@@ -1,3 +1,6 @@
 [submodule "sub_workflows/fn5_pipeline"]
 	path = sub_workflows/fn5_pipeline
 	url = git@github.com:oxfordmmm/fn5_pipeline.git
+[submodule "sub_workflows/clockwork_pipeline"]
+	path = sub_workflows/clockwork_pipeline
+	url = git@github.com:oxfordmmm/clockwork_pipeline.git
