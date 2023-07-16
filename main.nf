@@ -9,13 +9,13 @@ if (workflow.profile != 'kubernetes') {
     params.inputs_bucket = "$projectDir/data/inputs"
     params.outputs_bucket = "$projectDir/data/outputs"
     params.relatedness_bucket = "$projectDir/data/relatedness"
-    params.knowledge_bucket = "$projectDir/data/knowledge"
+    params.knowledge_bucket = "$projectDir/data/relatedness/knowledge"
 } else {
     params.uploads_bucket = "/data/uploads"
     params.inputs_bucket = "/data/inputs"
     params.outputs_bucket = "/data/outputs"
     params.relatedness_bucket = "/data/relatedness"
-    params.knowledge_bucket = "/data/knowledge"
+    params.knowledge_bucket = "/data/relatedness/knowledge"
 }
 
 
@@ -26,11 +26,10 @@ params.help = ''
 params.api_url = ''
 
 // the location in the buckets for the current run
-outdir = "$params.outputs_bucket/$params.sample_id/$params.run_id/"
-indir = "$params.inputs_bucket/$params.sample_id/$params.run_id/"
-updir = "$params.uploads_bucket/$params.sample_id/"
-reldir = "$params.relatedness_bucket/$params.sample_id/$params.run_id/"
-knowdir = "$params.knowledge_bucket/$params.sample_id/$params.run_id/"
+outdir = "$params.outputs_bucket/$params.sample_id/$params.run_id"
+indir = "$params.inputs_bucket/$params.sample_id/$params.run_id"
+updir = "$params.uploads_bucket/$params.sample_id"
+reldir = "$params.relatedness_bucket/$params.sample_id/$params.run_id"
 
 // files for the current run locations
 dirty_reads = "$updir/*_{1,2}.fastq.gz"
@@ -40,42 +39,72 @@ catalogue = "./data/mtb_catalogue.vcf"
 
 // sub workflows import
 subwork_folder = "${projectDir}/sub_workflows"
-include { find_neighbour_5 } from "${subwork_folder}/fn5_pipeline/main.nf"
-include { run_clockwork } from "${subwork_folder}/clockwork_pipeline/main.nf"
+//include { find_neighbour_5 } from "${subwork_folder}/fn5_pipeline/main.nf"
+include { clockwork } from "${subwork_folder}/clockwork_pipeline/main.nf"
 
 // dummy WP3
-workflow call_wp3 {
-    take:
-    reads
+process gatekeeper {
+    input:
+        tuple val(x), path(sample_reads1), path(sample_reads2)
+    output:
+        path("kraken2_report.json"), emit: kraken2_report_json
+        path("kraken2_error.json"), emit: kraken2_error_json
+        path("fastp_report.json"), emit: fastp_report_json
+        path("fastp_error.json"), emit: fastp_error_json
 
+    script:
+    """
+    touch kraken2_report.json
+    touch kraken2_error.json
+    touch fastp_report.json
+    touch fastp_error.json
+    """
+}
+
+workflow call_wp3 {
     main: 
-        log.info "Running WP3"
-    
+        dirty_reads_ch = Channel.fromFilePairs("$dirty_reads", checkIfExists:true, flat:true)
+        gatekeeper(dirty_reads_ch)
     emit:
         reads_ch = Channel.fromFilePairs("$clean_reads", checkIfExists:true, flat:true)
+        kraken2_report_json = gatekeeper.out.kraken2_report_json
+        kraken2_error_json = gatekeeper.out.kraken2_error_json
+        fastp_report_json = gatekeeper.out.fastp_report_json
+        fastp_error_json = gatekeeper.out.fastp_error_json
 }
 
 //dummy WP4
+
+process competitivemapping {
+    input:
+        tuple val(x), path(sample_reads1), path(sample_reads2)
+    output:
+        path("competitivemapping_report.json"), emit: competitivemapping_report_json
+        path("competitivemapping_error.json"), emit: competitivemapping_error_json
+        path("lc_error.json"), emit: lc_error_json
+        path("phylogenetics_report.json"), emit: phylogenetics_report_json
+    
+    script:
+    """
+    touch competitivemapping_report.json
+    touch competitivemapping_error.json
+    touch lc_error.json
+    touch phylogenetics_report.json
+    """
+}
+
 workflow call_wp4 {
     take:
     reads
 
     main:
-        log.info "Running WP4"
-
+        competitivemapping(reads)
     emit:
         reads_ch = reads
-}
-
-workflow call_clockwork {
-    take:
-    reads
-
-    main:
-        run_clockwork(reads)
-    
-    emit:
-        final_gvcf_fasta = run_clockwork.out.final_gvcf_fasta
+        competitivemapping_report_json = competitivemapping.out.competitivemapping_report_json
+        competitivemapping_error_json = competitivemapping.out.competitivemapping_error_json
+        lc_error_json = competitivemapping.out.lc_error_json
+        phylogenetics_report_json = competitivemapping.out.phylogenetics_report_json
 }
 
 workflow call_fn5 {
@@ -88,24 +117,77 @@ workflow call_fn5 {
 
 }
 
+process runPrediction {
+    input:
+        path(vcf)
+
+    output:
+        path("gnomonicus-out.json"), emit: gnomonicus_json
+    
+    script:
+    """
+        touch gnomonicus-out.json
+    """
+}
+
+workflow call_relatedness {
+    take:
+    vcf
+
+    main:
+        runPrediction(vcf)
+
+    emit:
+        gnomonicus_json = runPrediction.out.gnomonicus_json
+    
+}
+
+process copy_to_tb_output {
+    input:
+        path(source)
+        val(out_file_name)
+    script:
+    """
+    cp ${source} ${outdir}/tb/$out_file_name
+    """
+}
+
 workflow {
     main:
-        dirty_reads_ch = Channel.fromFilePairs("$dirty_reads", checkIfExists:true, flat:true)
 
         // wp3
-        call_wp3(dirty_reads)
+        call_wp3()
         clean_reads_ch = call_wp3.out.reads_ch
+        call_wp3.out.kraken2_report_json.first().copyTo("${outdir}/kraken2_report.json")
+        call_wp3.out.kraken2_error_json.first().copyTo("${outdir}/kraken2_error.json")
+        call_wp3.out.fastp_report_json.first().copyTo("${outdir}/fastp_report.json")
+        call_wp3.out.fastp_error_json.first().copyTo("${outdir}/fastp_error.json")
 
         // wp4
         call_wp4(clean_reads_ch)
         filtered_reads_ch = call_wp4.out.reads_ch
+        call_wp4.out.competitivemapping_report_json.first().copyTo("${outdir}/competitivemapping_report.json")
+        call_wp4.out.competitivemapping_error_json.first().copyTo("${outdir}/competitivemapping_error.json")
+        call_wp4.out.lc_error_json.first().copyTo("${outdir}/lc_error.json")
+        call_wp4.out.phylogenetics_report_json.first().copyTo("${outdir}/phylogenetics_report.json")
 
         // WP5
-        call_clockwork(filtered_reads_ch)
-        fasta_ch = call_clockwork.out.final_gvcf_fasta
-
+        clockwork(filtered_reads_ch)
+        fasta_ch = clockwork.out.final_gvcf_fasta
+        fasta_ch.first().copyTo("${outdir}/tb/final.fasta")
+        vcf_ch = clockwork.out.final_vcf
+        vcf_ch.first().copyTo("${outdir}/tb/final.vcf")
+        clockwork.out.cortex_vcf.first().copyTo("${outdir}/tb/cortex.vcf")
+        clockwork.out.final_gvcf.first().copyTo("${outdir}/tb/final.gvcf")
+        clockwork.out.samtools_vcf.first().copyTo("${outdir}/tb/samtools.vcf")
+        clockwork.out.map_bam.first().copyTo("${outdir}/tb/map.bam")
+        clockwork.out.map_bam_bai.first().copyTo("${outdir}/tb/map.bam.bai")
+        clockwork.out.tb_clockwork_report_json.first().copyTo("${outdir}/tb_clockwork_report.json")
+        clockwork.out.tb_clockwork_error_json.first().copyTo("${outdir}/tb_clockwork_error.json")
+        
         // WP6
-
+        call_relatedness(vcf_ch)
+        call_relatedness.out.gnomonicus_json.first().copyTo("${outdir}/gnomonicus.json")
 
         //WP7
         // call_fn5(fasta_ch)
