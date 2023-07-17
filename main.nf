@@ -42,6 +42,9 @@ subwork_folder = "${projectDir}/sub_workflows"
 //include { find_neighbour_5 } from "${subwork_folder}/fn5_pipeline/main.nf"
 include { clockwork } from "${subwork_folder}/clockwork_pipeline/main.nf"
 
+
+input_reads = Channel.fromFilePairs("$clean_reads", checkIfExists:true, flat:true)
+
 // dummy WP3
 process gatekeeper {
     input:
@@ -64,11 +67,13 @@ process gatekeeper {
 }
 
 workflow call_wp3 {
+    take:
+        reads
     main: 
-        dirty_reads_ch = Channel.fromFilePairs("$dirty_reads", checkIfExists:true, flat:true)
-        gatekeeper(dirty_reads_ch)
+        gatekeeper(reads)
     emit:
-        reads_ch = Channel.fromFilePairs("$clean_reads", checkIfExists:true, flat:true)
+        kraken_reads_ch = Channel.fromFilePairs("$clean_reads", checkIfExists:true, flat:true)
+        clean_reads_ch = Channel.fromFilePairs("$clean_reads", checkIfExists:true, flat:true)
         kraken_report_json = gatekeeper.out.kraken_report_json
         fastp_report_json = gatekeeper.out.fastp_report_json
         kraken_report_txt = gatekeeper.out.kraken_report_txt
@@ -77,7 +82,6 @@ workflow call_wp3 {
 }
 
 //dummy WP4
-
 process competitivemapping {
     input:
         tuple val(x), path(sample_reads1), path(sample_reads2)
@@ -134,7 +138,7 @@ process runPrediction {
     """
 }
 
-workflow call_relatedness {
+workflow call_wp6 {
     take:
     vcf
 
@@ -146,30 +150,40 @@ workflow call_relatedness {
     
 }
 
-process copy_to_tb_output {
-    input:
-        path(source)
-        val(out_file_name)
+process create_main_json {
+    output:
+        path('main_report.json'), emit: main_report_json
+        path('main_error.json'), emit: main_error_json
     script:
     """
-    cp ${source} ${outdir}/tb/$out_file_name
+    touch main_report.json
+    touch main_error.json
     """
+}
+
+workflow call_wp8 {
+    main:
+        create_main_json()
+    emit:
+        main_report_json = create_main_json.out.main_report_json
+        main_error_json = create_main_json.out.main_error_json
 }
 
 workflow {
     main:
 
         // wp3
-        call_wp3()
-        clean_reads_ch = call_wp3.out.reads_ch
-        call_wp3.out.kraken_report_json.first().copyTo("${outdir}/kraken_report.json")
-        call_wp3.out.fastp_report_json.first().copyTo("${outdir}/fastp_report.json")
-        call_wp3.out.kraken_report_txt.first().copyTo("${outdir}/kraken_report.txt")
+        call_wp3(input_reads)
+        kraken_reads_ch = call_wp3.out.kraken_reads_ch
+        clean_reads = call_wp3.out.clean_reads_ch
+        call_wp3.out.kraken_report_json.first().copyTo("${outdir}/speciation_reports_for_reads/kraken_report.json")
+        call_wp3.out.fastp_report_json.first().copyTo("${outdir}/raw_read_QC_reports/fastp_report.json")
+        call_wp3.out.kraken_report_txt.first().copyTo("${outdir}/speciation_reports_for_reads/kraken_report.txt")
         call_wp3.out.gatekeeper_error_json.first().copyTo("${outdir}/gatekeeper_error.json")
         call_wp3.out.gatekeeper_report_txt.first().copyTo("${outdir}/gatekeeper_report.txt")
 
         // wp4
-        call_wp4(clean_reads_ch)
+        call_wp4(kraken_reads_ch)
         filtered_reads_ch = call_wp4.out.reads_ch
         call_wp4.out.competitivemapping_report_json.first().copyTo("${outdir}/competitivemapping_report.json")
         call_wp4.out.competitivemapping_error_json.first().copyTo("${outdir}/competitivemapping_error.json")
@@ -191,9 +205,14 @@ workflow {
         clockwork.out.tb_clockwork_error_json.first().copyTo("${outdir}/tb_clockwork_error.json")
         
         // WP6
-        call_relatedness(vcf_ch)
-        call_relatedness.out.gnomonicus_json.first().copyTo("${outdir}/tb/gnomonicus.json")
+        call_wp6(vcf_ch)
+        call_wp6.out.gnomonicus_json.first().copyTo("${outdir}/tb/gnomonicus.json")
 
         //WP7
         // call_fn5(fasta_ch)
+
+        // WP8
+        call_wp8()
+        call_wp8.out.main_report_json.copyTo("${outdir}/main_report.json")
+        call_wp8.out.main_error_json.copyTo("${outdir}/main_error.json")
 }
