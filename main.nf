@@ -90,14 +90,14 @@ process competitivemapping {
         path("competitivemapping_report.json"), emit: competitivemapping_report_json
         path("competitivemapping_error.json"), emit: competitivemapping_error_json
         path("lc_error.json"), emit: lc_error_json
-        path("phylogenetics_report.json"), emit: phylogenetics_report_json
+        path("mykrobe_report.json"), emit: mykrobe_report_json
     
     script:
     """
     touch competitivemapping_report.json
     touch competitivemapping_error.json
     touch lc_error.json
-    touch phylogenetics_report.json
+    touch mykrobe_report.json
     """
 }
 
@@ -112,7 +112,7 @@ workflow call_wp4 {
         competitivemapping_report_json = competitivemapping.out.competitivemapping_report_json
         competitivemapping_error_json = competitivemapping.out.competitivemapping_error_json
         lc_error_json = competitivemapping.out.lc_error_json
-        phylogenetics_report_json = competitivemapping.out.phylogenetics_report_json
+        mykrobe_report_json = competitivemapping.out.mykrobe_report_json
 }
 
 workflow call_fn5 {
@@ -188,7 +188,7 @@ workflow {
         call_wp4.out.competitivemapping_report_json.first().copyTo("${outdir}/competitivemapping_report.json")
         call_wp4.out.competitivemapping_error_json.first().copyTo("${outdir}/competitivemapping_error.json")
         call_wp4.out.lc_error_json.first().copyTo("${outdir}/lc_error.json")
-        call_wp4.out.phylogenetics_report_json.first().copyTo("${outdir}/phylogenetics_report.json")
+        call_wp4.out.mykrobe_report_json.first().copyTo("${outdir}/mykrobe_report.json")
 
         // WP5
         clockwork(filtered_reads_ch)
