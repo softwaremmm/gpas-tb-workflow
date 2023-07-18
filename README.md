@@ -10,47 +10,12 @@ From https://www.nextflow.io/docs/latest/getstarted.html:
 wget -qO- https://get.nextflow.io | bash
 ```
 
-This workflow makes use of submodules, use the following command to clone
-```
-git clone --recurse-submodules git@github.com:GlobalPathogenAnalysisService/test-tb-workflow.git
-```
-
-To update the submodules if changes have been made use the following command
-```
-git submodule update --remote
-```
-
-See https://git-scm.com/book/en/v2/Git-Tools-Submodules for more information about 
-submodules
-
 ## Running
-
-This repo includes a set of mock-up bioinformatics tools that mimic the command line behaviour of the real ones. These are in `bin/`.
 
 To run this workflow, clone it:
 
 ```
-git clone https://github.com/GlobalPathogenAnalysisService/test-tb-workflow.git
-```
-
-and create an `in_bucket` in the directory it is run from:
-
-```
-cd test-tb-workflow
-mkdir in_bucket
-```
-
-Create a pair of fastqs to simulate uploading a sample:
-
-```
-touch in_bucket/asdf_R1.fastq.gz
-touch in_bucket/asdf_R2.fastq.gz
-```
-
-To run the pipeline, the mock-up `bin` directory needs to be in the path:
-
-```
-PATH=./bin/:$PATH ../nextflow run .
+git clone https://github.com/GlobalPathogenAnalysisService/gpas-tb-workflow.git
 ```
 
 ## Running the Pipeline Locally
@@ -59,4 +24,19 @@ Running the nextflow pipeline you can run as:
 
 ```bash
 nextflow run . -profile local
+```
+
+This will use the samples from the `data/outputs/1/1` folder as `params.sample_id` and `params.run_id` will both default to 1
+
+If you want to use different samples then create a structure under `data/outputs` to put your two fastq files into. e.g.
+
+If you use sample_id 5 and run_id 1 then you would have the folder structure
+```
+outputs
+    └── 5
+        └── 1
+```
+And would use the following command to run the nextflow
+```bash
+nextflow run . -profile local --sample_id 5 --run_id 1
 ```

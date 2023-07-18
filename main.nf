@@ -40,7 +40,7 @@ catalogue = "./data/mtb_catalogue.vcf"
 // sub workflows import
 subwork_folder = "${projectDir}/sub_workflows"
 //include { find_neighbour_5 } from "${subwork_folder}/fn5_pipeline/main.nf"
-include { clockwork } from "${subwork_folder}/clockwork_pipeline/main.nf"
+//include { clockwork } from "${subwork_folder}/clockwork_pipeline/main.nf"
 
 
 input_reads = Channel.fromFilePairs("$clean_reads", checkIfExists:true, flat:true)
@@ -115,14 +115,53 @@ workflow call_wp4 {
         mykrobe_report_json = competitivemapping.out.mykrobe_report_json
 }
 
-workflow call_fn5 {
+// dummy WP5
+process run_clockwork {
+    input:
+        tuple val(x), path(sample_reads1), path(sample_reads2)
+    output:
+        path("Outdir/1/cortex.vcf"), emit: cortex_vcf, optional: true
+        path("Outdir/1/final.gvcf"), emit: final_gvcf
+        path("Outdir/1/final.gvcf.fasta"), emit: final_gvcf_fasta
+        path("Outdir/1/final.vcf"), emit: final_vcf
+        path("Outdir/1/samtools.vcf"), emit: samtools_vcf
+        path("Outdir/1/map.bam"), emit: map_bam
+        path("Outdir/1/map.bam.bai"), emit: map_bam_bai
+        path("Outdir/1/tb_clockwork_report.json"), emit: tb_clockwork_report_json
+        path("Outdir/1/tb_clockwork_error.json"), emit: tb_clockwork_error_json
+
+    script:
+    """
+    mkdir -p ./Outdir
+    mkdir -p ./Outdir/1
+    touch ./Outdir/1/cortex.vcf
+    touch ./Outdir/1/final.gvcf
+    touch ./Outdir/1/final.gvcf.fasta
+    touch ./Outdir/1/final.vcf
+    touch ./Outdir/1/samtools.vcf
+    touch ./Outdir/1/map.bam
+    touch ./Outdir/1/map.bam.bai
+    touch ./Outdir/1/tb_clockwork_report.json
+    touch ./Outdir/1/tb_clockwork_error.json
+    """
+}
+
+workflow call_wp5 {
     take:
-    fasta
+    reads
 
     main:
-        container "lhr.ocir.io/lrbvkel2wjot/oxfordmmm/fn5:latest"
-        // find_neighbour5(fasta)
-
+        run_clockwork(reads)
+    emit:
+        cortex_vcf = run_clockwork.out.cortex_vcf
+        final_gvcf = run_clockwork.out.final_gvcf
+        final_gvcf_fasta = run_clockwork.out.final_gvcf_fasta
+        final_vcf = run_clockwork.out.final_vcf
+        samtools_vcf = run_clockwork.out.samtools_vcf
+        map_bam = run_clockwork.out.map_bam
+        map_bam_bai = run_clockwork.out.map_bam_bai
+        tb_clockwork_report_json = run_clockwork.out.tb_clockwork_report_json
+        tb_clockwork_error_json = run_clockwork.out.tb_clockwork_error_json
 }
 
 process runPrediction {
@@ -195,18 +234,18 @@ workflow {
         call_wp4.out.mykrobe_report_json.first().copyTo("${outdir}/mykrobe_report.json")
 
         // WP5
-        clockwork(filtered_reads_ch)
-        fasta_ch = clockwork.out.final_gvcf_fasta
+        call_wp5(filtered_reads_ch)
+        fasta_ch = call_wp5.out.final_gvcf_fasta
         fasta_ch.first().copyTo("${outdir}/tb/final.fasta")
-        vcf_ch = clockwork.out.final_vcf
+        vcf_ch = call_wp5.out.final_vcf
         vcf_ch.first().copyTo("${outdir}/tb/final.vcf")
-        clockwork.out.cortex_vcf.first().copyTo("${outdir}/tb/cortex.vcf")
-        clockwork.out.final_gvcf.first().copyTo("${outdir}/tb/final.gvcf")
-        clockwork.out.samtools_vcf.first().copyTo("${outdir}/tb/samtools.vcf")
-        clockwork.out.map_bam.first().copyTo("${outdir}/tb/map.bam")
-        clockwork.out.map_bam_bai.first().copyTo("${outdir}/tb/map.bam.bai")
-        clockwork.out.tb_clockwork_report_json.first().copyTo("${outdir}/tb_clockwork_report.json")
-        clockwork.out.tb_clockwork_error_json.first().copyTo("${outdir}/tb_clockwork_error.json")
+        call_wp5.out.cortex_vcf.first().copyTo("${outdir}/tb/cortex.vcf")
+        call_wp5.out.final_gvcf.first().copyTo("${outdir}/tb/final.gvcf")
+        call_wp5.out.samtools_vcf.first().copyTo("${outdir}/tb/samtools.vcf")
+        call_wp5.out.map_bam.first().copyTo("${outdir}/tb/map.bam")
+        call_wp5.out.map_bam_bai.first().copyTo("${outdir}/tb/map.bam.bai")
+        call_wp5.out.tb_clockwork_report_json.first().copyTo("${outdir}/tb_clockwork_report.json")
+        call_wp5.out.tb_clockwork_error_json.first().copyTo("${outdir}/tb_clockwork_error.json")
         
         // WP6
         call_wp6(vcf_ch)
