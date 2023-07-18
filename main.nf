@@ -176,11 +176,15 @@ workflow {
         call_wp3(input_reads)
         kraken_reads_ch = call_wp3.out.kraken_reads_ch
         clean_reads = call_wp3.out.clean_reads_ch
-        call_wp3.out.kraken_report_json.first().copyTo("${outdir}/speciation_reports_for_reads/kraken_report.json")
-        call_wp3.out.fastp_report_json.first().copyTo("${outdir}/raw_read_QC_reports/fastp_report.json")
-        call_wp3.out.kraken_report_txt.first().copyTo("${outdir}/speciation_reports_for_reads/kraken_report.txt")
+        call_wp3.out.kraken_report_json.first().copyTo("${outdir}/kraken_report.json")
+        call_wp3.out.fastp_report_json.first().copyTo("${outdir}/fastp_report.json")
+        call_wp3.out.kraken_report_txt.first().copyTo("${outdir}/kraken_report.txt")
         call_wp3.out.gatekeeper_error_json.first().copyTo("${outdir}/gatekeeper_error.json")
         call_wp3.out.gatekeeper_report_txt.first().copyTo("${outdir}/gatekeeper_report.txt")
+        call_wp3.out.kraken_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().first().copyTo("${outdir}/kraken_fastq_1.fastq.gz")
+        call_wp3.out.kraken_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().last().copyTo("${outdir}/kraken_fastq_2.fastq.gz")
+        call_wp3.out.clean_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().first().copyTo("${outdir}/clean_fastq_1.fastq.gz")
+        call_wp3.out.clean_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().last().copyTo("${outdir}/clean_fastq_2.fastq.gz")
 
         // wp4
         call_wp4(kraken_reads_ch)
