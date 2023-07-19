@@ -1,6 +1,19 @@
 # test-tb-workflow
 Example of a TB variant calling pipeline for testing nextflow deployments
 
+The workflow consist of multiple steps (sometimes referred to as "Work Packages"):
+
+| Work Package | Main Software | Notes | Repository(ies) | Docker Image(s) |
+| --- | --- | --- | --- | --- |
+| **2** Decontamination / Human Read Removal | [hostile](https://github.com/bede/hostile) | Double check on removal of human reads from input data (**not currently implemented as NextFlow**) | [human-read-removal_pipeline](https://github.com/GlobalPathogenAnalysisService/human-read-removal_pipeline) | None yet | 
+| **3** Gatekeeper | kraken2 | Quality checking and read filtering | [gatekeeper_pipeline](https://github.com/GlobalPathogenAnalysisService/gatekeeper_pipeline) | lhr.ocir.io/lrbvkel2wjot/gpas/gatekeeper_pipeline:latest |
+| **4** Speciation | minimap2, samtools, mykrobe | Competitive Mapping and Lineage Calling (mykrobe) | [lineagecalling_pipeline](https://github.com/GlobalPathogenAnalysisService/lineagecalling_pipeline) [competitivemapping_pipeline](https://github.com/GlobalPathogenAnalysisService/competitivemapping_pipeline) | lhr.ocir.io/lrbvkel2wjot/gpas/lineagecalling_pipeline:latest lhr.ocir.io/lrbvkel2wjot/gpas/competitivemapping_pipeline:latest |
+| **5** Assembly | clockwork, minos | *ToDo* | [clockwork_pipeline](https://github.com/GlobalPathogenAnalysisService/clockwork_pipeline) | lhr.ocir.io/lrbvkel2wjot/oxfordmmm/clockwork:latest |
+| **6** Resistance Prediction | gnomonicus | Variants, mutations and effects of a specified (minos) VCF file | [tb-predict-pipeline](https://github.com/GlobalPathogenAnalysisService/tb-predict-pipeline) | oxfordmmm/gnomonicus:latest |
+| **7** Relatedness | Find Neighbour 5 | Investigate bacterial relatedness | [fn5_pipeline](https://github.com/GlobalPathogenAnalysisService/fn5_pipeline) | lhr.ocir.io/lrbvkel2wjot/oxfordmmm/fn5:latest | 
+
+Work package **1** is about upload, and **8** is about integration, so they're not in this table.
+
 ## Installation
 
 Install nextflow. This requires Java 11 or later (OpenJDK, `apt install default-jre`, on Ubuntu works).
