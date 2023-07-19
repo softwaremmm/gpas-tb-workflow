@@ -10,7 +10,7 @@ The workflow consist of multiple steps (sometimes referred to as "Work Packages"
 | **4** Speciation | minimap2, samtools, mykrobe | Competitive Mapping and Lineage Calling (mykrobe) | [lineagecalling_pipeline](https://github.com/GlobalPathogenAnalysisService/lineagecalling_pipeline) [competitivemapping_pipeline](https://github.com/GlobalPathogenAnalysisService/competitivemapping_pipeline) | lhr.ocir.io/lrbvkel2wjot/gpas/lineagecalling_pipeline:latest lhr.ocir.io/lrbvkel2wjot/gpas/competitivemapping_pipeline:latest |
 | **5** Assembly | clockwork, minos | *ToDo* | [clockwork_pipeline](https://github.com/GlobalPathogenAnalysisService/clockwork_pipeline) | lhr.ocir.io/lrbvkel2wjot/oxfordmmm/clockwork:latest |
 | **6** Resistance Prediction | gnomonicus | Variants, mutations and effects of a specified (minos) VCF file | [tb-predict-pipeline](https://github.com/GlobalPathogenAnalysisService/tb-predict-pipeline) | oxfordmmm/gnomonicus:latest |
-| **7** Relatedness | Find Neighbour 5 | Investigate bacterial relatedness | [fn5_pipeline](https://github.com/GlobalPathogenAnalysisService/fn5_pipeline) | lhr.ocir.io/lrbvkel2wjot/oxfordmmm/fn5:latest | 
+| **7** Relatedness | Find Neighbour 5 | SNP distance calculation | [fn5_pipeline](https://github.com/GlobalPathogenAnalysisService/fn5_pipeline) | lhr.ocir.io/lrbvkel2wjot/oxfordmmm/fn5:latest | 
 
 Work package **1** is about upload, and **8** is about integration, so they're not in this table.
 
