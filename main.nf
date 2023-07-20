@@ -49,6 +49,7 @@ process gatekeeper {
         tuple val(x), path(sample_reads1), path(sample_reads2)
     output:
         path("fastp_report.json"), emit: fastp_report_json
+        path("fastp_error.json"), emit: fastp_error_json
         path("kraken_report.txt"), emit: kraken_report_txt
         path("gatekeeper_error.json"), emit: gatekeeper_error_json
         path("gatekeeper_report.txt"), emit: gatekeeper_report_txt
@@ -56,6 +57,7 @@ process gatekeeper {
     script:
     '''
     touch fastp_report.json
+    touch fastp_error.json
     touch kraken_report.txt
     touch gatekeeper_error.json
     touch gatekeeper_report.txt
@@ -71,6 +73,7 @@ workflow call_wp3 {
         kraken_reads_ch = Channel.fromFilePairs("$clean_reads", checkIfExists:true, flat:true)
         clean_reads_ch = Channel.fromFilePairs("$clean_reads", checkIfExists:true, flat:true)
         fastp_report_json = gatekeeper.out.fastp_report_json
+        fastp_error_json = gatekeeper.out.fastp_error_json
         kraken_report_txt = gatekeeper.out.kraken_report_txt
         gatekeeper_error_json = gatekeeper.out.gatekeeper_error_json
         gatekeeper_report_txt = gatekeeper.out.gatekeeper_report_txt
@@ -210,6 +213,7 @@ workflow {
         kraken_reads_ch = call_wp3.out.kraken_reads_ch
         clean_reads = call_wp3.out.clean_reads_ch
         call_wp3.out.fastp_report_json.first().copyTo("${outdir}/fastp_report.json")
+        call_wp3.out.fastp_error_json.first().copyTo("${outdir}/fastp_error.json")
         call_wp3.out.kraken_report_txt.first().copyTo("${outdir}/kraken_report.txt")
         call_wp3.out.gatekeeper_error_json.first().copyTo("${outdir}/gatekeeper_error.json")
         call_wp3.out.gatekeeper_report_txt.first().copyTo("${outdir}/gatekeeper_report.txt")
