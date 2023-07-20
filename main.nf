@@ -39,6 +39,7 @@ catalogue = "./data/mtb_catalogue.vcf"
 
 // sub workflows import
 subwork_folder = "${projectDir}/sub_workflows"
+include { gnomonicus_workflow } from "${subwork_folder}/tb-predict-pipeline/main.nf"
 //include { find_neighbour_5 } from "${subwork_folder}/fn5_pipeline/main.nf"
 //include { clockwork } from "${subwork_folder}/clockwork_pipeline/main.nf"
 

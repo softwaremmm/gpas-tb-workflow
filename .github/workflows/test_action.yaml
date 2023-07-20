@@ -27,13 +27,17 @@ jobs:
           #Make sure there's nothing there to start with
           rm -rf ./*
 
-          #Just tb-predict-pipeline to start with
-          git clone https://${{secrets.PAT_TOKEN}}@github.com/GlobalPathogenAnalysisService/tb-predict-pipeline.git
-          #In order to get the overarching git to track these files, remove .git and .github
-          rm -rf tb-predict-pipeline/.git*
+          for line in $(cat ../includerepos.txt); do
+            echo -e "Cloning $line"
+            git clone https://${{secrets.PAT_TOKEN}}@github.com/$line.git
+            #TODO: Get the latest release instead of main
+            
+            #In order to get the overarching git to track these files, remove .git and .github
+            rm -rf $(basename $line)/.git*
+          done
 
           #Push
           git add .
-          git commit -m "test adding a workflow"
+          git commit -m "test adding all workflows"
           git push
           
