@@ -1,0 +1,11 @@
+name: Test on dispatch
+on: workflow_dispatch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Do something
+        run: |
+          echo -e "Got an action running via dispatch"
+          
