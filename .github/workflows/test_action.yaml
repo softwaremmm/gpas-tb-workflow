@@ -30,8 +30,12 @@ jobs:
           for line in $(cat ../includerepos.txt); do
             echo -e "Cloning $line"
             git clone https://${{secrets.PAT_TOKEN}}@github.com/$line.git
-            #TODO: Get the latest release instead of main
-            
+
+            #Use most recent tags
+            git fetch --all
+            git fetch --tags
+            git checkout $(git describe --tags `git rev-list --tags --max-count=1`)
+
             #In order to get the overarching git to track these files, remove .git and .github
             rm -rf $(basename $line)/.git*
           done
