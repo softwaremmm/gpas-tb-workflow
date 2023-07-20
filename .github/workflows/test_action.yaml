@@ -29,6 +29,8 @@ jobs:
 
           #Just tb-predict-pipeline to start with
           git clone https://${{secrets.PAT_TOKEN}}@github.com/GlobalPathogenAnalysisService/tb-predict-pipeline.git
+          #In order to get the overarching git to track these files, remove .git and .github
+          rm -rf tb-predict-pipeline/.git*
 
           #Push
           git add .
