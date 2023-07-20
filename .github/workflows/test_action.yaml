@@ -20,12 +20,18 @@ jobs:
           cd gpas-tb-workflow
           git checkout test-action
 
-          #Make some changes
+          #Pull in all of the sub workflows
           mkdir -p sub_workflows
-          echo "some data here" > sub_workflows/test_data.txt
+          cd sub_workflows
+
+          #Make sure there's nothing there to start with
+          rm -rf ./*
+
+          #Just tb-predict-pipeline to start with
+          git clone https://${{secrets.PAT_TOKEN}}@github.com/GlobalPathogenAnalysisService/tb-predict-pipeline.git
 
           #Push
           git add .
-          git commit -m "test adding from workflow"
+          git commit -m "test adding "
           git push
           
