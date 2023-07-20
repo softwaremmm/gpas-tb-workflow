@@ -52,7 +52,7 @@ process gatekeeper {
         path("fastp_error.json"), emit: fastp_error_json
         path("kraken_report.txt"), emit: kraken_report_txt
         path("gatekeeper_error.json"), emit: gatekeeper_error_json
-        path("gatekeeper_report.txt"), emit: gatekeeper_report_txt
+        path("gatekeeper_report.json"), emit: gatekeeper_report_json
 
     script:
     '''
@@ -60,7 +60,7 @@ process gatekeeper {
     touch fastp_error.json
     touch kraken_report.txt
     touch gatekeeper_error.json
-    touch gatekeeper_report.txt
+    touch gatekeeper_report.json
     '''
 }
 
@@ -76,7 +76,7 @@ workflow call_wp3 {
         fastp_error_json = gatekeeper.out.fastp_error_json
         kraken_report_txt = gatekeeper.out.kraken_report_txt
         gatekeeper_error_json = gatekeeper.out.gatekeeper_error_json
-        gatekeeper_report_txt = gatekeeper.out.gatekeeper_report_txt
+        gatekeeper_report_json = gatekeeper.out.gatekeeper_report_json
 }
 
 //dummy WP4
@@ -216,7 +216,7 @@ workflow {
         call_wp3.out.fastp_error_json.first().copyTo("${outdir}/fastp_error.json")
         call_wp3.out.kraken_report_txt.first().copyTo("${outdir}/kraken_report.txt")
         call_wp3.out.gatekeeper_error_json.first().copyTo("${outdir}/gatekeeper_error.json")
-        call_wp3.out.gatekeeper_report_txt.first().copyTo("${outdir}/gatekeeper_report.txt")
+        call_wp3.out.gatekeeper_report_json.first().copyTo("${outdir}/gatekeeper_report.json")
         call_wp3.out.kraken_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().first().copyTo("${outdir}/kraken2_filtered_fastq_1.fastq.gz")
         call_wp3.out.kraken_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().last().copyTo("${outdir}/kraken2_filtered_fastq_2.fastq.gz")
         call_wp3.out.clean_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().first().copyTo("${outdir}/clean_fastq_1.fastq.gz")
