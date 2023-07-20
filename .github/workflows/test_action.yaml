@@ -9,7 +9,7 @@ jobs:
         run: |
           #Make sure we have git installed
           sudo apt update --fix-missing
-          sudo apt install git
+          sudo apt install -y git
 
           #Git setup so we can actually push
           git config --global user.email "jeremywesthead3@gmail.com"
@@ -32,6 +32,6 @@ jobs:
 
           #Push
           git add .
-          git commit -m "test adding "
+          git commit -m "test adding a workflow"
           git push
           
