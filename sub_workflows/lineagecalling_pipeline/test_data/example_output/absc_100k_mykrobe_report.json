@@ -1,0 +1,14 @@
+{
+  "phylo_group": {
+    "Non_tuberculosis_mycobacterium_complex": {
+      "percent_coverage": 8.088,
+      "median_depth": 81.5
+    }
+  },
+  "species": {
+    "Mycobacterium_abscessus": {
+      "percent_coverage": 15.362,
+      "median_depth": 77
+    }
+  }
+}
