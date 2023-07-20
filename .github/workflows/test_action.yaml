@@ -1,11 +1,27 @@
-name: Test on dispatch
-on: [push, workflow_dispatch]
+name: Pull in subworkflows
+on: workflow_dispatch
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Do something
+      - name: Clone subworkflows
         run: |
-          echo -e "Got an action running via dispatch"
+          #Make sure we have git installed
+          sudo apt update --fix-missing
+          sudo apt install git
+
+          #We want to start in this repo
+          git clone https://${{secrets.PAT_TOKEN}}@github.com/GlobalPathogenAnalysisService/gpas-tb-workflow.git
+          cd gpas-tb-workflow
+          git checkout test-action
+
+          #Make some changes
+          mkdir -p sub_workflows
+          echo "some data here" > sub_workflows/test_data.txt
+
+          #Push
+          git add .
+          git commit -m "test adding from workflow"
+          git push
           
