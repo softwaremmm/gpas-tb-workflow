@@ -172,3 +172,7 @@ trace-20230718-36090998.txt
 # Ignore test data
 
 *WTCHG*
+
+# Ignore large reference files
+
+data/relatedness/knowledge/kraken2
