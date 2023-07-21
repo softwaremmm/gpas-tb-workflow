@@ -169,7 +169,7 @@ workflow call_wp5 {
 
 process runPrediction {
     // ToDo: This is currently on GHCR and should be on OCR.
-    container 'oxfordmmm/gnomonicus:latest'
+    // container 'ghcr.io/oxfordmmm/gnomonicus:latest'
     input:
         path(vcf)
 
