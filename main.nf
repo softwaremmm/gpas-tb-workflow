@@ -170,6 +170,7 @@ workflow call_wp5 {
 process runPrediction {
     // ToDo: This is currently on GHCR and should be on OCR.
     // container 'ghcr.io/oxfordmmm/gnomonicus:latest'
+    container 'docker.io/library/alpine:latest'
     input:
         path(vcf)
 
@@ -178,6 +179,8 @@ process runPrediction {
 
     script:
     '''
+        #!/bin/sh
+        #Alpine shebang (dummy only)
         touch gnomonicus-out.json
     '''
 }
