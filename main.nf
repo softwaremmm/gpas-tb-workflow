@@ -1,5 +1,5 @@
 #!/usr/bin/env nextflow
-nextflow.enable.dsl=2
+nextflow.enable.dsl = 2
 
 // CURRENTLY NOT WORKING, IN DEVELOPMENT
 
@@ -11,13 +11,12 @@ if (workflow.profile != 'kubernetes') {
     params.relatedness_bucket = "$projectDir/data/relatedness"
     params.knowledge_bucket = "$projectDir/data/relatedness/knowledge"
 } else {
-    params.uploads_bucket = "/data/uploads"
-    params.inputs_bucket = "/data/inputs"
-    params.outputs_bucket = "/data/outputs"
-    params.relatedness_bucket = "/data/relatedness"
-    params.knowledge_bucket = "/data/relatedness/knowledge"
+    params.uploads_bucket = '/data/uploads'
+    params.inputs_bucket = '/data/inputs'
+    params.outputs_bucket = '/data/outputs'
+    params.relatedness_bucket = '/data/relatedness'
+    params.knowledge_bucket = '/data/relatedness/knowledge'
 }
-
 
 // Run Configurations
 params.sample_id = 1
@@ -34,19 +33,19 @@ reldir = "$params.relatedness_bucket/$params.sample_id/$params.run_id"
 // files for the current run locations
 dirty_reads = "$updir/*_{1,2}.fastq.gz"
 clean_reads = "$indir/*_{1,2}.fastq.gz"
-minimap2_index = "./data/h37rv.mmi"
-catalogue = "./data/mtb_catalogue.vcf"
+minimap2_index = './data/h37rv.mmi'
+catalogue = './data/mtb_catalogue.vcf'
 
 // sub workflows import
 subwork_folder = "${projectDir}/sub_workflows"
 //include { find_neighbour_5 } from "${subwork_folder}/fn5_pipeline/main.nf"
 //include { clockwork } from "${subwork_folder}/clockwork_pipeline/main.nf"
 
-
 input_reads = Channel.fromFilePairs("$clean_reads", checkIfExists:true, flat:true)
 
 // dummy WP3
 process gatekeeper {
+    container 'lhr.ocir.io/lrbvkel2wjot/gpas/gatekeeper_pipeline:latest'
     input:
         tuple val(x), path(sample_reads1), path(sample_reads2)
     output:
@@ -57,19 +56,19 @@ process gatekeeper {
         path("gatekeeper_report.txt"), emit: gatekeeper_report_txt
 
     script:
-    """
+    '''
     touch kraken_report.json
     touch fastp_report.json
     touch kraken_report.txt
     touch gatekeeper_error.json
     touch gatekeeper_report.txt
-    """
+    '''
 }
 
 workflow call_wp3 {
     take:
         reads
-    main: 
+    main:
         gatekeeper(reads)
     emit:
         kraken_reads_ch = Channel.fromFilePairs("$clean_reads", checkIfExists:true, flat:true)
@@ -83,6 +82,9 @@ workflow call_wp3 {
 
 //dummy WP4
 process competitivemapping {
+    container 'lhr.ocir.io/lrbvkel2wjot/gpas/competitivemapping_pipeline:latest'
+    // ToDo: Lineage Calling is a seperate workflow at the moment and
+    // needs to run in lhr.ocir.io/lrbvkel2wjot/gpas/lineagecalling_pipeline:latest
     input:
         tuple val(x), path(sample_reads1), path(sample_reads2)
         val(threshhold)
@@ -91,14 +93,14 @@ process competitivemapping {
         path("competitivemapping_error.json"), emit: competitivemapping_error_json
         path("lc_error.json"), emit: lc_error_json
         path("mykrobe_report.json"), emit: mykrobe_report_json
-    
+
     script:
-    """
+    '''
     touch competitivemapping_report.json
     touch competitivemapping_error.json
     touch lc_error.json
     touch mykrobe_report.json
-    """
+    '''
 }
 
 workflow call_wp4 {
@@ -117,6 +119,7 @@ workflow call_wp4 {
 
 // dummy WP5
 process run_clockwork {
+    container 'lhr.ocir.io/lrbvkel2wjot/oxfordmmm/clockwork:latest'
     input:
         tuple val(x), path(sample_reads1), path(sample_reads2)
     output:
@@ -131,7 +134,7 @@ process run_clockwork {
         path("Outdir/1/tb_clockwork_error.json"), emit: tb_clockwork_error_json
 
     script:
-    """
+    '''
     mkdir -p ./Outdir
     mkdir -p ./Outdir/1
     touch ./Outdir/1/cortex.vcf
@@ -143,7 +146,7 @@ process run_clockwork {
     touch ./Outdir/1/map.bam.bai
     touch ./Outdir/1/tb_clockwork_report.json
     touch ./Outdir/1/tb_clockwork_error.json
-    """
+    '''
 }
 
 workflow call_wp5 {
@@ -165,16 +168,18 @@ workflow call_wp5 {
 }
 
 process runPrediction {
+    // ToDo: This is currently on GHCR and should be on OCR.
+    container 'oxfordmmm/gnomonicus:latest'
     input:
         path(vcf)
 
     output:
         path("gnomonicus-out.json"), emit: gnomonicus_json
-    
+
     script:
-    """
+    '''
         touch gnomonicus-out.json
-    """
+    '''
 }
 
 workflow call_wp6 {
@@ -186,7 +191,6 @@ workflow call_wp6 {
 
     emit:
         gnomonicus_json = runPrediction.out.gnomonicus_json
-    
 }
 
 process create_main_json {
@@ -194,10 +198,10 @@ process create_main_json {
         path('main_report.json'), emit: main_report_json
         path('main_error.json'), emit: main_error_json
     script:
-    """
+    '''
     touch main_report.json
     touch main_error.json
-    """
+    '''
 }
 
 workflow call_wp8 {
@@ -246,7 +250,7 @@ workflow {
         call_wp5.out.map_bam_bai.first().copyTo("${outdir}/tb/map.bam.bai")
         call_wp5.out.tb_clockwork_report_json.first().copyTo("${outdir}/tb_clockwork_report.json")
         call_wp5.out.tb_clockwork_error_json.first().copyTo("${outdir}/tb_clockwork_error.json")
-        
+
         // WP6
         call_wp6(vcf_ch)
         call_wp6.out.gnomonicus_json.first().copyTo("${outdir}/tb/gnomonicus.json")
