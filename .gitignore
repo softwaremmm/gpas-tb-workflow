@@ -168,3 +168,7 @@ work/
 *fq.gz
 data/outputs/1
 trace-20230718-36090998.txt
+
+# Ignore test data
+
+*WTCHG*
