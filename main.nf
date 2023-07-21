@@ -30,6 +30,9 @@ indir = "$params.inputs_bucket/$params.sample_id/$params.run_id"
 updir = "$params.uploads_bucket/$params.sample_id"
 reldir = "$params.relatedness_bucket/$params.sample_id/$params.run_id"
 
+// Reference data
+kraken2_db = "$params.knowledge_bucket/kraken2"
+
 // files for the current run locations
 dirty_reads = "$updir/*_{1,2}.fastq.gz"
 clean_reads = "$indir/*_{1,2}.fastq.gz"
@@ -37,48 +40,49 @@ minimap2_index = './data/h37rv.mmi'
 catalogue = './data/mtb_catalogue.vcf'
 
 // sub workflows import
-subwork_folder = "${projectDir}/sub_workflows"
+include { gatekeeper } from "./gatekeeper_pipeline/main.nf"
+// subwork_folder = "${projectDir}/sub_workflows"
 //include { find_neighbour_5 } from "${subwork_folder}/fn5_pipeline/main.nf"
 //include { clockwork } from "${subwork_folder}/clockwork_pipeline/main.nf"
 
 input_reads = Channel.fromFilePairs("$clean_reads", checkIfExists:true, flat:true)
 
 // dummy WP3
-process gatekeeper {
-    container 'lhr.ocir.io/lrbvkel2wjot/gpas/gatekeeper_pipeline:latest'
-    input:
-        tuple val(x), path(sample_reads1), path(sample_reads2)
-    output:
-        path("kraken_report.json"), emit: kraken_report_json
-        path("fastp_report.json"), emit: fastp_report_json
-        path("kraken_report.txt"), emit: kraken_report_txt
-        path("gatekeeper_error.json"), emit: gatekeeper_error_json
-        path("gatekeeper_report.txt"), emit: gatekeeper_report_txt
+// process gatekeeper {
+//     container 'lhr.ocir.io/lrbvkel2wjot/gpas/gatekeeper_pipeline:latest'
+//     input:
+//         tuple val(x), path(sample_reads1), path(sample_reads2)
+//     output:
+//         path("kraken_report.json"), emit: kraken_report_json
+//         path("fastp_report.json"), emit: fastp_report_json
+//         path("kraken_report.txt"), emit: kraken_report_txt
+//         path("gatekeeper_error.json"), emit: gatekeeper_error_json
+//         path("gatekeeper_report.txt"), emit: gatekeeper_report_txt
 
-    script:
-    '''
-    touch kraken_report.json
-    touch fastp_report.json
-    touch kraken_report.txt
-    touch gatekeeper_error.json
-    touch gatekeeper_report.txt
-    '''
-}
+//     script:
+//     '''
+//     touch kraken_report.json
+//     touch fastp_report.json
+//     touch kraken_report.txt
+//     touch gatekeeper_error.json
+//     touch gatekeeper_report.txt
+//     '''
+// }
 
-workflow call_wp3 {
-    take:
-        reads
-    main:
-        gatekeeper(reads)
-    emit:
-        kraken_reads_ch = Channel.fromFilePairs("$clean_reads", checkIfExists:true, flat:true)
-        clean_reads_ch = Channel.fromFilePairs("$clean_reads", checkIfExists:true, flat:true)
-        kraken_report_json = gatekeeper.out.kraken_report_json
-        fastp_report_json = gatekeeper.out.fastp_report_json
-        kraken_report_txt = gatekeeper.out.kraken_report_txt
-        gatekeeper_error_json = gatekeeper.out.gatekeeper_error_json
-        gatekeeper_report_txt = gatekeeper.out.gatekeeper_report_txt
-}
+// workflow call_wp3 {
+//     take:
+//         reads
+//     main:
+//         gatekeeper(reads)
+//     emit:
+//         kraken_reads_ch = Channel.fromFilePairs("$clean_reads", checkIfExists:true, flat:true)
+//         clean_reads_ch = Channel.fromFilePairs("$clean_reads", checkIfExists:true, flat:true)
+//         kraken_report_json = gatekeeper.out.kraken_report_json
+//         fastp_report_json = gatekeeper.out.fastp_report_json
+//         kraken_report_txt = gatekeeper.out.kraken_report_txt
+//         gatekeeper_error_json = gatekeeper.out.gatekeeper_error_json
+//         gatekeeper_report_txt = gatekeeper.out.gatekeeper_report_txt
+// }
 
 //dummy WP4
 process competitivemapping {
@@ -222,50 +226,50 @@ workflow {
     main:
 
         // wp3
-        call_wp3(input_reads)
-        kraken_reads_ch = call_wp3.out.kraken_reads_ch
-        clean_reads = call_wp3.out.clean_reads_ch
-        call_wp3.out.kraken_report_json.first().copyTo("${outdir}/kraken_report.json")
-        call_wp3.out.fastp_report_json.first().copyTo("${outdir}/fastp_report.json")
-        call_wp3.out.kraken_report_txt.first().copyTo("${outdir}/kraken_report.txt")
-        call_wp3.out.gatekeeper_error_json.first().copyTo("${outdir}/gatekeeper_error.json")
-        call_wp3.out.gatekeeper_report_txt.first().copyTo("${outdir}/gatekeeper_report.txt")
-        call_wp3.out.kraken_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().first().copyTo("${outdir}/kraken_fastq_1.fastq.gz")
-        call_wp3.out.kraken_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().last().copyTo("${outdir}/kraken_fastq_2.fastq.gz")
-        call_wp3.out.clean_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().first().copyTo("${outdir}/clean_fastq_1.fastq.gz")
-        call_wp3.out.clean_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().last().copyTo("${outdir}/clean_fastq_2.fastq.gz")
+        gatekeeper(input_reads, kraken2_db)
+        // kraken_reads_ch = gatekeeper.out.kraken_reads_ch
+        // clean_reads = gatekeeper.out.clean_reads_ch
+        // gatekeeper.out.kraken_report_json.first().copyTo("${outdir}/kraken_report.json")
+        // gatekeeper.out.fastp_report_json.first().copyTo("${outdir}/fastp_report.json")
+        // gatekeeper.out.kraken_report_txt.first().copyTo("${outdir}/kraken_report.txt")
+        // gatekeeper.out.gatekeeper_error_json.first().copyTo("${outdir}/gatekeeper_error.json")
+        // gatekeeper.out.gatekeeper_report_txt.first().copyTo("${outdir}/gatekeeper_report.txt")
+        // gatekeeper.out.kraken_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().first().copyTo("${outdir}/kraken_fastq_1.fastq.gz")
+        // gatekeeper.out.kraken_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().last().copyTo("${outdir}/kraken_fastq_2.fastq.gz")
+        // gatekeeper.out.clean_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().first().copyTo("${outdir}/clean_fastq_1.fastq.gz")
+        // gatekeeper.out.clean_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().last().copyTo("${outdir}/clean_fastq_2.fastq.gz")
 
-        // wp4
-        call_wp4(kraken_reads_ch)
-        filtered_reads_ch = call_wp4.out.reads_ch
-        call_wp4.out.competitivemapping_report_json.first().copyTo("${outdir}/competitivemapping_report.json")
-        call_wp4.out.competitivemapping_error_json.first().copyTo("${outdir}/competitivemapping_error.json")
-        call_wp4.out.lc_error_json.first().copyTo("${outdir}/lc_error.json")
-        call_wp4.out.mykrobe_report_json.first().copyTo("${outdir}/mykrobe_report.json")
+        // // wp4
+        // call_wp4(kraken_reads_ch)
+        // filtered_reads_ch = call_wp4.out.reads_ch
+        // call_wp4.out.competitivemapping_report_json.first().copyTo("${outdir}/competitivemapping_report.json")
+        // call_wp4.out.competitivemapping_error_json.first().copyTo("${outdir}/competitivemapping_error.json")
+        // call_wp4.out.lc_error_json.first().copyTo("${outdir}/lc_error.json")
+        // call_wp4.out.mykrobe_report_json.first().copyTo("${outdir}/mykrobe_report.json")
 
-        // WP5
-        call_wp5(filtered_reads_ch)
-        fasta_ch = call_wp5.out.final_gvcf_fasta
-        fasta_ch.first().copyTo("${outdir}/tb/final.fasta")
-        vcf_ch = call_wp5.out.final_vcf
-        vcf_ch.first().copyTo("${outdir}/tb/final.vcf")
-        call_wp5.out.cortex_vcf.first().copyTo("${outdir}/tb/cortex.vcf")
-        call_wp5.out.final_gvcf.first().copyTo("${outdir}/tb/final.gvcf")
-        call_wp5.out.samtools_vcf.first().copyTo("${outdir}/tb/samtools.vcf")
-        call_wp5.out.map_bam.first().copyTo("${outdir}/tb/map.bam")
-        call_wp5.out.map_bam_bai.first().copyTo("${outdir}/tb/map.bam.bai")
-        call_wp5.out.tb_clockwork_report_json.first().copyTo("${outdir}/tb_clockwork_report.json")
-        call_wp5.out.tb_clockwork_error_json.first().copyTo("${outdir}/tb_clockwork_error.json")
+        // // WP5
+        // call_wp5(filtered_reads_ch)
+        // fasta_ch = call_wp5.out.final_gvcf_fasta
+        // fasta_ch.first().copyTo("${outdir}/tb/final.fasta")
+        // vcf_ch = call_wp5.out.final_vcf
+        // vcf_ch.first().copyTo("${outdir}/tb/final.vcf")
+        // call_wp5.out.cortex_vcf.first().copyTo("${outdir}/tb/cortex.vcf")
+        // call_wp5.out.final_gvcf.first().copyTo("${outdir}/tb/final.gvcf")
+        // call_wp5.out.samtools_vcf.first().copyTo("${outdir}/tb/samtools.vcf")
+        // call_wp5.out.map_bam.first().copyTo("${outdir}/tb/map.bam")
+        // call_wp5.out.map_bam_bai.first().copyTo("${outdir}/tb/map.bam.bai")
+        // call_wp5.out.tb_clockwork_report_json.first().copyTo("${outdir}/tb_clockwork_report.json")
+        // call_wp5.out.tb_clockwork_error_json.first().copyTo("${outdir}/tb_clockwork_error.json")
 
-        // WP6
-        call_wp6(vcf_ch)
-        call_wp6.out.gnomonicus_json.first().copyTo("${outdir}/tb/gnomonicus.json")
+        // // WP6
+        // call_wp6(vcf_ch)
+        // call_wp6.out.gnomonicus_json.first().copyTo("${outdir}/tb/gnomonicus.json")
 
-        //WP7
-        // call_fn5(fasta_ch)
+        // //WP7
+        // // call_fn5(fasta_ch)
 
-        // WP8
-        call_wp8()
-        call_wp8.out.main_report_json.copyTo("${outdir}/main_report.json")
-        call_wp8.out.main_error_json.copyTo("${outdir}/main_error.json")
+        // // WP8
+        // call_wp8()
+        // call_wp8.out.main_report_json.copyTo("${outdir}/main_report.json")
+        // call_wp8.out.main_error_json.copyTo("${outdir}/main_error.json")
 }
