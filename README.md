@@ -41,6 +41,9 @@ Running the nextflow pipeline you can run as:
 nextflow run . -profile local
 ```
 
+**Specifying the profile is really important. The first time you run, it will pull the Docker images
+which will take some time!**
+
 This will use the samples from the `data/inputs/1/1` folder as `params.sample_id` and `params.run_id` will both default to 1
 
 If you want to use different samples then create a structure under `data/inputs` to put your two fastq files into. e.g.
