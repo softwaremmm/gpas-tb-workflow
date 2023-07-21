@@ -197,11 +197,14 @@ workflow call_wp6 {
 }
 
 process create_main_json {
+    container 'docker.io/library/alpine:latest'
     output:
         path('main_report.json'), emit: main_report_json
         path('main_error.json'), emit: main_error_json
     script:
     '''
+    #!/bin/sh
+    #Alpine shebang (dummy only)
     touch main_report.json
     touch main_error.json
     '''
