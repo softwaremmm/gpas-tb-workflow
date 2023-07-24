@@ -66,35 +66,21 @@ jobs:
 
           done
 
-          #Push
+          #Push if there is anything to push
           git add . || echo "No changes to add"
           git commit -m "[bot] test" || echo "No changes to commit"
           git push || echo "No changes to push"
 
-          #Create release notes
-          echo '{
-            "tag_name":"v0.0.1",
-            "target_commitish":"test-action",
-            "name":"v0.0.1",' >> release_notes.json
-
-          echo "\"body\"":"\"Test release from CICD\nPipeline versions\n$(cat pipeline_versions.txt)\nContainer versions\n$(cat container_versions.txt)\"", >> release_notes.json
-          
-          echo '"draft":true,
-            "prerelease":true,
-            "generate_release_notes":false
-          }' >> release_notes.json
-
-          #URL encode the string to avoid issues
-          printf %s $(cat release_notes.json) | jq -sRr @uri > release_notes.json
-
-          #Create release using github API
+          #Create a release
+          #The JSON here is disgusting because of the \"
+          # but it's the only way to allow variable interpolation within a JSON string
           curl -L \
             -X POST \
             -H "Accept: application/vnd.github+json" \
             -H "Authorization: Bearer ${{secrets.PAT_TOKEN}}" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             https://api.github.com/repos/GlobalPathogenAnalysisService/gpas-tb-workflow/releases \
-            -d \'$(cat release_notes.json)\'
+            -d "{\"tag_name\": \"v0.0.1\", \"target_commitish\": \"test-action\", \"name\": \"v0.0.1\", \"body\": \"# Pipeline versions\n$(cat pipeline_versions.txt)\n# Container versions\n$(cat container_versions.txt)\", \"draft\": true, \"prerelease\": true, \"generate_release_notes\": false}"
 
 
           
