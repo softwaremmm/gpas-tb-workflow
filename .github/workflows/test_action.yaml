@@ -51,8 +51,8 @@ jobs:
             cd ..
 
             #Now we have the latest release, cut out everything not-required
-            mv $r/* tmp
             mv $r/.* tmp
+            mv $r/* tmp
 
             for f in $(cat tmp/minimal_files.txt); do
               mv tmp/$f $r
