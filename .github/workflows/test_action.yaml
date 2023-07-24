@@ -35,7 +35,7 @@ jobs:
             #Clone the repo
             git clone https://${{secrets.PAT_TOKEN}}@github.com/$repo.git
 
-            #Pull out the repo name (without `GlobalPathogetnAnalysisService/`)
+            #Pull out the repo name (without `GlobalPathogenAnalysisService/`)
             r=$(basename $repo)
 
             cd $r
@@ -62,12 +62,30 @@ jobs:
             rm -rf tmp/*
 
             #Find which containers are used within the nextflow
-            find . | grep -E "\.nf" | xargs cat | grep '\w*container\ *= \ *".*"' | cut -d \" -f 2 | uniq >> container_versions.txt
+            find $r | grep -E "\.nf" | xargs cat | grep '\w*container\ *= \ *".*"' | cut -d \" -f 2 | uniq >> container_versions.txt
 
           done
 
           #Push
           git add .
-          git commit -m "test adding specific version"
+          git commit -m "[bot] test"
           git push
+
+          #Create release using github API
+          curl -L \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{secrets.PAT_TOKEN}}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/GlobalPathogenAnalysisService/gpas-tb-workflow/releases \
+            -d '{
+                "tag_name":"v0.0.1",
+                "target_commitish":"test-action",
+                "name":"v0.0.1",
+                "body":"Test release from CICD\nPipeline versions\n$(cat pipeline_versions.txt)\nContainer versions\n$(cat container_versions.txt)",
+                "draft":true,
+                "prerelease":true,
+                "generate_release_notes":false}'
+
+
           
