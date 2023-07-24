@@ -71,6 +71,19 @@ jobs:
           git commit -m "[bot] test" || echo "No changes to commit"
           git push || echo "No changes to push"
 
+          #Create release notes
+          echo '{
+            "tag_name":"v0.0.1",
+            "target_commitish":"test-action",
+            "name":"v0.0.1",' >> release_notes.json
+
+          echo "\"body\"":"\"Test release from CICD\nPipeline versions\n$(cat pipeline_versions.txt)\nContainer versions\n$(cat container_versions.txt)\"", >> release_notes.json
+          
+          echo '"draft":true,
+            "prerelease":true,
+            "generate_release_notes":false
+          }' >> release_notes.json
+
           #Create release using github API
           curl -L \
             -X POST \
@@ -78,14 +91,7 @@ jobs:
             -H "Authorization: Bearer ${{secrets.PAT_TOKEN}}" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             https://api.github.com/repos/GlobalPathogenAnalysisService/gpas-tb-workflow/releases \
-            -d '{
-                "tag_name":"v0.0.1",
-                "target_commitish":"test-action",
-                "name":"v0.0.1",
-                "body":"Test release from CICD\nPipeline versions\n$(cat pipeline_versions.txt)\nContainer versions\n$(cat container_versions.txt)",
-                "draft":true,
-                "prerelease":true,
-                "generate_release_notes":false}'
+            -d \'$(cat release_notes.json)\'
 
 
           
