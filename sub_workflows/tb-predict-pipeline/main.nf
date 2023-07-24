@@ -47,7 +47,7 @@ workflow gnomonicus_workflow {
         if (params.help) {
             log.info """
             ========================================================================
-            M Y C O B A C T E R I A L  P R E D I C T I O N  P I P E L I N E  
+            M Y C O B A C T E R I A L  P R E D I C T I O N  P I P E L I N E
             
             Utilises a minos VCF file to produce variations, mutations and
             drug resistance predictions based on provided a reference genome and a resistance catalogue.
