@@ -10,7 +10,7 @@ jobs:
         run: |
           #Make sure we have git installed
           sudo apt update --fix-missing
-          sudo apt install -y git
+          sudo apt install -y git jq
 
           #Git setup so we can actually push
           git config --global user.email "jeremywesthead3@gmail.com"
@@ -83,6 +83,9 @@ jobs:
             "prerelease":true,
             "generate_release_notes":false
           }' >> release_notes.json
+
+          #URL encode the string to avoid issues
+          printf %s $(cat release_notes.json) | jq -sRr @uri > release_notes.json
 
           #Create release using github API
           curl -L \
