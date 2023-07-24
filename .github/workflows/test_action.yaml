@@ -45,13 +45,14 @@ jobs:
             git fetch --tags
 
             pipeline_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
-            echo $pipeline_tag >> pipeline_versions.txt
+            echo $pipeline_tag >> ../pipeline_versions.txt
             git checkout $pipeline_tag
 
             cd ..
 
             #Now we have the latest release, cut out everything not-required
             mv $r/* tmp
+            mv $r/.* tmp
 
             for f in $(cat tmp/minimal_files.txt); do
               mv tmp/$f $r
