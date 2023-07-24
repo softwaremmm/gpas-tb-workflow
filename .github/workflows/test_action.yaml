@@ -6,15 +6,12 @@ jobs:
     concurrency: pull_sub_workflows
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Set env
-        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-
       - name: Clone subworkflows
         run: |
+          set -xe
           #Make sure we have git installed
           sudo apt update --fix-missing
-          sudo apt install -y git jq
+          sudo apt install -y git
 
           #Git setup so we can actually push
           git config --global user.email "jeremywesthead3@gmail.com"
@@ -77,12 +74,14 @@ jobs:
 
           #Find out what the next version will be
           #Based on SARS-CoV2_workflows actiont to do the same
-          CURRENT_VERSION=$(git tag -l --sort=-version:refname | head -n 1)
-          echo "Current Version = $CURRENT_VERSION"
-          readarray -d . -t strarr <<< "$CURRENT_VERSION"
-          ((strarr[-1]+=1))
-          NEW_VERSION="${strarr[0]}"
-          for elem in "${strarr[@]:1}";do NEW_VERSION="$NEW_VERSION.$elem"; done
+          #This requires an actual release first though
+          # CURRENT_VERSION=$(git tag -l --sort=-version:refname | head -n 1)
+          # echo "Current Version = $CURRENT_VERSION"
+          # readarray -d . -t strarr <<< "$CURRENT_VERSION"
+          # ((strarr[-1]+=1))
+          # NEW_VERSION="${strarr[0]}"
+          # for elem in "${strarr[@]:1}";do NEW_VERSION="$NEW_VERSION.$elem"; done
+          NEW_VERSION="v0.0.1"
 
           #Create a release
           #The JSON here is disgusting because of the \"
