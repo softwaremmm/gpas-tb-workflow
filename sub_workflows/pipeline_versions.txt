@@ -1,2 +1,1 @@
-tb-predict-pipeline = v0.2.0
-fn5_pipeline = v0.2.0
+tb-predict-pipeline = v0.2.0\nfn5_pipeline = v0.2.0\n
