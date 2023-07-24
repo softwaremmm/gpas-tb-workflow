@@ -1,8 +1,14 @@
 name: Pull in subworkflows
-on: workflow_dispatch
+on: 
+  workflow_dispatch:
+    inputs:
+      sub_workflow_version:
+        description: "Which version to use"
+        required: true
 
 jobs:
   deploy:
+    concurrency: pull_sub_workflows
     runs-on: ubuntu-latest
     steps:
       - name: Clone subworkflows
@@ -27,23 +33,32 @@ jobs:
           #Make sure there's nothing there to start with
           rm -rf ./*
 
-          for line in $(cat ../includerepos.txt); do
-            echo -e "Cloning $line"
-            git clone https://${{secrets.PAT_TOKEN}}@github.com/$line.git
-            cd $(basename $line)
+          git clone https://${{secrets.PAT_TOKEN}}@github.com/GlobalPathogenAnalysisService/tb-predict-pipeline.git
+          cd tb-predict-pipeline
+          git checkout ${{ github.event.inputs.sub_workflow_version }}
+          cd ..
 
-            #Use most recent tags
-            git fetch --all
-            git fetch --tags
-            git checkout $(git describe --tags `git rev-list --tags --max-count=1`)
-            cd ..
 
-            #In order to get the overarching git to track these files, remove .git and .github
-            rm -rf $(basename $line)/.git*
-          done
+          #TODO: properly filter out files
+          rm -rf tb-predict-pipeline/.git*
+
+          # for line in $(cat ../includerepos.txt); do
+          #   echo -e "Cloning $line"
+          #   git clone https://${{secrets.PAT_TOKEN}}@github.com/$line.git
+          #   cd $(basename $line)
+
+          #   #Use most recent tags
+          #   git fetch --all
+          #   git fetch --tags
+          #   git checkout $(git describe --tags `git rev-list --tags --max-count=1`)
+          #   cd ..
+
+          #   #In order to get the overarching git to track these files, remove .git and .github
+          #   rm -rf $(basename $line)/.git*
+          # done
 
           #Push
           git add .
-          git commit -m "test adding all workflows"
+          git commit -m "test adding specific version"
           git push
           
