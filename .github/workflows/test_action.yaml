@@ -6,6 +6,10 @@ jobs:
     concurrency: pull_sub_workflows
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
+      - name: Set env
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
       - name: Clone subworkflows
         run: |
           #Make sure we have git installed
@@ -71,6 +75,15 @@ jobs:
           git commit -m "[bot] test" || echo "No changes to commit"
           git push || echo "No changes to push"
 
+          #Find out what the next version will be
+          #Based on SARS-CoV2_workflows actiont to do the same
+          CURRENT_VERSION=$(git tag -l --sort=-version:refname | head -n 1)
+          echo "Current Version = $CURRENT_VERSION"
+          readarray -d . -t strarr <<< "$CURRENT_VERSION"
+          ((strarr[-1]+=1))
+          NEW_VERSION="${strarr[0]}"
+          for elem in "${strarr[@]:1}";do NEW_VERSION="$NEW_VERSION.$elem"; done
+
           #Create a release
           #The JSON here is disgusting because of the \"
           # but it's the only way to allow variable interpolation within a JSON string
@@ -80,7 +93,7 @@ jobs:
             -H "Authorization: Bearer ${{secrets.PAT_TOKEN}}" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             https://api.github.com/repos/GlobalPathogenAnalysisService/gpas-tb-workflow/releases \
-            -d "{\"tag_name\": \"v0.0.1\", \"target_commitish\": \"test-action\", \"name\": \"v0.0.1\", \"body\": \"# Pipeline versions\n$(cat pipeline_versions.txt)\n# Container versions\n$(cat container_versions.txt)\", \"draft\": true, \"prerelease\": true, \"generate_release_notes\": false}"
+            -d "{\"tag_name\": \"$NEW_VERSION\", \"target_commitish\": \"test-action\", \"name\": \"$NEW_VERSION\", \"body\": \"# Pipeline versions\n$(cat pipeline_versions.txt)\n# Container versions\n$(cat container_versions.txt)\", \"draft\": true, \"prerelease\": true, \"generate_release_notes\": false}"
 
 
           
