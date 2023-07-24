@@ -4,7 +4,7 @@ nextflow.enable.dsl=2
 // CURRENTLY NOT WORKING, IN DEVELOPMENT
 
 // Kubernetes Related Buckets
-if (workflow.profile != 'kubernetes') {
+if ("$workflow.profile" != 'kubernetes') {
     params.uploads_bucket = "$projectDir/data/uploads"
     params.inputs_bucket = "$projectDir/data/inputs"
     params.outputs_bucket = "$projectDir/data/outputs"
@@ -47,6 +47,7 @@ input_reads = Channel.fromFilePairs("$clean_reads", checkIfExists:true, flat:tru
 
 // dummy WP3
 process gatekeeper {
+    container "docker.io/debian:12-slim"
     input:
         tuple val(x), path(sample_reads1), path(sample_reads2)
     output:
@@ -57,19 +58,19 @@ process gatekeeper {
         path("gatekeeper_report.txt"), emit: gatekeeper_report_txt
 
     script:
-    """
-    touch kraken_report.json
-    touch fastp_report.json
-    touch kraken_report.txt
-    touch gatekeeper_error.json
-    touch gatekeeper_report.txt
-    """
+        """
+        touch kraken_report.json
+        touch fastp_report.json
+        touch kraken_report.txt
+        touch gatekeeper_error.json
+        touch gatekeeper_report.txt
+        """
 }
 
 workflow call_wp3 {
     take:
         reads
-    main: 
+    main:
         gatekeeper(reads)
     emit:
         kraken_reads_ch = Channel.fromFilePairs("$clean_reads", checkIfExists:true, flat:true)
@@ -83,6 +84,7 @@ workflow call_wp3 {
 
 //dummy WP4
 process competitivemapping {
+    container "docker.io/debian:12-slim"
     input:
         tuple val(x), path(sample_reads1), path(sample_reads2)
         val(threshhold)
@@ -91,14 +93,14 @@ process competitivemapping {
         path("competitivemapping_error.json"), emit: competitivemapping_error_json
         path("lc_error.json"), emit: lc_error_json
         path("mykrobe_report.json"), emit: mykrobe_report_json
-    
+
     script:
-    """
-    touch competitivemapping_report.json
-    touch competitivemapping_error.json
-    touch lc_error.json
-    touch mykrobe_report.json
-    """
+        """
+        touch competitivemapping_report.json
+        touch competitivemapping_error.json
+        touch lc_error.json
+        touch mykrobe_report.json
+        """
 }
 
 workflow call_wp4 {
@@ -117,6 +119,7 @@ workflow call_wp4 {
 
 // dummy WP5
 process run_clockwork {
+    container "docker.io/debian:12-slim"
     input:
         tuple val(x), path(sample_reads1), path(sample_reads2)
     output:
@@ -131,19 +134,19 @@ process run_clockwork {
         path("Outdir/1/tb_clockwork_error.json"), emit: tb_clockwork_error_json
 
     script:
-    """
-    mkdir -p ./Outdir
-    mkdir -p ./Outdir/1
-    touch ./Outdir/1/cortex.vcf
-    touch ./Outdir/1/final.gvcf
-    touch ./Outdir/1/final.gvcf.fasta
-    touch ./Outdir/1/final.vcf
-    touch ./Outdir/1/samtools.vcf
-    touch ./Outdir/1/map.bam
-    touch ./Outdir/1/map.bam.bai
-    touch ./Outdir/1/tb_clockwork_report.json
-    touch ./Outdir/1/tb_clockwork_error.json
-    """
+        """
+        mkdir -p ./Outdir
+        mkdir -p ./Outdir/1
+        touch ./Outdir/1/cortex.vcf
+        touch ./Outdir/1/final.gvcf
+        touch ./Outdir/1/final.gvcf.fasta
+        touch ./Outdir/1/final.vcf
+        touch ./Outdir/1/samtools.vcf
+        touch ./Outdir/1/map.bam
+        touch ./Outdir/1/map.bam.bai
+        touch ./Outdir/1/tb_clockwork_report.json
+        touch ./Outdir/1/tb_clockwork_error.json
+        """
 }
 
 workflow call_wp5 {
@@ -165,16 +168,17 @@ workflow call_wp5 {
 }
 
 process runPrediction {
+    container "docker.io/debian:12-slim"
     input:
         path(vcf)
 
     output:
         path("gnomonicus-out.json"), emit: gnomonicus_json
-    
+
     script:
-    """
+        """
         touch gnomonicus-out.json
-    """
+        """
 }
 
 workflow call_wp6 {
@@ -186,18 +190,20 @@ workflow call_wp6 {
 
     emit:
         gnomonicus_json = runPrediction.out.gnomonicus_json
-    
+
 }
 
 process create_main_json {
+    container "docker.io/debian:12-slim"
     output:
         path('main_report.json'), emit: main_report_json
         path('main_error.json'), emit: main_error_json
-    script:
-    """
-    touch main_report.json
-    touch main_error.json
-    """
+
+     script:
+        """
+        touch main_report.json
+        touch main_error.json
+        """
 }
 
 workflow call_wp8 {
@@ -246,7 +252,7 @@ workflow {
         call_wp5.out.map_bam_bai.first().copyTo("${outdir}/tb/map.bam.bai")
         call_wp5.out.tb_clockwork_report_json.first().copyTo("${outdir}/tb_clockwork_report.json")
         call_wp5.out.tb_clockwork_error_json.first().copyTo("${outdir}/tb_clockwork_error.json")
-        
+
         // WP6
         call_wp6(vcf_ch)
         call_wp6.out.gnomonicus_json.first().copyTo("${outdir}/tb/gnomonicus.json")
