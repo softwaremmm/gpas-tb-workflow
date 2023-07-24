@@ -1,7 +1,0 @@
-name: nextflow
-channels:
-  - bioconda
-  - defaults
-dependencies:
-  - nextflow~=23.04
-  - nf-test~=0.7
