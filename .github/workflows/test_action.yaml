@@ -45,7 +45,7 @@ jobs:
             git fetch --tags
 
             pipeline_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
-            echo $pipeline_tag >> ../pipeline_versions.txt
+            echo $r = $pipeline_tag >> ../pipeline_versions.txt
             git checkout $pipeline_tag
 
             cd ..
