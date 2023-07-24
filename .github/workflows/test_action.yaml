@@ -67,9 +67,9 @@ jobs:
           done
 
           #Push
-          git add .
-          git commit -m "[bot] test"
-          git push
+          git add . || echo "No changes to add"
+          git commit -m "[bot] test" || echo "No changes to commit"
+          git push || echo "No changes to push"
 
           #Create release using github API
           curl -L \
