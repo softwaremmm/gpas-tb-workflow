@@ -4,16 +4,15 @@ FROM continuumio/miniconda3
 # Set the working directory within the container
 WORKDIR /app
 
-# Set up bioconda
-RUN conda config --add channels defaults \
-    && conda config --add channels bioconda \
-    && conda config --add channels conda-forge
+# Create the environment:
+COPY environment.yml .
 
-RUN conda install fastp=0.23.4
+RUN conda env create -f environment.yml 
 
-RUN conda install pandas~=2.0
+RUN conda install biopython=1.78 -y 
 
-RUN conda install biopython=1.78
+# Make RUN commands use the new environment:
+SHELL ["conda", "run", "-n", "gk-env", "/bin/bash", "-c"]
 
 # install dependencies and cleanup apt garbage
 RUN apt-get update && apt-get -y --no-install-recommends install \
@@ -49,5 +48,7 @@ RUN wget https://github.com/DerrickWood/kraken2/archive/v${K2VER}.tar.gz && \
  ./install_kraken2.sh . && \
  mkdir /data /kraken2-db
 
-ENV PATH="$PATH:/app/kraken2-${K2VER}" \
-    LC_ALL=C
+
+RUN cp kraken2-${K2VER}/kraken2{,-build,-inspect} /usr/bin
+
+RUN echo "conda activate gk-env" >> ~/.bashrc

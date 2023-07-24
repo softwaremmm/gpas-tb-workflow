@@ -1,21 +1,25 @@
 #!/usr/bin/env nextflow
 
 include {fastp} from './process/quality_check.nf'
+include {countReads} from './process/count_reads.nf'
 include {kraken2} from './process/kraken2.nf'
 
 //Constants
-fastq_pattern = "*_{1,2}.fastq.gz"
+fastq_pattern = "*_{1,2}.f*q*"
 
 
 //Parameters
 params.input_dir = ""
+params.output_dir = ""
 params.kraken2_db_path = ""
 params.help = ""
+
 
 workflow gatekeeper{
 
     take:
         input_dir
+        output_dir
         kraken2_db_path
 
     main:
@@ -23,11 +27,12 @@ workflow gatekeeper{
     if (params.help) {
             log.info """
             ========================================================================
-            Gatekeeper Workflow
+            Competitive Mapping Workflow
 
             Parameters:
             ------------------------------------------------------------------------
             --input_dir    Path to the sample's directory
+            --output_dir   Path to the workflow's output directory
             --kraken2_db_path   Path to the kraken dataset directory
 
             """
@@ -38,6 +43,10 @@ workflow gatekeeper{
 
         if ( input_dir == "" ) {
             exit 1, "error: --input_dir is mandatory"
+        }
+
+        if ( output_dir == "" ) {
+            exit 1, "error: --output_dir is mandatory"
         }
 
         if ( kraken2_db_path == "" ) {
@@ -53,24 +62,13 @@ workflow gatekeeper{
             .set{ input_files }
 
         Channel.fromPath(params.kraken2_db_path)
-            .set{ dataset }
+            .set{ database }
 
         input_files.view{it}
 
-        fastp_output = fastp(input_files)
+        fastp(input_files)
 
-        kraken2_output = kraken2(input_files, dataset)
-    
-    emit:
-
-        fastp_report = fastp_output.fastp_json
-        fastp_error = fastp_output.fastp_error
-  
-        kraken2_filtered_samples = kraken2_output.kraken2_filtering
-        kraken2_outputs = kraken2_output.kraken2_out
-        kraken2_error = kraken2_output.kraken2_log
-
-        gatekeeper_report = kraken2_output.gatekeeper_report_json
+        kraken2(input_files, database)
 
 }
 
@@ -93,7 +91,7 @@ workflow.onComplete {
 
 workflow{
     main:
-        gatekeeper(params.input_dir, params.kraken2_db_path)
+        gatekeeper(params.input_dir, params.output_dir, params.kraken2_db_path)
 }
 
 

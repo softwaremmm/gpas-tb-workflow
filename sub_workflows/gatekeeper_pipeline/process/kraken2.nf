@@ -2,12 +2,16 @@ project_dir = projectDir
 
 process kraken2 {
 
+    publishDir "${params.output_dir}/$sample_name/kraken2_filtered_reads", mode: 'copy', pattern: '*_kraken2_filtered_{1,2}.fastq', overwrite: 'true'
+    publishDir "${params.output_dir}/$sample_name/speciation_reports_for_reads", mode: 'copy', pattern: '*_kraken_report.*'
+    publishDir "${params.output_dir}/$sample_name", mode: 'copy', overwrite: 'true', pattern: '*{_err.json,_report.json}'
+
     input:
     tuple val(sample_name), path(fq1), path(fq2)
     path(database)
 
     output:
-    tuple val(sample_name), path("${sample_name}_kraken_report.txt"), path("${sample_name}_kraken_report.json"), emit: kraken2_out
+    tuple val(sample_name), path("${sample_name}_kraken_report.txt"), path("${sample_name}_kraken_report.json"), emit: kraken2_json
     tuple val(sample_name), path("${sample_name}_kraken2_filtered_1.fastq"), path("${sample_name}_kraken2_filtered_2.fastq"), emit: kraken2_filtering
     path "${sample_name}_gatekeeper_report.json", emit: gatekeeper_report_json optional true
     path "${sample_name}_err.json", emit: kraken2_log optional true
