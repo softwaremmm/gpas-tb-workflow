@@ -46,7 +46,7 @@ jobs:
             git fetch --tags
 
             pipeline_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
-            echo $r = $pipeline_tag >> ../pipeline_versions.txt
+            echo -n "$r = $pipeline_tag\n" >> ../pipeline_versions.txt
             git checkout $pipeline_tag
 
             cd ..
@@ -63,8 +63,7 @@ jobs:
             rm -rf tmp/*
 
             #Find which containers are used within the nextflow
-            find $r | grep -E "\.nf" | xargs cat | grep '\w*container\ *= \ *".*"' | cut -d \" -f 2 | uniq >> container_versions.txt
-
+            echo -nE $(find $r | grep -E "\.nf" | xargs cat | grep '\w*container\ *= \ *".*"' | cut -d \" -f 2 | uniq)"\n" >> container_versions.txt
           done
 
           #Push if there is anything to push
