@@ -51,7 +51,7 @@ jobs:
             cd ..
 
             #Now we have the latest release, cut out everything not-required
-            mv $r/.* tmp
+            rm -rf $r/.git*
             mv $r/* tmp
 
             for f in $(cat tmp/minimal_files.txt); do
