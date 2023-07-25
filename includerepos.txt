@@ -1,2 +1,3 @@
 GlobalPathogenAnalysisService/tb-predict-pipeline
 GlobalPathogenAnalysisService/fn5_pipeline
+GlobalPathogenAnalysisService/clockwork_pipeline

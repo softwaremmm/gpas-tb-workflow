@@ -80,7 +80,7 @@ jobs:
           # ((strarr[-1]+=1))
           # NEW_VERSION="${strarr[0]}"
           # for elem in "${strarr[@]:1}";do NEW_VERSION="$NEW_VERSION.$elem"; done
-          NEW_VERSION="v0.0.1"
+          NEW_VERSION="v0.0.2"
 
           #Create a release
           #The JSON here is disgusting because of the \"
