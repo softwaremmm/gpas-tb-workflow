@@ -125,7 +125,7 @@ process run_clockwork {
     output:
         path("Outdir/1/cortex.vcf"), emit: cortex_vcf, optional: true
         path("Outdir/1/final.gvcf"), emit: final_gvcf
-        path("Outdir/1/final.gvcf.fasta"), emit: final_gvcf_fasta
+        path("Outdir/1/final.fasta"), emit: final_fasta
         path("Outdir/1/final.vcf"), emit: final_vcf
         path("Outdir/1/samtools.vcf"), emit: samtools_vcf
         path("Outdir/1/map.bam"), emit: map_bam
@@ -139,7 +139,7 @@ process run_clockwork {
         mkdir -p ./Outdir/1
         touch ./Outdir/1/cortex.vcf
         touch ./Outdir/1/final.gvcf
-        touch ./Outdir/1/final.gvcf.fasta
+        touch ./Outdir/1/final.fasta
         touch ./Outdir/1/final.vcf
         touch ./Outdir/1/samtools.vcf
         touch ./Outdir/1/map.bam
@@ -158,7 +158,7 @@ workflow call_wp5 {
     emit:
         cortex_vcf = run_clockwork.out.cortex_vcf
         final_gvcf = run_clockwork.out.final_gvcf
-        final_gvcf_fasta = run_clockwork.out.final_gvcf_fasta
+        final_fasta = run_clockwork.out.final_fasta
         final_vcf = run_clockwork.out.final_vcf
         samtools_vcf = run_clockwork.out.samtools_vcf
         map_bam = run_clockwork.out.map_bam
@@ -199,10 +199,42 @@ process create_main_json {
         path('main_report.json'), emit: main_report_json
         path('main_error.json'), emit: main_error_json
 
-     script:
+    script:
         """
         touch main_report.json
         touch main_error.json
+        """
+}
+
+process write_to_bucket {
+    input:
+        path(output_file)
+    
+    script:
+        """
+        cp ${output_file} ${outdir}
+        """
+}
+
+process write_species_to_bucket {
+    input:
+        path(output_file)
+
+    script:
+        """
+        mkdir -p ${outdir}/tb
+        cp ${output_file} ${outdir}/tb
+        """
+}
+
+process write_samples_to_bucket {
+    input:
+        tuple val(x), path(sample1), path(sample2)
+
+    script:
+        """
+        cp ${sample1} ${outdir}
+        cp ${sample2} ${outdir}
         """
 }
 
@@ -220,12 +252,8 @@ workflow {
         // wp3
         call_wp3(input_reads)
         kraken_reads_ch = call_wp3.out.kraken_reads_ch
-        clean_reads = call_wp3.out.clean_reads_ch
-        call_wp3.out.kraken_report_json.first().copyTo("${outdir}/kraken_report.json")
-        call_wp3.out.fastp_report_json.first().copyTo("${outdir}/fastp_report.json")
-        call_wp3.out.kraken_report_txt.first().copyTo("${outdir}/kraken_report.txt")
-        call_wp3.out.gatekeeper_error_json.first().copyTo("${outdir}/gatekeeper_error.json")
-        call_wp3.out.gatekeeper_report_txt.first().copyTo("${outdir}/gatekeeper_report.txt")
+        clean_reads = call_wp3.out.clean_reads_ch 
+
         call_wp3.out.kraken_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().first().copyTo("${outdir}/kraken_fastq_1.fastq.gz")
         call_wp3.out.kraken_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().last().copyTo("${outdir}/kraken_fastq_2.fastq.gz")
         call_wp3.out.clean_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().first().copyTo("${outdir}/clean_fastq_1.fastq.gz")
@@ -234,34 +262,45 @@ workflow {
         // wp4
         call_wp4(kraken_reads_ch)
         filtered_reads_ch = call_wp4.out.reads_ch
-        call_wp4.out.competitivemapping_report_json.first().copyTo("${outdir}/competitivemapping_report.json")
-        call_wp4.out.competitivemapping_error_json.first().copyTo("${outdir}/competitivemapping_error.json")
-        call_wp4.out.lc_error_json.first().copyTo("${outdir}/lc_error.json")
-        call_wp4.out.mykrobe_report_json.first().copyTo("${outdir}/mykrobe_report.json")
 
         // WP5
         call_wp5(filtered_reads_ch)
-        fasta_ch = call_wp5.out.final_gvcf_fasta
-        fasta_ch.first().copyTo("${outdir}/tb/final.fasta")
+        fasta_ch = call_wp5.out.final_fasta
         vcf_ch = call_wp5.out.final_vcf
-        vcf_ch.first().copyTo("${outdir}/tb/final.vcf")
-        call_wp5.out.cortex_vcf.first().copyTo("${outdir}/tb/cortex.vcf")
-        call_wp5.out.final_gvcf.first().copyTo("${outdir}/tb/final.gvcf")
-        call_wp5.out.samtools_vcf.first().copyTo("${outdir}/tb/samtools.vcf")
-        call_wp5.out.map_bam.first().copyTo("${outdir}/tb/map.bam")
-        call_wp5.out.map_bam_bai.first().copyTo("${outdir}/tb/map.bam.bai")
-        call_wp5.out.tb_clockwork_report_json.first().copyTo("${outdir}/tb_clockwork_report.json")
-        call_wp5.out.tb_clockwork_error_json.first().copyTo("${outdir}/tb_clockwork_error.json")
 
         // WP6
         call_wp6(vcf_ch)
-        call_wp6.out.gnomonicus_json.first().copyTo("${outdir}/tb/gnomonicus.json")
 
         //WP7
         // call_fn5(fasta_ch)
 
         // WP8
         call_wp8()
-        call_wp8.out.main_report_json.copyTo("${outdir}/main_report.json")
-        call_wp8.out.main_error_json.copyTo("${outdir}/main_error.json")
+
+        //copy to bucket
+        call_wp3.out.kraken_report_json.concat(
+            call_wp3.out.kraken_report_txt,
+            call_wp3.out.gatekeeper_error_json,
+            call_wp3.out.gatekeeper_report_txt,
+            call_wp3.out.fastp_report_json,
+            call_wp4.out.competitivemapping_report_json,
+            call_wp4.out.competitivemapping_error_json,
+            call_wp4.out.lc_error_json,
+            call_wp4.out.mykrobe_report_json,
+            call_wp5.out.tb_clockwork_report_json,
+            call_wp5.out.tb_clockwork_error_json,
+            call_wp8.out.main_report_json,
+            call_wp8.out.main_error_json,
+        ) | write_to_bucket
+
+        // copy species specific files to bucket
+        call_wp5.out.final_fasta.concat(
+            call_wp5.out.final_vcf,
+            call_wp5.out.cortex_vcf,
+            call_wp5.out.final_gvcf,
+            call_wp5.out.samtools_vcf,
+            call_wp5.out.map_bam,
+            call_wp5.out.map_bam_bai,
+            call_wp6.out.gnomonicus_json,
+        ) | write_species_to_bucket
 }
