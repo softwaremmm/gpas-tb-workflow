@@ -53,14 +53,18 @@ jobs:
 
             #Now we have the latest release, cut out everything not-required
             rm -rf $r/.git*
-            mv $r/* tmp
+            
+            #If a minimal files has been declared, use it. Otherwise just take everything for now
+            if [ -s $r/minimal_files.txt ]; then
+              mv $r/* tmp
 
-            for f in $(cat tmp/minimal_files.txt); do
-              mv tmp/$f $r
-            done
+              for f in $(cat tmp/minimal_files.txt); do
+                mv tmp/$f $r
+              done
 
-            #Now we have just the files required to run, clean up and move on
-            rm -rf tmp/*
+              #Now we have just the files required to run, clean up and move on
+              rm -rf tmp/*
+            fi
 
             #Find which containers are used within the nextflow as a single \n separated line
             echo -nE $(find $r | grep -E "\.nf" | xargs cat | grep '\w*container\ *= \ *".*"' | cut -d \" -f 2 | uniq | sed 's/$/\\n/' | tr -d '\n') >> container_versions.txt
