@@ -1,0 +1,92 @@
+nextflow_process {
+
+    name "Test Process Kraken2"
+    script "process/kraken2.nf"
+    process "kraken2"
+
+
+    test("kraken2 classification should succeed when sample name and paths to fastq files are provided") {
+
+        when {
+            params {
+                output_dir = "tests/nextflow/results"
+            }
+
+            process{
+                """
+                input[0] = ['sample_test', file("tests/nextflow/samples/clinic/test_clinic_sample_1.fastq"), file("tests/nextflow/samples/clinic/test_clinic_sample_2.fastq")]
+                input[1] = [file("/mnt/volume_data/datasets_full/standard_05-06-2023")]
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assert process.trace.tasks().size() == 1
+            assert process.exitStatus == 0
+            assert process.out[0][0][0] == "sample_test"
+            assert process.out[0][0][1].contains("sample_test_kraken_report.txt")
+            assert process.out[0][0][2].contains("sample_test_kraken_report.json")
+        }
+
+    }
+
+    test("Process should generate a report with the number of reads of the relevant keys of Kraken2") {
+
+        when {
+            params {
+                output_dir = "tests/results"
+            }
+
+            process{
+                """
+                input[0] = ['sample_test', file("tests/nextflow/samples/clinic/test_clinic_sample_1.fastq"), file("tests/nextflow/samples/clinic/test_clinic_sample_2.fastq")]
+                input[1] = [file("/mnt/volume_data/datasets_full/standard_05-06-2023")]
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assert process.trace.tasks().size() == 1
+            assert process.exitStatus == 0
+            assert process.out[0][0][0] == "sample_test"
+            assert process.out[2][0].contains("sample_test_gatekeeper_report.json")
+            assert path(process.out[2][0]).json.get("0").toInteger() >= 0
+            assert path(process.out[2][0]).json.get("1").toInteger() >= 0
+            assert path(process.out[2][0]).json.get("2").toInteger() >= 0
+            assert path(process.out[2][0]).json.get("1762").toInteger() >= 0
+            assert path(process.out[2][0]).json.get("9606").toInteger() >= 0
+        }
+
+    }
+
+
+    test("Process should generate the positive filtered version of the sample files") {
+
+        when {
+            params {
+                output_dir = "tests/nextflow/results"
+            }
+
+            process{
+                """
+                input[0] = ['sample_test', file("tests/nextflow/samples/clinic/test_clinic_sample_1.fastq"), file("tests/nextflow/samples/clinic/test_clinic_sample_2.fastq")]
+                input[1] = [file("/mnt/volume_data/datasets_full/standard_05-06-2023")]
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assert process.trace.tasks().size() == 1
+            assert process.exitStatus == 0
+            assert process.out[0][0][0] == "sample_test"
+            assert process.out[2][0].contains("sample_test_gatekeeper_report.json")
+            assert process.out[1][0][1].contains("sample_test_kraken2_filtered_1.fastq")
+            assert process.out[1][0][2].contains("sample_test_kraken2_filtered_2.fastq")
+        }
+
+    }
+
+}
