@@ -1,1 +1,1 @@
-tb-predict-pipeline = v0.2.0\nfn5_pipeline = v0.2.0\n
+tb-predict-pipeline = v0.2.0\nfn5_pipeline = v0.2.0\nclockwork_pipeline = v0.1.1\n
