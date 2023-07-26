@@ -34,8 +34,9 @@ reldir = "$params.relatedness_bucket/$params.sample_id/$params.run_id"
 // files for the current run locations
 dirty_reads = "$updir/*_{1,2}.fastq.gz"
 clean_reads = "$indir/*_{1,2}.fastq.gz"
-minimap2_index = "./data/h37rv.mmi"
-catalogue = "./data/mtb_catalogue.vcf"
+// minimap2_index = "./data/h37rv.mmi"
+// catalogue = "./data/mtb_catalogue.vcf"
+params.kraken2_db_path = "${params.knowledge_bucket}/kraken2_db_path"
 
 // sub workflows import
 subwork_folder = "${projectDir}/sub_workflows"
@@ -251,7 +252,7 @@ workflow {
     main:
 
         // wp3
-        gatekeeper(input_reads)
+        gatekeeper("${indir}", $params.kraken2_db_path)
         kraken_reads_ch = gatekeeper.out.kraken2_filtered_samples
 
         // call_wp3.out.kraken_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().first().copyTo("${outdir}/kraken_fastq_1.fastq.gz")
