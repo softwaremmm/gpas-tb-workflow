@@ -227,16 +227,16 @@ process write_species_to_bucket {
         """
 }
 
-process write_samples_to_bucket {
-    input:
-        tuple val(x), path(sample1), path(sample2)
+// process write_samples_to_bucket {
+//     input:
+//         tuple val(x), path(sample1), path(sample2)
 
-    script:
-        """
-        cp ${sample1} ${outdir}
-        cp ${sample2} ${outdir}
-        """
-}
+//     script:
+//         """
+//         cp ${sample1} ${outdir}
+//         cp ${sample2} ${outdir}
+//         """
+// }
 
 workflow call_wp8 {
     main:
