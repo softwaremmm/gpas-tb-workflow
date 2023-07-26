@@ -40,47 +40,48 @@ catalogue = "./data/mtb_catalogue.vcf"
 // sub workflows import
 subwork_folder = "${projectDir}/sub_workflows"
 //include { find_neighbour_5 } from "${subwork_folder}/fn5_pipeline/main.nf"
-//include { clockwork } from "${subwork_folder}/clockwork_pipeline/main.nf"
+include { clockwork } from "${subwork_folder}/clockwork_pipeline/main.nf"
+include { gatekeeper } from "${subwork_folder}/gatekeeper_pipeline/main.nf"
 
 
 input_reads = Channel.fromFilePairs("$clean_reads", checkIfExists:true, flat:true)
 
 // dummy WP3
-process gatekeeper {
-    container "docker.io/debian:12-slim"
-    input:
-        tuple val(x), path(sample_reads1), path(sample_reads2)
-    output:
-        path("kraken_report.json"), emit: kraken_report_json
-        path("fastp_report.json"), emit: fastp_report_json
-        path("kraken_report.txt"), emit: kraken_report_txt
-        path("gatekeeper_error.json"), emit: gatekeeper_error_json
-        path("gatekeeper_report.txt"), emit: gatekeeper_report_txt
+// process gatekeeper {
+//     container "docker.io/debian:12-slim"
+//     input:
+//         tuple val(x), path(sample_reads1), path(sample_reads2)
+//     output:
+//         path("kraken_report.json"), emit: kraken_report_json
+//         path("fastp_report.json"), emit: fastp_report_json
+//         path("kraken_report.txt"), emit: kraken_report_txt
+//         path("gatekeeper_error.json"), emit: gatekeeper_error_json
+//         path("gatekeeper_report.txt"), emit: gatekeeper_report_txt
 
-    script:
-        """
-        touch kraken_report.json
-        touch fastp_report.json
-        touch kraken_report.txt
-        touch gatekeeper_error.json
-        touch gatekeeper_report.txt
-        """
-}
+//     script:
+//         """
+//         touch kraken_report.json
+//         touch fastp_report.json
+//         touch kraken_report.txt
+//         touch gatekeeper_error.json
+//         touch gatekeeper_report.txt
+//         """
+// }
 
-workflow call_wp3 {
-    take:
-        reads
-    main:
-        gatekeeper(reads)
-    emit:
-        kraken_reads_ch = Channel.fromFilePairs("$clean_reads", checkIfExists:true, flat:true)
-        clean_reads_ch = Channel.fromFilePairs("$clean_reads", checkIfExists:true, flat:true)
-        kraken_report_json = gatekeeper.out.kraken_report_json
-        fastp_report_json = gatekeeper.out.fastp_report_json
-        kraken_report_txt = gatekeeper.out.kraken_report_txt
-        gatekeeper_error_json = gatekeeper.out.gatekeeper_error_json
-        gatekeeper_report_txt = gatekeeper.out.gatekeeper_report_txt
-}
+// workflow call_wp3 {
+//     take:
+//         reads
+//     main:
+//         gatekeeper(reads)
+//     emit:
+//         kraken_reads_ch = Channel.fromFilePairs("$clean_reads", checkIfExists:true, flat:true)
+//         clean_reads_ch = Channel.fromFilePairs("$clean_reads", checkIfExists:true, flat:true)
+//         kraken_report_json = gatekeeper.out.kraken_report_json
+//         fastp_report_json = gatekeeper.out.fastp_report_json
+//         kraken_report_txt = gatekeeper.out.kraken_report_txt
+//         gatekeeper_error_json = gatekeeper.out.gatekeeper_error_json
+//         gatekeeper_report_txt = gatekeeper.out.gatekeeper_report_txt
+// }
 
 //dummy WP4
 process competitivemapping {
@@ -118,54 +119,54 @@ workflow call_wp4 {
 }
 
 // dummy WP5
-process run_clockwork {
-    container "docker.io/debian:12-slim"
-    input:
-        tuple val(x), path(sample_reads1), path(sample_reads2)
-    output:
-        path("Outdir/1/cortex.vcf"), emit: cortex_vcf, optional: true
-        path("Outdir/1/final.gvcf"), emit: final_gvcf
-        path("Outdir/1/final.fasta"), emit: final_fasta
-        path("Outdir/1/final.vcf"), emit: final_vcf
-        path("Outdir/1/samtools.vcf"), emit: samtools_vcf
-        path("Outdir/1/map.bam"), emit: map_bam
-        path("Outdir/1/map.bam.bai"), emit: map_bam_bai
-        path("Outdir/1/tb_clockwork_report.json"), emit: tb_clockwork_report_json
-        path("Outdir/1/tb_clockwork_error.json"), emit: tb_clockwork_error_json
+// process run_clockwork {
+//     container "docker.io/debian:12-slim"
+//     input:
+//         tuple val(x), path(sample_reads1), path(sample_reads2)
+//     output:
+//         path("Outdir/1/cortex.vcf"), emit: cortex_vcf, optional: true
+//         path("Outdir/1/final.gvcf"), emit: final_gvcf
+//         path("Outdir/1/final.fasta"), emit: final_fasta
+//         path("Outdir/1/final.vcf"), emit: final_vcf
+//         path("Outdir/1/samtools.vcf"), emit: samtools_vcf
+//         path("Outdir/1/map.bam"), emit: map_bam
+//         path("Outdir/1/map.bam.bai"), emit: map_bam_bai
+//         path("Outdir/1/tb_clockwork_report.json"), emit: tb_clockwork_report_json
+//         path("Outdir/1/tb_clockwork_error.json"), emit: tb_clockwork_error_json
 
-    script:
-        """
-        mkdir -p ./Outdir
-        mkdir -p ./Outdir/1
-        touch ./Outdir/1/cortex.vcf
-        touch ./Outdir/1/final.gvcf
-        touch ./Outdir/1/final.fasta
-        touch ./Outdir/1/final.vcf
-        touch ./Outdir/1/samtools.vcf
-        touch ./Outdir/1/map.bam
-        touch ./Outdir/1/map.bam.bai
-        touch ./Outdir/1/tb_clockwork_report.json
-        touch ./Outdir/1/tb_clockwork_error.json
-        """
-}
+//     script:
+//         """
+//         mkdir -p ./Outdir
+//         mkdir -p ./Outdir/1
+//         touch ./Outdir/1/cortex.vcf
+//         touch ./Outdir/1/final.gvcf
+//         touch ./Outdir/1/final.fasta
+//         touch ./Outdir/1/final.vcf
+//         touch ./Outdir/1/samtools.vcf
+//         touch ./Outdir/1/map.bam
+//         touch ./Outdir/1/map.bam.bai
+//         touch ./Outdir/1/tb_clockwork_report.json
+//         touch ./Outdir/1/tb_clockwork_error.json
+//         """
+// }
 
-workflow call_wp5 {
-    take:
-    reads
+// workflow call_wp5 {
+//     take:
+//     reads
 
-    main:
-        run_clockwork(reads)
-    emit:
-        cortex_vcf = run_clockwork.out.cortex_vcf
-        final_gvcf = run_clockwork.out.final_gvcf
-        final_fasta = run_clockwork.out.final_fasta
-        final_vcf = run_clockwork.out.final_vcf
-        samtools_vcf = run_clockwork.out.samtools_vcf
-        map_bam = run_clockwork.out.map_bam
-        map_bam_bai = run_clockwork.out.map_bam_bai
-        tb_clockwork_report_json = run_clockwork.out.tb_clockwork_report_json
-        tb_clockwork_error_json = run_clockwork.out.tb_clockwork_error_json
-}
+//     main:
+//         run_clockwork(reads)
+//     emit:
+//         cortex_vcf = run_clockwork.out.cortex_vcf
+//         final_gvcf = run_clockwork.out.final_gvcf
+//         final_fasta = run_clockwork.out.final_fasta
+//         final_vcf = run_clockwork.out.final_vcf
+//         samtools_vcf = run_clockwork.out.samtools_vcf
+//         map_bam = run_clockwork.out.map_bam
+//         map_bam_bai = run_clockwork.out.map_bam_bai
+//         tb_clockwork_report_json = run_clockwork.out.tb_clockwork_report_json
+//         tb_clockwork_error_json = run_clockwork.out.tb_clockwork_error_json
+// }
 
 process runPrediction {
     container "docker.io/debian:12-slim"
@@ -250,23 +251,22 @@ workflow {
     main:
 
         // wp3
-        call_wp3(input_reads)
-        kraken_reads_ch = call_wp3.out.kraken_reads_ch
-        clean_reads = call_wp3.out.clean_reads_ch 
+        gatekeeper(input_reads)
+        kraken_reads_ch = gatekeeper.out.kraken2_filtered_samples
 
-        call_wp3.out.kraken_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().first().copyTo("${outdir}/kraken_fastq_1.fastq.gz")
-        call_wp3.out.kraken_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().last().copyTo("${outdir}/kraken_fastq_2.fastq.gz")
-        call_wp3.out.clean_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().first().copyTo("${outdir}/clean_fastq_1.fastq.gz")
-        call_wp3.out.clean_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().last().copyTo("${outdir}/clean_fastq_2.fastq.gz")
+        // call_wp3.out.kraken_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().first().copyTo("${outdir}/kraken_fastq_1.fastq.gz")
+        // call_wp3.out.kraken_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().last().copyTo("${outdir}/kraken_fastq_2.fastq.gz")
+        // call_wp3.out.clean_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().first().copyTo("${outdir}/clean_fastq_1.fastq.gz")
+        // call_wp3.out.clean_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().last().copyTo("${outdir}/clean_fastq_2.fastq.gz")
 
         // wp4
         call_wp4(kraken_reads_ch)
         filtered_reads_ch = call_wp4.out.reads_ch
 
         // WP5
-        call_wp5(filtered_reads_ch)
-        fasta_ch = call_wp5.out.final_fasta
-        vcf_ch = call_wp5.out.final_vcf
+        clockwork(filtered_reads_ch)
+        fasta_ch = clockwork.out.final_fasta
+        vcf_ch = clockwork.out.final_vcf
 
         // WP6
         call_wp6(vcf_ch)
@@ -278,29 +278,29 @@ workflow {
         call_wp8()
 
         //copy to bucket
-        call_wp3.out.kraken_report_json.concat(
-            call_wp3.out.kraken_report_txt,
-            call_wp3.out.gatekeeper_error_json,
-            call_wp3.out.gatekeeper_report_txt,
-            call_wp3.out.fastp_report_json,
+        gatekeeper.out.kraken2_outputs.concat(
+            gatekeeper.out.kraken2_error,
+            gatekeeper.out.gatekeeper_report,
+            gatekeeper.out.fastp_report,
+            gatekeeper.out.fastp_error,
             call_wp4.out.competitivemapping_report_json,
             call_wp4.out.competitivemapping_error_json,
             call_wp4.out.lc_error_json,
             call_wp4.out.mykrobe_report_json,
-            call_wp5.out.tb_clockwork_report_json,
-            call_wp5.out.tb_clockwork_error_json,
+            clockwork.out.tb_clockwork_report_json,
+            clockwork.out.tb_clockwork_error_json,
             call_wp8.out.main_report_json,
             call_wp8.out.main_error_json,
         ) | write_to_bucket
 
         // copy species specific files to bucket
-        call_wp5.out.final_fasta.concat(
-            call_wp5.out.final_vcf,
-            call_wp5.out.cortex_vcf,
-            call_wp5.out.final_gvcf,
-            call_wp5.out.samtools_vcf,
-            call_wp5.out.map_bam,
-            call_wp5.out.map_bam_bai,
+        clockwork.out.final_fasta.concat(
+            clockwork.out.final_vcf,
+            clockwork.out.cortex_vcf,
+            clockwork.out.final_gvcf,
+            clockwork.out.samtools_vcf,
+            clockwork.out.map_bam,
+            clockwork.out.map_bam_bai,
             call_wp6.out.gnomonicus_json,
         ) | write_species_to_bucket
 }
