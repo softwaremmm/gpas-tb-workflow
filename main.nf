@@ -120,54 +120,54 @@ workflow call_wp4 {
 }
 
 // dummy WP5
-// process run_clockwork {
-//     container "docker.io/debian:12-slim"
-//     input:
-//         tuple val(x), path(sample_reads1), path(sample_reads2)
-//     output:
-//         path("Outdir/1/cortex.vcf"), emit: cortex_vcf, optional: true
-//         path("Outdir/1/final.gvcf"), emit: final_gvcf
-//         path("Outdir/1/final.fasta"), emit: final_fasta
-//         path("Outdir/1/final.vcf"), emit: final_vcf
-//         path("Outdir/1/samtools.vcf"), emit: samtools_vcf
-//         path("Outdir/1/map.bam"), emit: map_bam
-//         path("Outdir/1/map.bam.bai"), emit: map_bam_bai
-//         path("Outdir/1/tb_clockwork_report.json"), emit: tb_clockwork_report_json
-//         path("Outdir/1/tb_clockwork_error.json"), emit: tb_clockwork_error_json
+process run_clockwork {
+    container "docker.io/debian:12-slim"
+    input:
+        tuple val(x), path(sample_reads1), path(sample_reads2)
+    output:
+        path("Outdir/1/cortex.vcf"), emit: cortex_vcf, optional: true
+        path("Outdir/1/final.gvcf"), emit: final_gvcf
+        path("Outdir/1/final.fasta"), emit: final_fasta
+        path("Outdir/1/final.vcf"), emit: final_vcf
+        path("Outdir/1/samtools.vcf"), emit: samtools_vcf
+        path("Outdir/1/map.bam"), emit: map_bam
+        path("Outdir/1/map.bam.bai"), emit: map_bam_bai
+        path("Outdir/1/tb_clockwork_report.json"), emit: tb_clockwork_report_json
+        path("Outdir/1/tb_clockwork_error.json"), emit: tb_clockwork_error_json
 
-//     script:
-//         """
-//         mkdir -p ./Outdir
-//         mkdir -p ./Outdir/1
-//         touch ./Outdir/1/cortex.vcf
-//         touch ./Outdir/1/final.gvcf
-//         touch ./Outdir/1/final.fasta
-//         touch ./Outdir/1/final.vcf
-//         touch ./Outdir/1/samtools.vcf
-//         touch ./Outdir/1/map.bam
-//         touch ./Outdir/1/map.bam.bai
-//         touch ./Outdir/1/tb_clockwork_report.json
-//         touch ./Outdir/1/tb_clockwork_error.json
-//         """
-// }
+    script:
+        """
+        mkdir -p ./Outdir
+        mkdir -p ./Outdir/1
+        touch ./Outdir/1/cortex.vcf
+        touch ./Outdir/1/final.gvcf
+        touch ./Outdir/1/final.fasta
+        touch ./Outdir/1/final.vcf
+        touch ./Outdir/1/samtools.vcf
+        touch ./Outdir/1/map.bam
+        touch ./Outdir/1/map.bam.bai
+        touch ./Outdir/1/tb_clockwork_report.json
+        touch ./Outdir/1/tb_clockwork_error.json
+        """
+}
 
-// workflow call_wp5 {
-//     take:
-//     reads
+workflow call_wp5 {
+    take:
+    reads
 
-//     main:
-//         run_clockwork(reads)
-//     emit:
-//         cortex_vcf = run_clockwork.out.cortex_vcf
-//         final_gvcf = run_clockwork.out.final_gvcf
-//         final_fasta = run_clockwork.out.final_fasta
-//         final_vcf = run_clockwork.out.final_vcf
-//         samtools_vcf = run_clockwork.out.samtools_vcf
-//         map_bam = run_clockwork.out.map_bam
-//         map_bam_bai = run_clockwork.out.map_bam_bai
-//         tb_clockwork_report_json = run_clockwork.out.tb_clockwork_report_json
-//         tb_clockwork_error_json = run_clockwork.out.tb_clockwork_error_json
-// }
+    main:
+        run_clockwork(reads)
+    emit:
+        cortex_vcf = run_clockwork.out.cortex_vcf
+        final_gvcf = run_clockwork.out.final_gvcf
+        final_fasta = run_clockwork.out.final_fasta
+        final_vcf = run_clockwork.out.final_vcf
+        samtools_vcf = run_clockwork.out.samtools_vcf
+        map_bam = run_clockwork.out.map_bam
+        map_bam_bai = run_clockwork.out.map_bam_bai
+        tb_clockwork_report_json = run_clockwork.out.tb_clockwork_report_json
+        tb_clockwork_error_json = run_clockwork.out.tb_clockwork_error_json
+}
 
 process runPrediction {
     container "docker.io/debian:12-slim"
@@ -265,9 +265,13 @@ workflow {
         filtered_reads_ch = call_wp4.out.reads_ch
 
         // WP5
-        clockwork(filtered_reads_ch)
-        fasta_ch = clockwork.out.final_fasta
-        vcf_ch = clockwork.out.final_vcf
+        // clockwork(filtered_reads_ch)
+        // fasta_ch = clockwork.out.final_fasta
+        // vcf_ch = clockwork.out.final_vcf
+
+        call_wp5(filtered_reads_ch)
+        fasta_ch = call_wp5.out.final_fasta
+        vcf_ch = call_wp5.out.final_vcf
 
         // WP6
         call_wp6(vcf_ch)
@@ -288,20 +292,31 @@ workflow {
             call_wp4.out.competitivemapping_error_json,
             call_wp4.out.lc_error_json,
             call_wp4.out.mykrobe_report_json,
-            clockwork.out.tb_clockwork_report_json,
-            clockwork.out.tb_clockwork_error_json,
+            call_wp5.out.tb_clockwork_report_json,
+            call_wp5.out.tb_clockwork_error_json,
             call_wp8.out.main_report_json,
             call_wp8.out.main_error_json,
         ) | write_to_bucket
 
         // copy species specific files to bucket
-        clockwork.out.final_fasta.concat(
-            clockwork.out.final_vcf,
-            clockwork.out.cortex_vcf,
-            clockwork.out.final_gvcf,
-            clockwork.out.samtools_vcf,
-            clockwork.out.map_bam,
-            clockwork.out.map_bam_bai,
+        // clockwork.out.final_fasta.concat(
+        //     clockwork.out.final_vcf,
+        //     clockwork.out.cortex_vcf,
+        //     clockwork.out.final_gvcf,
+        //     clockwork.out.samtools_vcf,
+        //     clockwork.out.map_bam,
+        //     clockwork.out.map_bam_bai,
+        //     call_wp6.out.gnomonicus_json,
+        // ) | write_species_to_bucket
+
+        // copy species specific files to bucket
+        call_wp5.out.final_fasta.concat(
+            call_wp5.out.final_vcf,
+            call_wp5.out.cortex_vcf,
+            call_wp5.out.final_gvcf,
+            call_wp5.out.samtools_vcf,
+            call_wp5.out.map_bam,
+            call_wp5.out.map_bam_bai,
             call_wp6.out.gnomonicus_json,
         ) | write_species_to_bucket
 }
