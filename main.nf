@@ -173,11 +173,11 @@ process runPrediction {
         path(vcf)
 
     output:
-        path("gnomonicus-out.json"), emit: gnomonicus_json
+        path("gnomonicus.json"), emit: gnomonicus_json
 
     script:
         """
-        touch gnomonicus-out.json
+        touch gnomonicus.json
         """
 }
 
@@ -278,6 +278,21 @@ workflow {
         call_wp8()
 
         //copy to bucket
+        call_wp3.out.kraken_report_json.concat(
+            call_wp3.out.kraken_report_txt,
+            call_wp3.out.gatekeeper_error_json,
+            call_wp3.out.gatekeeper_report_txt,
+            call_wp3.out.fastp_report_json,
+            call_wp4.out.competitivemapping_report_json,
+            call_wp4.out.competitivemapping_error_json,
+            call_wp4.out.lc_error_json,
+            call_wp4.out.mykrobe_report_json,
+            call_wp5.out.tb_clockwork_report_json,
+            call_wp5.out.tb_clockwork_error_json,
+            call_wp8.out.main_report_json,
+            call_wp8.out.main_error_json,
+        ) | write_to_bucket
+
         call_wp3.out.kraken_report_json.concat(
             call_wp3.out.kraken_report_txt,
             call_wp3.out.gatekeeper_error_json,
