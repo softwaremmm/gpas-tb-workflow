@@ -7,17 +7,17 @@ from lib.generate_report import report
 
 def test_generate_json_report(kraken_report, output_filepath):
     """ "Should generate a json report"""
-    kraken_keys = [0, 1762]
+    kraken_keys = ["unclassified", "Mycobacteriaceae"]
 
     report(kraken_report, output_filepath, kraken_keys)
     assert os.path.exists(output_filepath)
 
 
-def test_json_report_has_kraken2_taxid_keys(kraken_report, output_filepath):
+def test_json_report_has_kraken2_name_keys(kraken_report, output_filepath):
     """Json should have the input kraken2 list as keys"""
-    kraken_keys = [0, 1, 2, 1762, 9606]
+    kraken_keys = ["unclassified", "classified", "Bacteria", "Mycobacteriaceae", "Homo sapiens"]
 
-    report(kraken_report, output_filepath, kraken_keys)
+    report(kraken_report, output_filepath, ["unclassified", "root", "Bacteria", "Mycobacteriaceae", "Homo sapiens"])
     with open(output_filepath) as output_json:
         report_json = json.load(output_json)
 
@@ -47,8 +47,7 @@ def test_json_keys_0_if_key_not_found_in_kraken2_report(local_report, output_fil
   0.00	2	0	D	2759	    Eukaryota"""
         )
 
-    # 9606 = Homo sapiens
-    kraken_keys = [0, 1, 2, 1762, 9606]
+    kraken_keys = ["unclassified", "root", "Bacteria", "Mycobacteriaceae", "Homo sapiens"]
 
     report(kraken_report, output_filepath, kraken_keys)
 
@@ -60,12 +59,12 @@ def test_json_keys_0_if_key_not_found_in_kraken2_report(local_report, output_fil
                 for k, v in obj.items()
             },
         )
-
-    assert report_json.get("0") == 38
-    assert report_json.get("1") == 1062630
-    assert report_json.get("2") == 1062625
-    assert report_json.get("1762") == 1062524
-    assert report_json.get("9606") == 0
+    print(report_json)
+    assert report_json.get("unclassified") == 38
+    assert report_json.get("classified") == 1062630
+    assert report_json.get("Bacteria") == 1062625
+    assert report_json.get("Mycobacteriaceae") == 1062524
+    assert report_json.get("Homo sapiens") == 0
 
 
 def test_error_if_report_file_does_not_exist(nonexistent_file):
@@ -87,14 +86,14 @@ def test_error_if_out_dir_does_not_exist(kraken_report, nonexistent_dir):
 
 def test_error_if_kraken_keys_is_not_list_type(kraken_report, output_filepath):
     """ "Should rase TypeError if Kraken2 keys is not a list"""
-    kraken_keys = "1762"
+    kraken_keys = "Mycobacteriaceae"
     with pytest.raises(TypeError):
         report(kraken_report, output_filepath, kraken_keys)
 
 
-def test_error_if_kraken_key_item_is_not_int_type(kraken_report, output_filepath):
-    """ "Should rase TypeError if there is at least a  Kraken2 list value that is not an Int"""
-    kraken_keys = [0, "1762", 9606]
+def test_error_if_kraken_key_item_is_not_string_type(kraken_report, output_filepath):
+    """ "Should rase TypeError if there is at least a  Kraken2 list value that is not a string"""
+    kraken_keys = ["root", 9606]
     with pytest.raises(TypeError):
         report(kraken_report, output_filepath, kraken_keys)
 
@@ -104,6 +103,6 @@ def test_error_if_kraken_file_has_wrong_number_columns(
 ):
     """ "Should rase FileNotFoundError if kraken report file has wrong number of columns"""
     kraken_report = kraken_report_no_cols
-    kraken_keys = [0, 1762]
+    kraken_keys = ["unclassified", "Mycobacteriaceae"]
     with pytest.raises(ValueError):
         report(kraken_report, output_filepath, kraken_keys)

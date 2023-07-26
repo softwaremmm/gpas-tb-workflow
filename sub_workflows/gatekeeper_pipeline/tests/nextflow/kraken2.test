@@ -52,11 +52,11 @@ nextflow_process {
             assert process.exitStatus == 0
             assert process.out[0][0][0] == "sample_test"
             assert process.out[2][0].contains("sample_test_gatekeeper_report.json")
-            assert path(process.out[2][0]).json.get("0").toInteger() >= 0
-            assert path(process.out[2][0]).json.get("1").toInteger() >= 0
-            assert path(process.out[2][0]).json.get("2").toInteger() >= 0
-            assert path(process.out[2][0]).json.get("1762").toInteger() >= 0
-            assert path(process.out[2][0]).json.get("9606").toInteger() >= 0
+            assert path(process.out[2][0]).json.get("unclassified").toInteger() >= 0
+            assert path(process.out[2][0]).json.get("classified").toInteger() >= 0
+            assert path(process.out[2][0]).json.get("Bacteria").toInteger() >= 0
+            assert path(process.out[2][0]).json.get("Mycobacteriaceae").toInteger() >= 0
+            assert path(process.out[2][0]).json.get("Homo sapiens").toInteger() >= 0
         }
 
     }

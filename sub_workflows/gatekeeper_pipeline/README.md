@@ -1,14 +1,23 @@
 # gatekeeper_pipeline
 
-This pipeline should be use to peform check quality in sequence data.
+This pipeline should be used to perform check quality in sequence data with [FASTP](https://github.com/OpenGene/fastp) and filtering reads based on [Kraken2](https://github.com/DerrickWood/kraken2) classification. 
+
+## System Requirements ##
+* Nextflow (tested on version 23.04)
+* Kraken2 [Standard dataset](https://benlangmead.github.io/aws-indexes/k2) (tested with Standard from 06/05/2023)
 
 Parameters
 
-**input_dir**  = A directory containing pairs of fastq(.gz) files
+**input_dir**  = A directory containing pairs of fastq.gz files
 
-**output_dir** = Output directory for results
+**kraken2_db_path** = Path to the kraken2 dataset
 
-## FASTP Parameters ## 
+### Run  ###
+
+`nextflow run main.nf --input_dir ${INPUT_PATH} --kraken2_db_path ${KRAKEN2_DB_PATH}
+`
+
+## FASTP default Parameters ## 
 
 **length_required**  Reads shorter than _length_required_ will be discarded, default is 15. (int [=15])
 
