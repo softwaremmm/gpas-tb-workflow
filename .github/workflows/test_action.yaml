@@ -67,7 +67,7 @@ jobs:
             fi
 
             #Find which containers are used within the nextflow as a single \n separated line
-            echo -nE $(find $r | grep -E "\.nf" | xargs cat | grep '\w*container\ *= \ *".*"' | cut -d \" -f 2 | uniq | sed 's/$/\\n/' | tr -d '\n') >> container_versions.txt
+            echo -nE $(find $r | grep -E "\.nf" | xargs cat | grep '\w*container\ *=? \ *".*"' | cut -d \" -f 2 | uniq | sed 's/$/\\n/' | tr -d '\n') >> container_versions.txt
           done
 
           #Push if there is anything to push
