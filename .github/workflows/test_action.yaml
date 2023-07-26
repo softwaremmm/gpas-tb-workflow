@@ -47,7 +47,7 @@ jobs:
 
             pipeline_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
             echo -n "$r = $pipeline_tag\n" >> ../pipeline_versions.txt
-            git checkout $pipeline_tag
+            #git checkout $pipeline_tag
 
             cd ..
 

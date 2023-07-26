@@ -260,7 +260,7 @@ workflow {
         // call_fn5(fasta_ch)
 
         // WP8
-        call_wp8()
-        call_wp8.out.main_report_json.copyTo("${outdir}/main_report.json")
-        call_wp8.out.main_error_json.copyTo("${outdir}/main_error.json")
+        // call_wp8()
+        // call_wp8.out.main_report_json.copyTo("${outdir}/main_report.json")
+        // call_wp8.out.main_error_json.copyTo("${outdir}/main_error.json")
 }
