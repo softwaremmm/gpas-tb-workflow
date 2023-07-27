@@ -47,22 +47,23 @@ include { gatekeeper } from "${subwork_folder}/gatekeeper_pipeline/main.nf"
 include { competitive_mapping } from "${subwork_folder}/competitivemapping_pipeline/main.nf"
 include { lineagecalling } from "${subwork_folder}/lineagecalling_pipeline/main.nf"
 include { gnomonicus_workflow } from "${subwork_folder}/tb-predict-pipeline/main.nf"
+include { summary } from "${subwork_folder}/summary_pipeline/main.nf"
 
 
 input_reads = Channel.fromFilePairs("$clean_reads", checkIfExists:true, flat:true)
 
-process create_main_json {
-    container "docker.io/debian:12-slim"
-    output:
-        path('main_report.json'), emit: main_report_json
-        path('main_error.json'), emit: main_error_json
+// process create_main_json {
+//     container "docker.io/debian:12-slim"
+//     output:
+//         path('main_report.json'), emit: main_report_json
+//         path('main_error.json'), emit: main_error_json
 
-    script:
-        """
-        touch main_report.json
-        touch main_error.json
-        """
-}
+//     script:
+//         """
+//         touch main_report.json
+//         touch main_error.json
+//         """
+// }
 
 process write_to_bucket {
     input:
@@ -98,13 +99,13 @@ process write_samples_to_bucket {
         """
 }
 
-workflow call_wp8 {
-    main:
-        create_main_json()
-    emit:
-        main_report_json = create_main_json.out.main_report_json
-        main_error_json = create_main_json.out.main_error_json
-}
+// workflow call_wp8 {
+//     main:
+//         create_main_json()
+//     emit:
+//         main_report_json = create_main_json.out.main_report_json
+//         main_error_json = create_main_json.out.main_error_json
+// }
 
 workflow {
     main:
@@ -128,7 +129,10 @@ workflow {
         // // call_fn5(fasta_ch)
 
         // WP8
-        call_wp8()
+        summary(gatekeeper_ch.gatekeeper_report, 
+            competitive_mapping_ch.cm_report, 
+            lineagecalling_ch.json_report, 
+            gnomonicus_ch.gnomonicus_json)
 
         //copy to bucket
         gatekeeper_ch.gatekeeper_report.concat(
@@ -141,8 +145,8 @@ workflow {
             lineagecalling_ch.json_report,
             clockwork_ch.tb_clockwork_report_json,
             clockwork_ch.tb_clockwork_error_json,
-            call_wp8.out.main_report_json,
-            call_wp8.out.main_error_json,
+            summary.out.main_report,
+            summary.out.error_report,
         ) | write_to_bucket
 
         // copy species specific files to bucket
