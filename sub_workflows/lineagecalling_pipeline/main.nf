@@ -9,20 +9,18 @@ ANSI_RESET = "\033[0m"
 
 params.help = ''
 
-if (workflow.profile != 'kubernetes') {
-  params.knowledge_bucket = "$projectDir/data/relatedness/knowledge"
-} else {
-  params.knowledge_bucket = '/data/relatedness/knowledge'
-}
+//Constant
+fastq_pattern = "*_{1,2}.fastq.gz"
+
 
 process mykrobe {
-    container 'lhr.ocir.io/lrbvkel2wjot/gpas/lineagecalling_pipeline:latest'
+  container 'lhr.ocir.io/lrbvkel2wjot/gpas/lineagecalling_pipeline:latest'
 
   input:
     tuple val(sample_name), path(fq1), path(fq2)
 
   output:
-    path "${sample_name}_lc_report.json", emit: report optional false
+    path "${sample_name}_lc_report.json", emit: report
 
   script:
     mykrobe_report = "${sample_name}_lc_report.json"
@@ -54,14 +52,42 @@ process mykrobe_json {
 
 workflow lineagecalling {
   take:
-    input_dir
+    input_files
 
   main:
-    if (params.input_dir == '') {
-    exit 1, 'error: --input_dir is mandatory'
-    }
+   
+    input_files.view { it } // print channel contents to console
+    lc_report = mykrobe(input_files)
+    mykrobe_json_output = mykrobe_json(input_files, lc_report)
 
-    if (params.help) {
+  emit:
+    json_report = mykrobe_json_output.mykrobe_report
+}
+
+workflow.onComplete {
+    if ( workflow.success ) {
+        log.info """
+        ===========================================
+        Lineage calling (Mycrobe) Workflow completed successfully
+        """
+        .stripIndent()
+    }
+    else {
+        log.info """
+        ===========================================
+        Lineage calling (Mycrobe) finished with errors
+        """
+        .stripIndent()
+    }
+}
+ 
+
+workflow {
+  if (params.input_dir == '') {
+    exit 1, 'error: --input_dir is mandatory'
+  }
+
+  if (params.help) {
     log.info '''
             ========================================================================
             Lineage Calling
@@ -76,7 +102,7 @@ workflow lineagecalling {
             .stripIndent()
 
     exit(0)
-    }
+  }
 
   log.info """
         ========================================================================
@@ -99,17 +125,11 @@ workflow lineagecalling {
         """
         .stripIndent()
 
-    Channel.fromFilePairs("$params.input_dir/*_{1,2}.fastq.gz", checkIfExists:true, flat:true)
-            .set { input_files }
-    input_files.view { it } // print channel contents to console
-    lc_report = mykrobe(input_files)
-    mykrobe_json_output = mykrobe_json(input_files, lc_report)
+  Channel.fromFilePairs("$params.input_dir/${fastq_pattern}", checkIfExists:true, flat:true)
+    .ifEmpty { error "cannot find any reads matching ${fastq_pattern} in ${indir}" }
+    .set { input_files }
 
-  emit:
-    json_report = mykrobe_json_output.mykrobe_report
-}
 
-workflow {
   main:
-    lineagecalling(params.input_dir)
+    lineagecalling(input_files)
 }
