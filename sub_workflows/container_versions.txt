@@ -1,1 +1,0 @@
-lhr.ocir.io/lrbvkel2wjot/gpas/gatekeeper_pipeline:latest\nlhr.ocir.io/lrbvkel2wjot/gpas/lineagecalling_pipeline:latest\nlhr.ocir.io/lrbvkel2wjot/gpas/competitivemapping_pipeline:latest\nlhr.ocir.io/lrbvkel2wjot/oxfordmmm/clockwork:latest\nlhr.ocir.io/lrbvkel2wjot/oxfordmmm/gnomonicus:latest\nlhr.ocir.io/lrbvkel2wjot/gpas/summary_pipeline:latest\n

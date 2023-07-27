@@ -32,8 +32,8 @@ jobs:
           for elem in "${strarr[@]:1}";do NEW_VERSION="$NEW_VERSION.$elem"; done
           echo "This version = $NEW_VERSION"
           
-          git checkout integration
-          git checkout -b $NEW_VERSION-branch integration
+          git checkout main
+          git checkout -b $NEW_VERSION-branch main
 
           #Pull in all of the sub workflows
           mkdir -p sub_workflows
