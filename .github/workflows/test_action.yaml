@@ -14,12 +14,24 @@ jobs:
           sudo apt install -y git
 
           #Git setup so we can actually push
-          git config --global user.email "jeremywesthead3@gmail.com"
-          git config --global user.name "JeremyWesthead"
+          git config --global user.email "it-support@gpas.global"
+          git config --global user.name "gpas-github-bot"
 
           #We want to start in this repo
           git clone https://${{secrets.PAT_TOKEN}}@github.com/GlobalPathogenAnalysisService/gpas-tb-workflow.git
           cd gpas-tb-workflow
+
+          #Find out what the next version will be
+          #Based on SARS-CoV2_workflows actiont to do the same
+          #This requires an actual release first though
+          # CURRENT_VERSION=$(git tag -l --sort=-version:refname | head -n 1)
+          # echo "Current Version = $CURRENT_VERSION"
+          # readarray -d . -t strarr <<< "$CURRENT_VERSION"
+          # ((strarr[-1]+=1))
+          # NEW_VERSION="${strarr[0]}"
+          # for elem in "${strarr[@]:1}";do NEW_VERSION="$NEW_VERSION.$elem"; done
+          NEW_VERSION="v0.0.3"
+          
           git checkout test-action
 
           #Pull in all of the sub workflows
@@ -76,17 +88,6 @@ jobs:
           git add . || echo "No changes to add"
           git commit -m "[bot] test" || echo "No changes to commit"
           git push || echo "No changes to push"
-
-          #Find out what the next version will be
-          #Based on SARS-CoV2_workflows actiont to do the same
-          #This requires an actual release first though
-          # CURRENT_VERSION=$(git tag -l --sort=-version:refname | head -n 1)
-          # echo "Current Version = $CURRENT_VERSION"
-          # readarray -d . -t strarr <<< "$CURRENT_VERSION"
-          # ((strarr[-1]+=1))
-          # NEW_VERSION="${strarr[0]}"
-          # for elem in "${strarr[@]:1}";do NEW_VERSION="$NEW_VERSION.$elem"; done
-          NEW_VERSION="v0.0.3"
 
           #Create a release
           #The JSON here is disgusting because of the \"
