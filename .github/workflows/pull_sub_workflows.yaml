@@ -24,13 +24,13 @@ jobs:
           #Find out what the next version will be
           #Based on SARS-CoV2_workflows actiont to do the same
           #This requires an actual release first though
-          # CURRENT_VERSION=$(git tag -l --sort=-version:refname | head -n 1)
-          # echo "Current Version = $CURRENT_VERSION"
-          # readarray -d . -t strarr <<< "$CURRENT_VERSION"
-          # ((strarr[-1]+=1))
-          # NEW_VERSION="${strarr[0]}"
-          # for elem in "${strarr[@]:1}";do NEW_VERSION="$NEW_VERSION.$elem"; done
-          NEW_VERSION="v0.0.1"
+          CURRENT_VERSION=$(git tag -l --sort=-version:refname | head -n 1)
+          echo "Current Version = $CURRENT_VERSION"
+          readarray -d . -t strarr <<< "$CURRENT_VERSION"
+          ((strarr[-1]+=1))
+          NEW_VERSION="${strarr[0]}"
+          for elem in "${strarr[@]:1}";do NEW_VERSION="$NEW_VERSION.$elem"; done
+          echo "This version = $NEW_VERSION"
           
           git checkout integration
           git checkout -b $NEW_VERSION-branch integration
