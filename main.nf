@@ -52,19 +52,6 @@ include { summary } from "${subwork_folder}/summary_pipeline/main.nf"
 
 input_reads = Channel.fromFilePairs("$clean_reads", checkIfExists:true, flat:true)
 
-// process create_main_json {
-//     container "docker.io/debian:12-slim"
-//     output:
-//         path('main_report.json'), emit: main_report_json
-//         path('main_error.json'), emit: main_error_json
-
-//     script:
-//         """
-//         touch main_report.json
-//         touch main_error.json
-//         """
-// }
-
 process write_to_bucket {
     input:
         path(output_file)
@@ -98,14 +85,6 @@ process write_samples_to_bucket {
         cp ${sample2} ${outdir}
         """
 }
-
-// workflow call_wp8 {
-//     main:
-//         create_main_json()
-//     emit:
-//         main_report_json = create_main_json.out.main_report_json
-//         main_error_json = create_main_json.out.main_error_json
-// }
 
 workflow {
     main:
