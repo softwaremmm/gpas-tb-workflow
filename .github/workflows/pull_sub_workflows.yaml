@@ -99,7 +99,10 @@ jobs:
             -H "Authorization: Bearer ${{secrets.PAT_TOKEN}}" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             https://api.github.com/repos/GlobalPathogenAnalysisService/gpas-tb-workflow/releases \
-            -d "{\"tag_name\": \"$NEW_VERSION\", \"target_commitish\": \"$NEW_VERSION-branch\", \"name\": \"$NEW_VERSION\", \"body\": \"# Pipeline versions\n$(cat pipeline_versions.txt)\n# Container versions\n$(cat container_versions.txt)\", \"draft\": true, \"prerelease\": true, \"generate_release_notes\": false}"
+            -d "{\"tag_name\": \"$NEW_VERSION\", \"target_commitish\": \"$NEW_VERSION-branch\", \"name\": \"$NEW_VERSION\", \"body\": \"# Pipeline versions\n$(cat pipeline_versions.txt)\n# Container versions\n$(cat container_versions.txt)\", \"draft\": false, \"prerelease\": false, \"generate_release_notes\": false}"
+          
+          #Clean up the branch now we're done with it
+          git push origin --delete $NEW_VERSION-branch
 
 
           
