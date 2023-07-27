@@ -1,0 +1,109 @@
+nextflow_process {
+
+    name "Test Process fastp"
+    script "process/quality_check.nf"
+    process "fastp"
+
+    test("Should succeed when sample name and paths to fastq files are provided") {
+
+        when {
+            params {
+                output_dir = "tests/results"
+            }
+
+            process{
+                """
+                input[0] = ['sample_test', file("tests/nextflow/samples/default_samples/illumina-sample_1.fastq.gz"), file("tests/nextflow/samples/default_samples/illumina-sample_2.fastq.gz"), 100000]
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assert process.exitStatus == 0
+        }
+    }
+
+    test("Should generate json report") {
+
+        when {
+            params {
+                output_dir = "tests/results"
+            }
+
+            process{
+                """
+                input[0] = ['default_samples', file("tests/nextflow/samples/default_samples/illumina-sample_1.fastq.gz"), file("tests/nextflow/samples/default_samples/illumina-sample_2.fastq.gz"), 100000]
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assert process.out.fastp_json[0].contains('default_samples_fastp.json')
+            assert path(process.out.fastp_json[0]).json.summary.before_filtering.total_reads == 98000
+        }
+
+    }
+
+
+    test("Should generate error report if files do not exist") {
+
+        when {
+            params {
+                output_dir = "tests/results"
+            }
+
+            process{
+                """
+                input[0] = ['sample_e', file("tests/nextflow/samples/non_existing/sample_1.fastq.gz"), file("tests/nextflow/samples/non_existing/sample_2.fastq.gz"), 100000]
+                """
+            }
+        }
+
+        then {
+           assert process.out.fastp_error[0].contains('sample_e_err.json')
+        }
+    }
+
+
+    test("Should generate error report if files are not valid") {
+
+        when {
+            params {
+                output_dir = "tests/results"
+            }
+
+            process{
+                """
+                input[0] = ['sample_e', file("tests/nextflow/samples/invalid_fastq/file_1.fastq.gz"), file("tests/nextflow/samples/invalid_fastq/file_2.fastq.gz"), 100000]
+                """
+            }
+        }
+
+        then {
+           assert process.out.fastp_error[0].contains('sample_e_err.json')
+        }
+    }
+
+
+    test("Should not generate error report if FASTQ did not present errors") {
+
+         when {
+            params {
+                output_dir = "tests/results"
+            }
+
+            process{
+                """
+                input[0] = ['sample_test', file("tests/nextflow/samples/default_samples/illumina-sample_1.fastq.gz"), file("tests/nextflow/samples/default_samples/illumina-sample_2.fastq.gz"), 100000]
+                """
+            }
+        }
+
+        then {
+            assert process.out.fastp_fqs[0][0].contains('sample_test')
+            assert process.out.fastp_error.isEmpty()
+        }
+    }
+}
