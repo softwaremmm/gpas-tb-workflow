@@ -1,1 +1,1 @@
-gatekeeper_pipeline = 0.1.0\nlineagecalling_pipeline = 0.1.0\ncompetitivemapping_pipeline = 0.1.0\nclockwork_pipeline = v0.1.1\ntb-predict-pipeline = v0.2.0\nfn5_pipeline = v0.2.0\n
+gatekeeper_pipeline = 0.1.0\nlineagecalling_pipeline = 0.1.0\ncompetitivemapping_pipeline = 0.1.0\nclockwork_pipeline = v0.1.1\ntb-predict-pipeline = v0.2.0\nfn5_pipeline = v0.2.0\nsummary_pipeline = 0.1.0\n
