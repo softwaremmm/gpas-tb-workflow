@@ -1,0 +1,122 @@
+{
+    "Organism Identification": {
+        "Human Reads": null,
+        "Unclassified Reads": null,
+        "Non-Mycobacterium Bacteria Reads": null,
+        "Mycobacterium Reads": null
+    },
+    "Mycobacterium Results": {
+        "Species": [
+            {
+                "Name": "Mycobacterium tuberculosis H37Rv",
+                "Num Reads": 4175866,
+                "Coverage": 98.6959,
+                "Mean Depth": 141.949,
+                "Length": 4411532
+            }
+        ],
+        "Phylogenic Group": {
+            "Name": "Mycobacterium_tuberculosis_complex",
+            "Coverage": 99.48,
+            "Median Depth": 129
+        },
+        "Subspecies": {
+            "Name": "Mycobacterium_tuberculosis",
+            "Coverage": 97.766,
+            "Median Depth": 110
+        },
+        "Lineage": [
+            {
+                "Name": "lineage4.3.4.2",
+                "Coverage": 100,
+                "Median Depth": 143
+            }
+        ]
+    },
+    "Sequencing Quality": {
+        "Mapped To": "AL123456.3",
+        "Num Reads": 4175866,
+        "Coverage": 98.6959,
+        "Mean Depth": 141.949
+    },
+    "Resistance Prediction": {
+        "Resistance Prediction Summary": {
+            "CAP": "S",
+            "EMB": "S",
+            "PZA": "U",
+            "LEV": "S",
+            "MXF": "S",
+            "STM": "U",
+            "INH": "R",
+            "RIF": "S",
+            "LZD": "S",
+            "DLM": "S",
+            "AMI": "S",
+            "ETH": "S",
+            "KAN": "S"
+        },
+        "Resistance Prediction Detail": [
+            {
+                "Drug Name": "CAP",
+                "Mutations": []
+            },
+            {
+                "Drug Name": "EMB",
+                "Mutations": []
+            },
+            {
+                "Drug Name": "PZA",
+                "Mutations": [
+                    {
+                        "Gene": "pncA",
+                        "Position": 100,
+                        "Ref to Alt": "acc->gcc",
+                        "Cov": [
+                            0,
+                            97
+                        ],
+                        "Prediction": "U"
+                    }
+                ]
+            },
+            {
+                "Drug Name": "LEV",
+                "Mutations": []
+            },
+            {
+                "Drug Name": "MXF",
+                "Mutations": []
+            },
+            {
+                "Drug Name": "STM",
+                "Mutations": [
+                    {
+                        "Gene": "gid",
+                        "Position": 50,
+                        "Ref to Alt": "ctg->cgg",
+                        "Cov": [
+                            0,
+                            88
+                        ],
+                        "Prediction": "U"
+                    }
+                ]
+            },
+            {
+                "Drug Name": "INH",
+                "Mutations": [
+                    {
+                        "Gene": "katG",
+                        "Position": 315,
+                        "Ref to Alt": "agc->acc",
+                        "Cov": [
+                            0,
+                            103
+                        ],
+                        "Prediction": "R"
+                    }
+                ]
+            }
+        ]
+    }
+}
