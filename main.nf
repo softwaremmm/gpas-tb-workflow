@@ -1,8 +1,6 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-// CURRENTLY NOT WORKING, IN DEVELOPMENT
-
 // Kubernetes Related Buckets
 if ("$workflow.profile" != 'kubernetes') {
     params.uploads_bucket = "$projectDir/data/uploads"
@@ -20,7 +18,7 @@ if ("$workflow.profile" != 'kubernetes') {
 
 
 // Run Configurations
-//params.sample_id = 1
+params.sample_id = 1
 params.run_id = 1
 params.help = ''
 params.api_url = ''
@@ -34,8 +32,6 @@ reldir = "$params.relatedness_bucket/$params.sample_id/$params.run_id"
 // files for the current run locations
 dirty_reads = "$updir/*_{1,2}.fastq.gz"
 clean_reads = "$indir/*_{1,2}.fastq.gz"
-// minimap2_index = "./data/h37rv.mmi"
-// catalogue = "./data/mtb_catalogue.vcf"
 params.kraken2_db_path = "${params.knowledge_bucket}/kraken2_db"
 params.manifest = "${params.knowledge_bucket}/manifest/target_101_new.fasta"
 params.ref_files = "${params.knowledge_bucket}/clockwork/tb/Ref_prepare"
@@ -74,6 +70,7 @@ process write_to_bucket {
     
     script:
         """
+        mkdir -p ${outdir}
         cp ${output_file} ${outdir}
         """
 }
@@ -95,6 +92,7 @@ process write_samples_to_bucket {
 
     script:
         """
+        mkdir -p ${outdir}
         cp ${sample1} ${outdir}
         cp ${sample2} ${outdir}
         """
@@ -116,11 +114,6 @@ workflow {
 
         kraken2_ch2 = gatekeeper_ch.kraken2_filtered_samples
 
-        // // call_wp3.out.kraken_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().first().copyTo("${outdir}/kraken_fastq_1.fastq.gz")
-        // // call_wp3.out.kraken_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().last().copyTo("${outdir}/kraken_fastq_2.fastq.gz")
-        // // call_wp3.out.clean_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().first().copyTo("${outdir}/clean_fastq_1.fastq.gz")
-        // // call_wp3.out.clean_reads_ch.flatten().buffer( size:2, skip:1 ).flatten().last().copyTo("${outdir}/clean_fastq_2.fastq.gz")
-
         // wp4
         competitive_mapping_ch = competitive_mapping(kraken2_ch2, params.manifest)
         lineagecalling_ch = lineagecalling(gatekeeper_ch.kraken2_filtered_samples)
@@ -138,9 +131,8 @@ workflow {
         call_wp8()
 
         //copy to bucket
-        gatekeeper_ch.kraken2_outputs.concat(
+        gatekeeper_ch.gatekeeper_report.concat(
             gatekeeper_ch.kraken2_error,
-            gatekeeper_ch.gatekeeper_report,
             gatekeeper_ch.fastp_report,
             gatekeeper_ch.fastp_error,
             competitive_mapping_ch.cm_report,
@@ -163,5 +155,11 @@ workflow {
             clockwork_ch.map_bam_bai,
             gnomonicus_ch.gnomonicus_json,
         ) | write_species_to_bucket
+
+        // copy fastq files to bucket
+        gatekeeper_ch.kraken2_filtered_samples.concat(
+            gatekeeper_ch.kraken2_outputs,
+            competitive_mapping_ch.cm_sample_paths,
+        ) | write_samples_to_bucket
 
 }
