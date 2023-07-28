@@ -21,7 +21,7 @@ if ("$workflow.profile" != 'kubernetes') {
 params.sample_id = 1
 params.run_id = 1
 params.help = ''
-params.api_url = ''
+params.api_url = 'https://dev.portal.gpas.world'
 
 // the location in the buckets for the current run
 outdir = "$params.outputs_bucket/$params.sample_id/$params.run_id"
@@ -41,7 +41,7 @@ params.tb_minor_alleles = "${params.knowledge_bucket}/minor_alleles.txt"
 
 // sub workflows import
 subwork_folder = "${projectDir}/sub_workflows"
-//include { find_neighbour_5 } from "${subwork_folder}/fn5_pipeline/main.nf"
+include { find_neighbour_5 } from "${subwork_folder}/fn5_pipeline/main.nf"
 include { clockwork } from "${subwork_folder}/clockwork_pipeline/main.nf"
 include { gatekeeper } from "${subwork_folder}/gatekeeper_pipeline/main.nf"
 include { competitive_mapping } from "${subwork_folder}/competitivemapping_pipeline/main.nf"
@@ -104,8 +104,8 @@ workflow {
         // WP6
         gnomonicus_ch = gnomonicus_workflow(clockwork_ch.final_vcf, params.tb_ref_genome, params.tb_amr_cat, params.tb_minor_alleles)
 
-        // //WP7
-        // // call_fn5(fasta_ch)
+        //WP7
+        find_neighbour_5(clockwork_ch.final_fasta, "test", params.api_url, params.api_token)
 
         // WP8
         summary(gatekeeper_ch.gatekeeper_report, 
