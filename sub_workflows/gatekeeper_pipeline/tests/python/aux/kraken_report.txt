@@ -1,0 +1,156 @@
+  0.00	38	38	U	0	unclassified
+100.00	1062630	0	R	1	root
+100.00	1062630	3	R1	131567	  cellular organisms
+100.00	1062625	10	D	2	    Bacteria
+ 99.99	1062604	0	D1	1783272	      Terrabacteria group
+ 99.99	1062604	0	P	201174	        Actinomycetota
+ 99.99	1062604	13	C	1760	          Actinomycetes
+ 99.99	1062575	40	O	85007	            Mycobacteriales
+ 99.99	1062524	1163	F	1762	              Mycobacteriaceae
+ 99.87	1061307	467	G	1866885	                Mycolicibacterium
+ 99.82	1060770	1060770	S	39695	                  Mycolicibacterium tokaiense
+  0.00	23	23	S	319707	                  Mycolicibacterium aubagnense
+  0.00	8	8	S	1286180	                  Mycolicibacterium sediminis
+  0.00	8	0	S	1810	                  Mycolicibacterium vaccae
+  0.00	8	8	S1	1354275	                    Mycolicibacterium vaccae 95051
+  0.00	6	6	S	2736649	                  Mycolicibacterium mengxianglii
+  0.00	4	4	S	319706	                  Mycolicibacterium phocaicum
+  0.00	2	1	G1	2636767	                  unclassified Mycolicibacterium
+  0.00	1	1	S	2759662	                    Mycolicibacterium sp. TY81
+  0.00	2	2	S	1794	                  Mycolicibacterium gadium
+  0.00	2	2	S	126673	                  Mycolicibacterium doricum
+  0.00	1	0	S	1804	                  Mycolicibacterium gilvum
+  0.00	1	1	S1	278137	                    Mycolicibacterium gilvum Spyr1
+  0.00	1	1	S	67081	                  Mycolicibacterium alvei
+  0.00	1	1	S	53462	                  Mycolicibacterium mageritense
+  0.00	1	0	S	46351	                  Mycolicibacterium hassiacum
+  0.00	1	1	S1	1122247	                    Mycolicibacterium hassiacum DSM 44199
+  0.00	1	1	S	444597	                  Mycolicibacterium insubricum
+  0.00	1	1	S	39688	                  Mycolicibacterium duvalii
+  0.00	1	1	S	1249101	                  Mycolicibacterium celeriflavum
+  0.00	1	1	S	28047	                  Mycolicibacterium confluentis
+  0.00	1	1	S	110539	                  Mycolicibacterium vanbaalenii
+  0.00	1	1	S	1801	                  Mycolicibacterium diernhoferi
+  0.00	1	1	S	1799	                  Mycolicibacterium aichiense
+  0.00	1	1	S	146017	                  Mycolicibacterium boenickei
+  0.00	1	0	S	152142	                  Mycolicibacterium holsaticum
+  0.00	1	1	S1	1226752	                    Mycolicibacterium holsaticum DSM 44478 = JCM 12374
+  0.00	1	1	S	1792	                  Mycolicibacterium chitae
+  0.00	1	1	S	1791	                  Mycolicibacterium aurum
+  0.00	35	12	G	1763	                Mycobacterium
+  0.00	7	0	G1	2642494	                  unclassified Mycobacterium
+  0.00	2	2	S	2857060	                    Mycobacterium sp. SMC-8
+  0.00	1	1	S	2991729	                    Mycobacterium sp. Aquia_216
+  0.00	1	1	S	1545728	                    Mycobacterium sp. EPa45
+  0.00	1	1	S	1936029	                    Mycobacterium sp. MS1601
+  0.00	1	1	S	212767	                    Mycobacterium sp. JS623
+  0.00	1	1	S	2675524	                    Mycobacterium sp. DL592
+  0.00	4	0	G1	77643	                  Mycobacterium tuberculosis complex
+  0.00	3	2	S	1773	                    Mycobacterium tuberculosis
+  0.00	1	1	S1	1097669	                      Mycobacterium tuberculosis UT205
+  0.00	1	1	S	78331	                    Mycobacterium canettii
+  0.00	3	1	G1	120793	                  Mycobacterium avium complex (MAC)
+  0.00	1	0	S	1764	                    Mycobacterium avium
+  0.00	1	1	S1	439334	                      Mycobacterium avium subsp. hominissuis
+  0.00	1	0	S	1767	                    Mycobacterium intracellulare
+  0.00	1	1	S1	222805	                      Mycobacterium intracellulare subsp. chimaera
+  0.00	1	1	S	1769	                  Mycobacterium leprae
+  0.00	1	0	G1	2249310	                  Mycobacterium simiae complex
+  0.00	1	1	S	470076	                    Mycobacterium stomatepiae
+  0.00	1	1	S	1389713	                  Mycobacterium paragordonae
+  0.00	1	1	S	459858	                  Mycobacterium noviomagense
+  0.00	1	1	S	398694	                  Mycobacterium shinjukuense
+  0.00	1	1	S	110505	                  Mycobacterium heckeshornense
+  0.00	1	1	S	43348	                  Mycobacterium branderi
+  0.00	1	0	S	29311	                  Mycobacterium haemophilum
+  0.00	1	1	S1	1202450	                    Mycobacterium haemophilum DSM 44634
+  0.00	1	1	S	1789	                  Mycobacterium xenopi
+  0.00	17	0	G	1073531	                Mycolicibacter
+  0.00	13	13	S	1795032	                  Mycolicibacter virginiensis
+  0.00	1	1	S	29314	                  Mycolicibacter hiberniae
+  0.00	1	1	S	512402	                  Mycolicibacter heraklionensis
+  0.00	1	1	S	1118379	                  Mycolicibacter minnesotensis
+  0.00	1	1	G1	2642523	                  unclassified Mycolicibacter
+  0.00	2	0	G	670516	                Mycobacteroides
+  0.00	1	1	S	36809	                  Mycobacteroides abscessus
+  0.00	1	1	S	1520670	                  [Mycobacterium] stephanolepidis
+  0.00	6	0	F	85025	              Nocardiaceae
+  0.00	4	0	G	1817	                Nocardia
+  0.00	2	2	S	37329	                  Nocardia farcinica
+  0.00	1	1	S	2382165	                  Nocardia yunnanensis
+  0.00	1	1	S	2055889	                  Nocardia tengchongensis
+  0.00	2	0	G	1827	                Rhodococcus
+  0.00	1	0	G1	192944	                  unclassified Rhodococcus (in: high G+C Gram-positive bacteria)
+  0.00	1	1	S	1653478	                    Rhodococcus sp. PBTS 1
+  0.00	1	1	S	191292	                  Rhodococcus aetherivorans
+  0.00	5	0	F	1653	              Corynebacteriaceae
+  0.00	5	2	G	1716	                Corynebacterium
+  0.00	1	1	S	39791	                  Corynebacterium glucuronolyticum
+  0.00	1	1	S	1724	                  Corynebacterium renale
+  0.00	1	1	S	156978	                  Corynebacterium imitans
+  0.00	13	0	O	85006	            Micrococcales
+  0.00	12	0	F	85023	              Microbacteriaceae
+  0.00	12	0	G	881616	                Herbiconiux
+  0.00	12	0	G1	2618217	                  unclassified Herbiconiux
+  0.00	12	12	S	2735133	                    Herbiconiux sp. SALV-R1
+  0.00	1	0	F	145357	              Dermacoccaceae
+  0.00	1	0	G	745364	                Luteipulveratus
+  0.00	1	1	S	571913	                  Luteipulveratus mongoliensis
+  0.00	2	0	O	85009	            Propionibacteriales
+  0.00	2	0	F	85015	              Nocardioidaceae
+  0.00	2	0	G	1839	                Nocardioides
+  0.00	2	2	S	2849501	                  Nocardioides panacis
+  0.00	1	0	O	85008	            Micromonosporales
+  0.00	1	0	F	28056	              Micromonosporaceae
+  0.00	1	0	G	1873	                Micromonospora
+  0.00	1	0	G1	2617518	                  unclassified Micromonospora
+  0.00	1	1	S	3018339	                    Micromonospora sp. LH3U1
+  0.00	10	0	P	1224	      Pseudomonadota
+  0.00	9	0	C	28211	        Alphaproteobacteria
+  0.00	9	0	O	356	          Hyphomicrobiales
+  0.00	8	0	F	41294	            Nitrobacteraceae
+  0.00	8	0	G	374	              Bradyrhizobium
+  0.00	8	8	G1	2631580	                unclassified Bradyrhizobium
+  0.00	1	0	F	119045	            Methylobacteriaceae
+  0.00	1	1	G	407	              Methylobacterium
+  0.00	1	0	C	1236	        Gammaproteobacteria
+  0.00	1	0	O	135614	          Xanthomonadales
+  0.00	1	0	F	32033	            Xanthomonadaceae
+  0.00	1	1	G	338	              Xanthomonas
+  0.00	1	0	D1	1783257	      PVC group
+  0.00	1	0	P	203682	        Planctomycetota
+  0.00	1	0	C	203683	          Planctomycetia
+  0.00	1	0	O	2691355	            Gemmatales
+  0.00	1	0	F	1914233	              Gemmataceae
+  0.00	1	0	G	2807415	                Urbifossiella
+  0.00	1	1	S	2528023	                  Urbifossiella limnaea
+  0.00	2	0	D	2759	    Eukaryota
+  0.00	2	0	D1	33154	      Opisthokonta
+  0.00	2	0	K	33208	        Metazoa
+  0.00	2	0	K1	6072	          Eumetazoa
+  0.00	2	0	K2	33213	            Bilateria
+  0.00	2	0	K3	33511	              Deuterostomia
+  0.00	2	0	P	7711	                Chordata
+  0.00	2	0	P1	89593	                  Craniata
+  0.00	2	0	P2	7742	                    Vertebrata
+  0.00	2	0	P3	7776	                      Gnathostomata
+  0.00	2	0	P4	117570	                        Teleostomi
+  0.00	2	0	P5	117571	                          Euteleostomi
+  0.00	2	0	P6	8287	                            Sarcopterygii
+  0.00	2	0	P7	1338369	                              Dipnotetrapodomorpha
+  0.00	2	0	P8	32523	                                Tetrapoda
+  0.00	2	0	P9	32524	                                  Amniota
+  0.00	2	0	C	40674	                                    Mammalia
+  0.00	2	0	C1	32525	                                      Theria
+  0.00	2	0	C2	9347	                                        Eutheria
+  0.00	2	0	C3	1437010	                                          Boreoeutheria
+  0.00	2	0	C4	314146	                                            Euarchontoglires
+  0.00	2	0	O	9443	                                              Primates
+  0.00	2	0	O1	376913	                                                Haplorrhini
+  0.00	2	0	O2	314293	                                                  Simiiformes
+  0.00	2	0	O3	9526	                                                    Catarrhini
+  0.00	2	0	O4	314295	                                                      Hominoidea
+  0.00	2	0	F	9604	                                                        Hominidae
+  0.00	2	0	F1	207598	                                                          Homininae
+  0.00	2	0	G	9605	                                                            Homo
+  0.00	2	2	S	9606	                                                              Homo sapiens
