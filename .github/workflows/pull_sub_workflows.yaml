@@ -1,0 +1,108 @@
+name: Pull in subworkflows
+on: workflow_dispatch
+
+jobs:
+  deploy:
+    concurrency: pull_sub_workflows
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone subworkflows
+        run: |
+          set -xe
+          #Make sure we have git installed
+          sudo apt update --fix-missing
+          sudo apt install -y git
+
+          #Git setup so we can actually push
+          git config --global user.email "it-support@gpas.global"
+          git config --global user.name "gpas-github-bot"
+
+          #We want to start in this repo
+          git clone https://${{secrets.PAT_TOKEN}}@github.com/GlobalPathogenAnalysisService/gpas-tb-workflow.git
+          cd gpas-tb-workflow
+
+          #Find out what the next version will be
+          #Based on SARS-CoV2_workflows actiont to do the same
+          #This requires an actual release first though
+          CURRENT_VERSION=$(git tag -l --sort=-version:refname | head -n 1)
+          echo "Current Version = $CURRENT_VERSION"
+          readarray -d . -t strarr <<< "$CURRENT_VERSION"
+          ((strarr[-1]+=1))
+          NEW_VERSION="${strarr[0]}"
+          for elem in "${strarr[@]:1}";do NEW_VERSION="$NEW_VERSION.$elem"; done
+          echo "This version = $NEW_VERSION"
+          
+          git checkout main
+          git checkout -b $NEW_VERSION-branch main
+
+          #Pull in all of the sub workflows
+          mkdir -p sub_workflows
+          cd sub_workflows
+
+          #Make sure there's nothing there to start with
+          rm -rf ./*
+
+          #Temp folder to make extracting files easy
+          mkdir -p tmp
+
+          for repo in $(cat ../includerepos.txt); do
+            #Clone the repo
+            git clone https://${{secrets.PAT_TOKEN}}@github.com/$repo.git
+
+            #Pull out the repo name (without `GlobalPathogenAnalysisService/`)
+            r=$(basename $repo)
+
+            cd $r
+          
+            #Use most recent tags
+            git fetch --all
+            git fetch --tags
+
+            pipeline_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
+            echo -n "$r = $pipeline_tag\n" >> ../pipeline_versions.txt
+            git checkout $pipeline_tag
+
+            cd ..
+
+            #Now we have the latest release, cut out everything not-required
+            rm -rf $r/.git*
+            
+            #If a minimal files has been declared, use it. Otherwise just take everything for now
+            if [ -s $r/minimal_files.txt ]; then
+              mv $r/* tmp
+
+              for f in $(cat tmp/minimal_files.txt); do
+                mv tmp/$f $r
+              done
+
+              #Now we have just the files required to run, clean up and move on
+              rm -rf tmp/*
+            fi
+
+            #Find which containers are used within the nextflow as a single \n separated line
+            #One version for `container = "<foo>"`, one for `container = '<foo>'`
+            echo -nE $(find $r | grep -E "\.nf" | xargs cat | grep -E '\w*container\ *=? \ *".*"' | cut -d \" -f 2 | uniq | sed 's/$/\\n/' | tr -d '\n') >> container_versions.txt
+            echo -nE $(find $r | grep -E "\.nf" | xargs cat | grep -E "\w*container\ *=? \ *'.*'" | cut -d \' -f 2 | uniq | sed 's/$/\\n/' | tr -d '\n') >> container_versions.txt
+          done
+
+          #Push if there is anything to push
+          git add . || echo "No changes to add"
+          git commit -m "[bot] test" || echo "No changes to commit"
+          git push origin $NEW_VERSION-branch || echo "No changes to push"
+
+          #Create a release
+          #The JSON here is disgusting because of the \"
+          # but it's the only way to allow variable interpolation within a JSON string
+          curl -L \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{secrets.PAT_TOKEN}}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/GlobalPathogenAnalysisService/gpas-tb-workflow/releases \
+            -d "{\"tag_name\": \"$NEW_VERSION\", \"target_commitish\": \"$NEW_VERSION-branch\", \"name\": \"$NEW_VERSION\", \"body\": \"# Pipeline versions\n$(cat pipeline_versions.txt)\n# Container versions\n$(cat container_versions.txt)\", \"draft\": false, \"prerelease\": false, \"generate_release_notes\": false}"
+          
+          #Clean up the branch now we're done with it
+          git push origin --delete $NEW_VERSION-branch
+
+
+          
