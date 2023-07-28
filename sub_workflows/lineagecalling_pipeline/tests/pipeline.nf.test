@@ -1,0 +1,28 @@
+nextflow_pipeline {
+    name 'Test lineagecalling Pipeline'
+    script 'main.nf'
+
+    test('Should run without failures') {
+        when {
+            params {
+                input_dir = 'test_data/absc_100k'
+            }
+        }
+
+        then {
+            assert workflow.success
+        }
+    }
+
+    test('Failing to specify input causes pipeline to fail.') {
+        when {
+            params {
+                input_dir = 'test_data_is_not_here/'
+            }
+        }
+
+        then {
+            assert workflow.failed // Ideally, this would check for a specific error
+        }
+    }
+}
