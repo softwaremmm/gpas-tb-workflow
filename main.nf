@@ -120,7 +120,7 @@ workflow {
         gnomonicus_ch = gnomonicus_workflow(clockwork_ch.final_vcf, params.tb_ref_genome, params.tb_amr_cat, params.tb_minor_alleles)
 
         //WP7
-        find_neighbour_5(clockwork_ch.final_fasta, "test", params.api_url, params.api_token)
+        fn5_ch = find_neighbour_5(clockwork_ch.final_fasta, "test", params.api_url, params.api_token)
 
         // WP8
         summary(gatekeeper_ch.gatekeeper_report, 
@@ -153,6 +153,7 @@ workflow {
             clockwork_ch.map_bam,
             clockwork_ch.map_bam_bai,
             gnomonicus_ch.gnomonicus_json,
+            fn5_ch.error_log,
         ) | write_species_to_bucket
 
         // copy fastq files to bucket
