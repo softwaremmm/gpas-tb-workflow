@@ -105,29 +105,48 @@ workflow {
         write_clean_reads_to_input(human_read_removal_ch.clean_fastq)
 
         // wp3
-        gatekeeper_ch = gatekeeper(human_read_removal_ch.clean_fastq, params.kraken2_db_path)
+        gatekeeper_ch = gatekeeper(human_read_removal_ch.clean_fastq, params.kraken2_db_path, 20000)
 
         kraken2_ch2 = gatekeeper_ch.kraken2_filtered_samples
 
         // wp4
         competitive_mapping_ch = competitive_mapping(kraken2_ch2, params.manifest)
         lineagecalling_ch = lineagecalling(gatekeeper_ch.kraken2_filtered_samples)
+        competitive_mapping_ch.cm_enough_reads.view{it}
+        if(competitive_mapping_ch.cm_enough_reads.first()) {
+            // WP5
+            clockwork_ch = clockwork(competitive_mapping_ch.cm_sample_paths, params.ref_files)
 
-        // WP5
-        clockwork_ch = clockwork(competitive_mapping_ch.cm_sample_paths, params.ref_files)
+            // WP6
+            gnomonicus_ch = gnomonicus_workflow(clockwork_ch.final_vcf, params.tb_ref_genome, params.tb_amr_cat, params.tb_minor_alleles)
+            gnomonicus_json = gnomonicus_ch.gnomonicus_json
 
-        // WP6
-        gnomonicus_ch = gnomonicus_workflow(clockwork_ch.final_vcf, params.tb_ref_genome, params.tb_amr_cat, params.tb_minor_alleles)
+            //WP7
+            fn5_ch = find_neighbour_5(clockwork_ch.final_fasta, "test", params.api_url, params.api_token)
 
-        //WP7
-        fn5_ch = find_neighbour_5(clockwork_ch.final_fasta, "test", params.api_url, params.api_token)
+            // copy species specific files to bucket
+            clockwork_ch.final_fasta.concat(
+                clockwork_ch.final_vcf,
+                clockwork_ch.cortex_vcf,
+                clockwork_ch.final_gvcf,
+                clockwork_ch.samtools_vcf,
+                clockwork_ch.map_bam,
+                clockwork_ch.map_bam_bai,
+                gnomonicus_ch.gnomonicus_json,
+                fn5_ch.error_log,
+                clockwork_ch.tb_clockwork_report_json,
+                clockwork_ch.tb_clockwork_error_json,
+            ) | write_species_to_bucket
+        } else {
+            gnomonicus_json = Channel.empty()
+        }
 
         // WP8
         summary(gatekeeper_ch.gatekeeper_report, 
             competitive_mapping_ch.cm_report, 
             lineagecalling_ch.json_report, 
-            gnomonicus_ch.gnomonicus_json)
-
+            gnomonicus_json) 
+        
         //copy to bucket
         gatekeeper_ch.gatekeeper_report.concat(
             gatekeeper_ch.kraken2_error,
@@ -137,24 +156,10 @@ workflow {
             // call_wp4.out.competitivemapping_error_json,
             // lineagecalling_ch.lc_error_json,
             lineagecalling_ch.json_report,
-            clockwork_ch.tb_clockwork_report_json,
-            clockwork_ch.tb_clockwork_error_json,
             summary.out.main_report,
             summary.out.error_report,
             human_read_removal_ch.hostile_report,
         ) | write_to_bucket
-
-        // copy species specific files to bucket
-        clockwork_ch.final_fasta.concat(
-            clockwork_ch.final_vcf,
-            clockwork_ch.cortex_vcf,
-            clockwork_ch.final_gvcf,
-            clockwork_ch.samtools_vcf,
-            clockwork_ch.map_bam,
-            clockwork_ch.map_bam_bai,
-            gnomonicus_ch.gnomonicus_json,
-            fn5_ch.error_log,
-        ) | write_species_to_bucket
 
         // copy fastq files to bucket
         gatekeeper_ch.kraken2_filtered_samples.concat(
