@@ -17,16 +17,18 @@ A machine readable list of the repositories required to run the full pipeline (n
 
 Work package **1** is about upload, and **8** is about integration, so they're not in this table.
 
-## Installation
+## Prerequisites
 
-Install nextflow. This requires Java 11 or later (OpenJDK, `apt install default-jre`, on Ubuntu works).
+Install NextFlow. This requires Java 11 or later (OpenJDK, `apt install default-jre`, on Ubuntu works).
 
 From https://www.nextflow.io/docs/latest/getstarted.html:
 ```
 wget -qO- https://get.nextflow.io | bash
 ```
 
-## Running
+Install Docker Desktop.
+
+## Installation
 
 To run this workflow, clone it:
 
