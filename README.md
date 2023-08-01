@@ -47,12 +47,20 @@ This will use the samples from the `data/uploads/1/1` folder as `params.sample_i
 If you want to use different samples then create a structure under `data/uploads` to put your two fastq files into. e.g.
 
 If you use sample_id 5 and run_id 1 then you would have the folder structure
+
 ```
 inputs
-    └── 5
-        └── 1
+    └── 5
+        └── 1
 ```
-And would use the following command to run the nextflow
+
+And would use the following command to run the nextflow:
+
 ```bash
-nextflow run . -profile local --sample_id 5 --run_id 1
+sudo nextflow run . -profile local --sample_id 5 --run_id 1 --api_token $(cat ./NEXTFLOW_API_KEY)
 ```
+
+`NEXTFLOW_API_KEY` is a file containing the API needed for FN5 to communicate with the database it needs in order to function.
+It is also important to only use `run_id`s from an approved list as these are unique over **all** runs and cannot be reused.
+
+`sudo` is recommended.
