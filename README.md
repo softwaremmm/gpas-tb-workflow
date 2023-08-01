@@ -60,16 +60,18 @@ nextflow run . -profile local
 
 This will use the samples from the `data/uploads/1/` folder as `params.sample_id` and `params.run_id` will both default to 1
 
-If you want to use different samples then create a structure under `data/uploads` to put your two fastq files into. e.g.
+If you want to use different samples then create a structure under `data/uploads` to put your two FASTQ files into. FASTQ files must adopt the pipeline standard file naming convention i.e. `*_{1,2}.fastq.gz`
 
-If you use sample_id 5 and run_id 1 then you would have the folder structure
+e.g. if you use sample_id 5 and run_id 1 then you would have the folder structure
 
 ```
 uploads
     └── 5
+        ├── bob_1.fastq.gz
+        └── bob_2.fastq.gz
 ```
 
-And would use the following command to run the nextflow:
+And would use the following command to run the NextFlow:
 
 ```bash
 sudo nextflow run . -profile local --sample_id 5 --run_id 1 --api_token $(cat ./NEXTFLOW_API_KEY)
