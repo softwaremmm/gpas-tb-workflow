@@ -29,15 +29,14 @@ indir = "$params.inputs_bucket/$params.sample_id/$params.run_id"
 updir = "$params.uploads_bucket/$params.sample_id"
 reldir = "$params.relatedness_bucket/$params.sample_id/$params.run_id"
 
-// files for the current run locations
-dirty_reads = "$updir/*_{1,2}.fastq.gz"
-clean_reads = "$indir/*_{1,2}.fastq.gz"
+// knowledge parameters
 params.kraken2_db_path = "${params.knowledge_bucket}/kraken2_db"
 params.manifest = "${params.knowledge_bucket}/manifest/target_101_new.fasta"
 params.ref_files = "${params.knowledge_bucket}/clockwork/tb/Ref_prepare"
 params.tb_ref_genome = "${params.knowledge_bucket}/tuberculosis_amr_catalogues/catalogues/NC_000962.3/NC_000962.3.gbk"
 params.tb_amr_cat = "${params.knowledge_bucket}/tuberculosis_amr_catalogues/catalogues/NC_000962.3/NC_000962.3_WHO-UCN-GTB-PCI-2021.7_v1.0_GARC1_RUS.csv"
 params.tb_minor_alleles = "${params.knowledge_bucket}/minor_alleles.txt"
+params.human_genome_dir = "${params.knowledge_bucket}/human-genome"
 
 // sub workflows import
 subwork_folder = "${projectDir}/sub_workflows"
@@ -48,9 +47,21 @@ include { competitive_mapping } from "${subwork_folder}/competitivemapping_pipel
 include { lineagecalling } from "${subwork_folder}/lineagecalling_pipeline/main.nf"
 include { gnomonicus_workflow } from "${subwork_folder}/tb-predict-pipeline/main.nf"
 include { summary } from "${subwork_folder}/summary_pipeline/main.nf"
+include { human_read_removal } from "${subwork_folder}/human-read-removal_pipeline/src/workflow/human_read_removal.nf"
 
+dirty_reads_ch = Channel.fromFilePairs("${updir}/*_{1,2}.fastq.gz", checkIfExists:true, flat:true)
 
-input_reads = Channel.fromFilePairs("$clean_reads", checkIfExists:true, flat:true)
+process write_clean_reads_to_input {
+    input:
+        tuple val(x), path(sample1), path(sample2)
+
+    script:
+        """
+        mkdir -p ${indir}
+        cp ${sample1} ${indir}
+        cp ${sample2} ${indir}
+        """
+}
 
 process write_to_bucket {
     input:
@@ -89,30 +100,53 @@ process write_samples_to_bucket {
 workflow {
     main:
 
+        // wp2
+        human_read_removal_ch = human_read_removal(dirty_reads_ch, Channel.fromPath(params.human_genome_dir))
+        write_clean_reads_to_input(human_read_removal_ch.clean_fastq)
+
         // wp3
-        gatekeeper_ch = gatekeeper(input_reads, params.kraken2_db_path)
+        gatekeeper_ch = gatekeeper(human_read_removal_ch.clean_fastq, params.kraken2_db_path, 20000)
 
         kraken2_ch2 = gatekeeper_ch.kraken2_filtered_samples
 
         // wp4
         competitive_mapping_ch = competitive_mapping(kraken2_ch2, params.manifest)
         lineagecalling_ch = lineagecalling(gatekeeper_ch.kraken2_filtered_samples)
+        competitive_mapping_ch.cm_enough_reads.view{it}
+        if(competitive_mapping_ch.cm_enough_reads.first()) {
+            // WP5
+            clockwork_ch = clockwork(competitive_mapping_ch.cm_sample_paths, params.ref_files)
 
-        // WP5
-        clockwork_ch = clockwork(competitive_mapping_ch.cm_sample_paths, params.ref_files)
+            // WP6
+            gnomonicus_ch = gnomonicus_workflow(clockwork_ch.final_vcf, params.tb_ref_genome, params.tb_amr_cat, params.tb_minor_alleles)
+            gnomonicus_json = gnomonicus_ch.gnomonicus_json
 
-        // WP6
-        gnomonicus_ch = gnomonicus_workflow(clockwork_ch.final_vcf, params.tb_ref_genome, params.tb_amr_cat, params.tb_minor_alleles)
+            //WP7
+            fn5_ch = find_neighbour_5(clockwork_ch.final_fasta, "test", params.api_url, params.api_token)
 
-        //WP7
-        find_neighbour_5(clockwork_ch.final_fasta, "test", params.api_url, params.api_token)
+            // copy species specific files to bucket
+            clockwork_ch.final_fasta.concat(
+                clockwork_ch.final_vcf,
+                clockwork_ch.cortex_vcf,
+                clockwork_ch.final_gvcf,
+                clockwork_ch.samtools_vcf,
+                clockwork_ch.map_bam,
+                clockwork_ch.map_bam_bai,
+                gnomonicus_ch.gnomonicus_json,
+                fn5_ch.error_log,
+                clockwork_ch.tb_clockwork_report_json,
+                clockwork_ch.tb_clockwork_error_json,
+            ) | write_species_to_bucket
+        } else {
+            gnomonicus_json = Channel.empty()
+        }
 
         // WP8
         summary(gatekeeper_ch.gatekeeper_report, 
             competitive_mapping_ch.cm_report, 
             lineagecalling_ch.json_report, 
-            gnomonicus_ch.gnomonicus_json)
-
+            gnomonicus_json) 
+        
         //copy to bucket
         gatekeeper_ch.gatekeeper_report.concat(
             gatekeeper_ch.kraken2_error,
@@ -122,22 +156,10 @@ workflow {
             // call_wp4.out.competitivemapping_error_json,
             // lineagecalling_ch.lc_error_json,
             lineagecalling_ch.json_report,
-            clockwork_ch.tb_clockwork_report_json,
-            clockwork_ch.tb_clockwork_error_json,
             summary.out.main_report,
             summary.out.error_report,
+            human_read_removal_ch.hostile_report,
         ) | write_to_bucket
-
-        // copy species specific files to bucket
-        clockwork_ch.final_fasta.concat(
-            clockwork_ch.final_vcf,
-            clockwork_ch.cortex_vcf,
-            clockwork_ch.final_gvcf,
-            clockwork_ch.samtools_vcf,
-            clockwork_ch.map_bam,
-            clockwork_ch.map_bam_bai,
-            gnomonicus_ch.gnomonicus_json,
-        ) | write_species_to_bucket
 
         // copy fastq files to bucket
         gatekeeper_ch.kraken2_filtered_samples.concat(
