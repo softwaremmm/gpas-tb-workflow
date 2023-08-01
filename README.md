@@ -50,6 +50,8 @@ cd sub-workflows
 git clone <repository>
 ```
 
+The [clone_sub_workflows](./clone_sub_workflows.sh) script might help with this in development.
+
 ## Running the Pipeline Locally
 
 Running the nextflow pipeline you can run as:
