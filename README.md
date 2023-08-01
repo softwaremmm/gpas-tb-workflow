@@ -36,6 +36,20 @@ To run this workflow, clone it:
 git clone https://github.com/GlobalPathogenAnalysisService/gpas-tb-workflow.git
 ```
 
+create a directory called `sub-workflows/` inside the root of the clone e.g.
+
+```
+cd gpas-tb-workflow
+mkdir sub-workflows
+```
+
+clone each of the sub workflows from the table above into this directory e.g.
+
+```
+cd sub-workflows
+git clone <repository>
+```
+
 ## Running the Pipeline Locally
 
 Running the nextflow pipeline you can run as:
