@@ -36,7 +36,7 @@ To run this workflow, clone it:
 git clone https://github.com/GlobalPathogenAnalysisService/gpas-tb-workflow.git
 ```
 
-create a directory called `sub-workflows/` inside the root of the clone e.g.
+create a directory called `sub_workflows/` inside the root of the clone e.g.
 
 ```
 cd gpas-tb-workflow
