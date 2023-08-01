@@ -56,5 +56,3 @@ And would use the following command to run the nextflow
 ```bash
 nextflow run . -profile local --sample_id 5 --run_id 1
 ```
-
-Please note that WP7 does not have a dummy as it outputs nothing to the output bucket
