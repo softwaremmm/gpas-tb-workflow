@@ -1,3 +1,4 @@
+GlobalPathogenAnalysisService/human-read-removal_pipeline
 GlobalPathogenAnalysisService/gatekeeper_pipeline
 GlobalPathogenAnalysisService/lineagecalling_pipeline
 GlobalPathogenAnalysisService/competitivemapping_pipeline
@@ -5,4 +6,3 @@ GlobalPathogenAnalysisService/clockwork_pipeline
 GlobalPathogenAnalysisService/tb-predict-pipeline
 GlobalPathogenAnalysisService/fn5_pipeline
 GlobalPathogenAnalysisService/summary_pipeline
-GlobalPathogenAnalysisService/human-read-removal_pipeline
