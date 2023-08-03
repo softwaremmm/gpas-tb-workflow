@@ -109,37 +109,43 @@ workflow {
 
         kraken2_ch2 = gatekeeper_ch.kraken2_filtered_samples
 
-        // wp4
+        // Speciation
         competitive_mapping_ch = competitive_mapping(kraken2_ch2, params.manifest)
-        lineagecalling_ch = lineagecalling(gatekeeper_ch.kraken2_filtered_samples)
-        competitive_mapping_ch.cm_enough_reads.view{it}
-        if(competitive_mapping_ch.cm_enough_reads.first()) {
-            // WP5
-            clockwork_ch = clockwork(competitive_mapping_ch.cm_sample_paths, params.ref_files)
+        lineagecalling_ch = lineagecalling(kraken2_ch2)
 
-            // WP6
-            gnomonicus_ch = gnomonicus_workflow(clockwork_ch.final_vcf, params.tb_ref_genome, params.tb_amr_cat, params.tb_minor_alleles)
-            gnomonicus_json = gnomonicus_ch.gnomonicus_json
 
-            //WP7
-            fn5_ch = find_neighbour_5(clockwork_ch.final_fasta, "test", params.api_url, params.api_token)
+        competitive_mapping_ch = competitive_mapping(gatekeeper_ch.kraken2_filtered_samples, params.manifest)
+        
+        //Create a new channel if the condition to test (enough reads) and the channel to use to proceed the execution (paths)
+        competitive_mapping_ch_output = competitive_mapping_ch.cm_sample_paths.merge(competitive_mapping_ch.cm_enough_reads)
 
-            // copy species specific files to bucket
-            clockwork_ch.final_fasta.concat(
-                clockwork_ch.final_vcf,
-                clockwork_ch.cortex_vcf,
-                clockwork_ch.final_gvcf,
-                clockwork_ch.samtools_vcf,
-                clockwork_ch.map_bam,
-                clockwork_ch.map_bam_bai,
-                gnomonicus_ch.gnomonicus_json,
-                fn5_ch.error_log,
-                clockwork_ch.tb_clockwork_report_json,
-                clockwork_ch.tb_clockwork_error_json,
-            ) | write_species_to_bucket
-        } else {
-            gnomonicus_json = Channel.empty()
-        }
+        cm_enough_reads_ch = competitive_mapping_ch_output
+            .filter { it[3] == "true"} //A new channel will be created only if the it[3] (enough reads) is true
+            .map(it -> [it[0], it[1], it[2]]) //The value for the new channel will have a tuble of sample name, path1, path2
+
+        // WP5 -> It will only be called and proceed the execution if cm_enough_reads_ch is defined. 
+        clockwork_ch = clockwork(cm_enough_reads_ch, params.ref_files)
+
+        // WP6
+        gnomonicus_ch = gnomonicus_workflow(clockwork_ch.final_vcf, params.tb_ref_genome, params.tb_amr_cat, params.tb_minor_alleles)
+        gnomonicus_json = gnomonicus_ch.gnomonicus_json
+
+        //WP7
+        fn5_ch = find_neighbour_5(clockwork_ch.final_fasta, "test", params.api_url, params.api_token)
+
+        // copy species specific files to bucket
+        clockwork_ch.final_fasta.concat(
+            clockwork_ch.final_vcf,
+            clockwork_ch.cortex_vcf,
+            clockwork_ch.final_gvcf,
+            clockwork_ch.samtools_vcf,
+            clockwork_ch.map_bam,
+            clockwork_ch.map_bam_bai,
+            gnomonicus_ch.gnomonicus_json,
+            fn5_ch.error_log,
+            clockwork_ch.tb_clockwork_report_json,
+            clockwork_ch.tb_clockwork_error_json,
+        ) | write_species_to_bucket
 
         // WP8
         summary(gatekeeper_ch.gatekeeper_report, 
