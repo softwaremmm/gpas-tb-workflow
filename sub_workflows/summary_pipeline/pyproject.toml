@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools~=68.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "summary_pipeline"
+description = "Summarises output from GPAS sub-workflows (part of WP8)."
+classifiers = [
+    "Environment :: Console",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+]
+requires-python = "~=3.11"
+version = "0.0.1dev"
+
+[project.scripts]
+summary_json = "summary.summarise:summarise"
