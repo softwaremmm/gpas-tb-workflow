@@ -112,20 +112,16 @@ workflow {
         // Speciation
         competitive_mapping_ch = competitive_mapping(kraken2_ch2, params.manifest)
         lineagecalling_ch = lineagecalling(kraken2_ch2)
-
-
-        competitive_mapping_ch = competitive_mapping(gatekeeper_ch.kraken2_filtered_samples, params.manifest)
-        
         //Create a new channel if the condition to test (enough reads) and the channel to use to proceed the execution (paths)
         competitive_mapping_ch_output = competitive_mapping_ch.cm_sample_paths.merge(competitive_mapping_ch.cm_enough_reads)
-
+ 
         cm_enough_reads_ch = competitive_mapping_ch_output
             .filter { it[3] == "true"} //A new channel will be created only if the it[3] (enough reads) is true
             .map(it -> [it[0], it[1], it[2]]) //The value for the new channel will have a tuble of sample name, path1, path2
 
         // WP5 -> It will only be called and proceed the execution if cm_enough_reads_ch is defined. 
         clockwork_ch = clockwork(cm_enough_reads_ch, params.ref_files)
-
+        
         // WP6
         gnomonicus_ch = gnomonicus_workflow(clockwork_ch.final_vcf, params.tb_ref_genome, params.tb_amr_cat, params.tb_minor_alleles)
         gnomonicus_json = gnomonicus_ch.gnomonicus_json
