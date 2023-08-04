@@ -124,7 +124,6 @@ workflow {
         
         // WP6
         gnomonicus_ch = gnomonicus_workflow(clockwork_ch.final_vcf, params.tb_ref_genome, params.tb_amr_cat, params.tb_minor_alleles)
-        gnomonicus_json = gnomonicus_ch.gnomonicus_json
 
         //WP7
         fn5_ch = find_neighbour_5(clockwork_ch.final_fasta, "test", params.api_url, params.api_token)
@@ -147,7 +146,7 @@ workflow {
         summary(gatekeeper_ch.gatekeeper_report, 
             competitive_mapping_ch.cm_report, 
             lineagecalling_ch.json_report, 
-            gnomonicus_json) 
+            gnomonicus_ch.gnomonicus_json) 
         
         //copy to bucket
         gatekeeper_ch.gatekeeper_report.concat(
