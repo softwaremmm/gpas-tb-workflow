@@ -105,7 +105,7 @@ workflow {
         write_clean_reads_to_input(human_read_removal_ch.clean_fastq)
 
         // wp3
-        gatekeeper_ch = gatekeeper(human_read_removal_ch.clean_fastq, params.kraken2_db_path)
+        gatekeeper_ch = gatekeeper(human_read_removal_ch.clean_fastq, params.kraken2_db_path, 20000)
 
         kraken2_ch2 = gatekeeper_ch.kraken2_filtered_samples
 
