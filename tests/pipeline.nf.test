@@ -1,0 +1,34 @@
+nextflow_pipeline {
+
+    name "Test tb pipeline"
+    script "../main.nf"
+
+
+
+    test("Pipeline should not continue the run if Gatekeeper returns FALSE to enough number of reads") {
+
+        when {
+            params {
+              sample_id = 1
+              run_id  = 1
+              updir = "samples/local/h37rv_tb/1"
+              indir = "samples/local/h37rv_tb/1/1"
+              api_token = "token"
+              kraken2_db_path = "/mnt/volume_data/datasets_full/standard_05-06-2023"
+            }
+        }
+
+        then {
+
+           assert workflow.success
+
+           assert workflow.trace.succeeded().size() == 6
+
+        }
+
+    }
+
+
+
+
+}
