@@ -46,8 +46,9 @@ include { gatekeeper } from "${subwork_folder}/gatekeeper_pipeline/main.nf"
 include { competitive_mapping } from "${subwork_folder}/competitivemapping_pipeline/main.nf"
 include { lineagecalling } from "${subwork_folder}/lineagecalling_pipeline/main.nf"
 include { gnomonicus_workflow } from "${subwork_folder}/tb-predict-pipeline/main.nf"
-include { summary as summary_3 } from "${subwork_folder}/summary_pipeline/main.nf"
-include { summary as summary_4 } from "${subwork_folder}/summary_pipeline/main.nf"
+include { summary as summary_1_inputs } from "${subwork_folder}/summary_pipeline/main.nf"
+include { summary as summary_3_inputs } from "${subwork_folder}/summary_pipeline/main.nf"
+include { summary as summary_4_inputs } from "${subwork_folder}/summary_pipeline/main.nf"
 include { human_read_removal } from "${subwork_folder}/human-read-removal_pipeline/src/workflow/human_read_removal.nf"
 
 dirty_reads_ch = Channel.fromFilePairs("${updir}/*_{1,2}.fastq.gz", checkIfExists:true, flat:true)
@@ -102,17 +103,17 @@ workflow {
     main:
 
         // wp2
-        human_read_removal_ch = human_read_removal(dirty_reads_ch, Channel.fromPath(params.human_genome_dir))
-        write_clean_reads_to_input(human_read_removal_ch.clean_fastq)
+        //human_read_removal_ch = human_read_removal(dirty_reads_ch, Channel.fromPath(params.human_genome_dir))
+        //write_clean_reads_to_input(human_read_removal_ch.clean_fastq)
 
         // wp3
-        gatekeeper_ch = gatekeeper(human_read_removal_ch.clean_fastq, params.kraken2_db_path)
+        //gatekeeper_ch = gatekeeper(human_read_removal_ch.clean_fastq, params.kraken2_db_path)
 
-        kraken2_ch2 = gatekeeper_ch.kraken2_filtered_samples
+        //kraken2_ch2 = gatekeeper_ch.kraken2_filtered_samples
 
         // Speciation
-        competitive_mapping_ch = competitive_mapping(kraken2_ch2, params.manifest)
-        lineagecalling_ch = lineagecalling(kraken2_ch2)
+        competitive_mapping_ch = competitive_mapping(dirty_reads_ch, params.manifest)
+        lineagecalling_ch = lineagecalling(dirty_reads_ch)
         //Create a new channel if the condition to test (enough reads) and the channel to use to proceed the execution (paths)
         competitive_mapping_ch_output = competitive_mapping_ch.cm_sample_paths.merge(competitive_mapping_ch.cm_enough_reads)
                 
@@ -120,11 +121,13 @@ workflow {
 
         cm_json_enough
             .branch { enough_reads: it[1] == "true"
-                      not_enough_reads: it[1] == "false"}
+                                    return it[0]
+                      not_enough_reads: it[1] == "false"
+                                    return it[0]}
             .set{ cm_json }
         
-        cm_json.enough_reads.view{ it[0] }
-        cm_json.not_enough_reads.view{ it[0] }
+        cm_json.enough_reads.view()
+        cm_json.not_enough_reads.view()
 
         cm_enough_reads_ch = competitive_mapping_ch_output
             .filter { it[3] == "true"} //A new channel will be created only if the it[3] (enough reads) is true
@@ -155,15 +158,16 @@ workflow {
         ) | write_species_to_bucket */
 
         // WP8
-        summary_4(gatekeeper_ch.gatekeeper_report, 
+        summary_3_inputs(lineagecalling_ch.json_report, 
+            cm_json.not_enough_reads, 
+            lineagecalling_ch.json_report,
+            "/EMPTY")
+        
+        summary_4_inputs(lineagecalling_ch.json_report, 
             cm_json.enough_reads, 
             lineagecalling_ch.json_report, 
             gnomonicus_ch.gnomonicus_json) 
-        
-        summary_3(gatekeeper_ch.gatekeeper_report, 
-            cm_json.not_enough_reads, 
-            lineagecalling_ch.json_report,
-            "EMPTY")
+              
         
 /*         //copy to bucket
         gatekeeper_ch.gatekeeper_report.concat(
