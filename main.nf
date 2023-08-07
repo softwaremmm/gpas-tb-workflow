@@ -103,17 +103,17 @@ workflow {
     main:
 
         // wp2
-        //human_read_removal_ch = human_read_removal(dirty_reads_ch, Channel.fromPath(params.human_genome_dir))
-        //write_clean_reads_to_input(human_read_removal_ch.clean_fastq)
+        human_read_removal_ch = human_read_removal(dirty_reads_ch, Channel.fromPath(params.human_genome_dir))
+        write_clean_reads_to_input(human_read_removal_ch.clean_fastq)
 
         // wp3
-        //gatekeeper_ch = gatekeeper(human_read_removal_ch.clean_fastq, params.kraken2_db_path)
+        gatekeeper_ch = gatekeeper(human_read_removal_ch.clean_fastq, params.kraken2_db_path)
 
-        //kraken2_ch2 = gatekeeper_ch.kraken2_filtered_samples
+        kraken2_ch2 = gatekeeper_ch.kraken2_filtered_samples
 
         // Speciation
-        competitive_mapping_ch = competitive_mapping(dirty_reads_ch, params.manifest)
-        lineagecalling_ch = lineagecalling(dirty_reads_ch)
+        competitive_mapping_ch = competitive_mapping(kraken2_ch2, params.manifest)
+        lineagecalling_ch = lineagecalling(kraken2_ch2)
         //Create a new channel if the condition to test (enough reads) and the channel to use to proceed the execution (paths)
         competitive_mapping_ch_output = competitive_mapping_ch.cm_sample_paths.merge(competitive_mapping_ch.cm_enough_reads)
                 
@@ -143,7 +143,7 @@ workflow {
         //WP7
         //fn5_ch = find_neighbour_5(clockwork_ch.final_fasta, "test", params.api_url, params.api_token)
 
-/*         // copy species specific files to bucket
+        // copy species specific files to bucket
         clockwork_ch.final_fasta.concat(
             clockwork_ch.final_vcf,
             clockwork_ch.cortex_vcf,
@@ -155,21 +155,21 @@ workflow {
             //fn5_ch.error_log,
             clockwork_ch.tb_clockwork_report_json,
             clockwork_ch.tb_clockwork_error_json,
-        ) | write_species_to_bucket */
+        ) | write_species_to_bucket
 
         // WP8
-        summary_3_inputs(lineagecalling_ch.json_report, 
+        summary_3_inputs(gatekeeper_ch.gatekeeper_report, 
             cm_json.not_enough_reads, 
             lineagecalling_ch.json_report,
             "/EMPTY")
         
-        summary_4_inputs(lineagecalling_ch.json_report, 
+        summary_4_inputs(gatekeeper_ch.gatekeeper_report, 
             cm_json.enough_reads, 
             lineagecalling_ch.json_report, 
             gnomonicus_ch.gnomonicus_json) 
               
         
-/*         //copy to bucket
+        //copy to bucket
         gatekeeper_ch.gatekeeper_report.concat(
             gatekeeper_ch.kraken2_error,
             gatekeeper_ch.fastp_report,
@@ -178,15 +178,17 @@ workflow {
             // call_wp4.out.competitivemapping_error_json,
             // lineagecalling_ch.lc_error_json,
             lineagecalling_ch.json_report,
-            summary.out.main_report,
-            summary.out.error_report,
+            summary_3_inputs.out.main_report,
+            summary_3_inputs.out.error_report,
+            summary_4_inputs.out.main_report,
+            summary_4_inputs.out.error_report,
             human_read_removal_ch.hostile_report,
-        ) | write_to_bucket */
+        ) | write_to_bucket
 
-/*         // copy fastq files to bucket
+        // copy fastq files to bucket
         gatekeeper_ch.kraken2_filtered_samples.concat(
             gatekeeper_ch.kraken2_outputs,
             competitive_mapping_ch.cm_sample_paths,
-        ) | write_samples_to_bucket */
+        ) | write_samples_to_bucket
 
 }
