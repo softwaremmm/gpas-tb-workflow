@@ -46,7 +46,8 @@ include { gatekeeper } from "${subwork_folder}/gatekeeper_pipeline/main.nf"
 include { competitive_mapping } from "${subwork_folder}/competitivemapping_pipeline/main.nf"
 include { lineagecalling } from "${subwork_folder}/lineagecalling_pipeline/main.nf"
 include { gnomonicus_workflow } from "${subwork_folder}/tb-predict-pipeline/main.nf"
-include { summary } from "${subwork_folder}/summary_pipeline/main.nf"
+include { summary as summary_3 } from "${subwork_folder}/summary_pipeline/main.nf"
+include { summary as summary_4 } from "${subwork_folder}/summary_pipeline/main.nf"
 include { human_read_removal } from "${subwork_folder}/human-read-removal_pipeline/src/workflow/human_read_removal.nf"
 
 dirty_reads_ch = Channel.fromFilePairs("${updir}/*_{1,2}.fastq.gz", checkIfExists:true, flat:true)
@@ -114,7 +115,17 @@ workflow {
         lineagecalling_ch = lineagecalling(kraken2_ch2)
         //Create a new channel if the condition to test (enough reads) and the channel to use to proceed the execution (paths)
         competitive_mapping_ch_output = competitive_mapping_ch.cm_sample_paths.merge(competitive_mapping_ch.cm_enough_reads)
- 
+                
+        cm_json_enough = competitive_mapping_ch.cm_report.merge(competitive_mapping_ch.cm_enough_reads)
+
+        cm_json_enough
+            .branch { enough_reads: it[1] == "true"
+                      not_enough_reads: it[1] == "false"}
+            .set{ cm_json }
+        
+        cm_json.enough_reads.view{ it[0] }
+        cm_json.not_enough_reads.view{ it[0] }
+
         cm_enough_reads_ch = competitive_mapping_ch_output
             .filter { it[3] == "true"} //A new channel will be created only if the it[3] (enough reads) is true
             .map(it -> [it[0], it[1], it[2]]) //The value for the new channel will have a tuble of sample name, path1, path2
@@ -127,9 +138,9 @@ workflow {
         gnomonicus_json = gnomonicus_ch.gnomonicus_json
 
         //WP7
-        fn5_ch = find_neighbour_5(clockwork_ch.final_fasta, "test", params.api_url, params.api_token)
+        //fn5_ch = find_neighbour_5(clockwork_ch.final_fasta, "test", params.api_url, params.api_token)
 
-        // copy species specific files to bucket
+/*         // copy species specific files to bucket
         clockwork_ch.final_fasta.concat(
             clockwork_ch.final_vcf,
             clockwork_ch.cortex_vcf,
@@ -138,18 +149,23 @@ workflow {
             clockwork_ch.map_bam,
             clockwork_ch.map_bam_bai,
             gnomonicus_ch.gnomonicus_json,
-            fn5_ch.error_log,
+            //fn5_ch.error_log,
             clockwork_ch.tb_clockwork_report_json,
             clockwork_ch.tb_clockwork_error_json,
-        ) | write_species_to_bucket
+        ) | write_species_to_bucket */
 
         // WP8
-        summary(gatekeeper_ch.gatekeeper_report, 
-            competitive_mapping_ch.cm_report, 
+        summary_4(gatekeeper_ch.gatekeeper_report, 
+            cm_json.enough_reads, 
             lineagecalling_ch.json_report, 
-            gnomonicus_json) 
+            gnomonicus_ch.gnomonicus_json) 
         
-        //copy to bucket
+        summary_3(gatekeeper_ch.gatekeeper_report, 
+            cm_json.not_enough_reads, 
+            lineagecalling_ch.json_report,
+            "EMPTY")
+        
+/*         //copy to bucket
         gatekeeper_ch.gatekeeper_report.concat(
             gatekeeper_ch.kraken2_error,
             gatekeeper_ch.fastp_report,
@@ -161,12 +177,12 @@ workflow {
             summary.out.main_report,
             summary.out.error_report,
             human_read_removal_ch.hostile_report,
-        ) | write_to_bucket
+        ) | write_to_bucket */
 
-        // copy fastq files to bucket
+/*         // copy fastq files to bucket
         gatekeeper_ch.kraken2_filtered_samples.concat(
             gatekeeper_ch.kraken2_outputs,
             competitive_mapping_ch.cm_sample_paths,
-        ) | write_samples_to_bucket
+        ) | write_samples_to_bucket */
 
 }
