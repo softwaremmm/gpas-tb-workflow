@@ -172,3 +172,5 @@ trace-20230718-36090998.txt
 tests/.nf-test/
 tests/tests/
 tests/.nf-test/
+
+!sub_workflows/**
