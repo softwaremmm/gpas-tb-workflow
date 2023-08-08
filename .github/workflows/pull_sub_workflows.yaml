@@ -71,8 +71,10 @@ jobs:
             if [ -s $r/minimal_files.txt ]; then
               mv $r/* tmp
 
-              for f in $(cat tmp/minimal_files.txt); do
-                mv tmp/$f $r
+              for f in $(cat tmp/minimal_files.txt);do
+                #Retain dir structure
+                mkdir -p $r/$(dirname $f)
+                cp tmp/$f $r/$(dirname $f)
               done
 
               #Now we have just the files required to run, clean up and move on
@@ -87,7 +89,7 @@ jobs:
 
           #Push if there is anything to push
           git add . || echo "No changes to add"
-          git commit -m "[bot] test" || echo "No changes to commit"
+          git commit -m "[bot] Update WP8 to $NEW_VERSION" || echo "No changes to commit"
           git push origin $NEW_VERSION-branch || echo "No changes to push"
 
           #Create a release
