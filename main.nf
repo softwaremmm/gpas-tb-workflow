@@ -105,7 +105,7 @@ workflow {
         write_clean_reads_to_input(human_read_removal_ch.clean_fastq)
 
         // wp3
-        gatekeeper_ch = gatekeeper(human_read_removal_ch.clean_fastq, params.kraken2_db_path)
+        gatekeeper_ch = gatekeeper(human_read_removal_ch, params.kraken2_db_path)
 
         kraken2_ch2 = gatekeeper_ch.kraken2_filtered_samples
 
@@ -143,12 +143,12 @@ workflow {
             clockwork_ch.tb_clockwork_error_json,
         ) | write_species_to_bucket
 
-        // WP8
-        summary(gatekeeper_ch.gatekeeper_report, 
-            competitive_mapping_ch.cm_report, 
-            lineagecalling_ch.json_report, 
-            gnomonicus_json) 
-        
+        gatekeeper_ch.gatekeeper_report.concat(
+            competitive_mapping_ch.cm_report,
+            lineagecalling_ch.json_report,
+            gnomonicus_ch.gnomonicus_json
+        ).toList() | summary // WP8
+
         //copy to bucket
         gatekeeper_ch.gatekeeper_report.concat(
             gatekeeper_ch.kraken2_error,
