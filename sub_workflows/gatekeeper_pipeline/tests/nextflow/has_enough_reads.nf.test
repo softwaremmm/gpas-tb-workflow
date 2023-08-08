@@ -1,0 +1,40 @@
+nextflow_process {
+
+    name "Test Process has_enough_reads"
+    script "main.nf"
+    process "has_enough_reads"
+
+    test("Should return true if json has no error message") {
+
+        when {
+
+            process{
+                """
+                input[0] = file("tests/nextflow/json/do_not_have_error_message.json")
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assert process.out[0][0] == 'true'
+        }
+    }
+
+    test("Should return false if json has error message") {
+
+        when {
+
+            process{
+                """
+                input[0] = file("tests/nextflow/json/has_error_message.json")
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assert process.out[0][0] == 'false'
+        }
+    }
+}

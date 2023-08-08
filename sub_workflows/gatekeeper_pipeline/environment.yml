@@ -1,0 +1,10 @@
+name: gk-env
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - jq=1.6
+  - fqtools=2.0
+  - fastp=0.23.4
+  - pandas~=2.0
+  - biopython=1.78
