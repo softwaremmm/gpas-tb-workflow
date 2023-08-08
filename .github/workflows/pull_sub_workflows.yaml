@@ -35,6 +35,9 @@ jobs:
           git checkout main
           git checkout -b $NEW_VERSION-branch main
 
+          #Remove the contents of the dummy data dir
+          rm -rf data/*
+
           #Pull in all of the sub workflows
           mkdir -p sub_workflows
           cd sub_workflows
