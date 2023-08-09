@@ -9,9 +9,9 @@ jobs:
       - name: Clone subworkflows
         run: |
           set -xe
-          #Make sure we have git installed
+          #Make sure we have git, tar and jq installed
           sudo apt update --fix-missing
-          sudo apt install -y git
+          sudo apt install -y git jq tar gzip
 
           #Git setup so we can actually push
           git config --global user.email "it-support@gpas.global"
@@ -109,9 +109,33 @@ jobs:
             -H "Authorization: Bearer ${{secrets.PAT_TOKEN}}" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             https://api.github.com/repos/GlobalPathogenAnalysisService/gpas-tb-workflow/releases \
-            -d "{\"tag_name\": \"$NEW_VERSION\", \"target_commitish\": \"$NEW_VERSION-branch\", \"name\": \"$NEW_VERSION\", \"body\": \"# Pipeline versions\n$(cat sub_workflows/pipeline_versions.txt)\n# Container versions\n$(cat sub_workflows/container_versions.txt)\", \"draft\": false, \"prerelease\": false, \"generate_release_notes\": false}"
+            -d "{\"tag_name\": \"$NEW_VERSION\", \"target_commitish\": \"$NEW_VERSION-branch\", \"name\": \"$NEW_VERSION\", \"body\": \"# Pipeline versions\n$(cat sub_workflows/pipeline_versions.txt)\n# Container versions\n$(cat sub_workflows/container_versions.txt)\", \"draft\": false, \"prerelease\": false, \"generate_release_notes\": false}" > gh_release.json
+
+          #For debugging...
+          cat gh_release.json
+
+          #Parse the JSON response to get the ID of the release we just created
+          RELEASE_ID=$(cat gh_release.json | jq ".id")
+          rm gh_release.json
+
+          #Create release asset
+          cd ..
+          mkdir -p $NEW_VERSION
+          cp -r gpas-tb-workflow/* $NEW_VERSION
+          tar -czf $NEW_VERSION.tar.gz $NEW_VERSION
+          curl -L
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{secrets.PAT_TOKEN}}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            -H "Content-Type: application/octet-stream" \
+            "https://uploads.github.com/repos/GlobalPathogenAnalysisService/gpas-tb-workflow/releases/$RELEASE_ID/assets?name=$NEW_VERSION.tar.gz" \
+            --data-binary "@$NEW_VERSION.tar.gz"
           
+
+
           #Clean up the branch now we're done with it
+          cd gpas-tb-workflow
           git push origin --delete $NEW_VERSION-branch
 
 
