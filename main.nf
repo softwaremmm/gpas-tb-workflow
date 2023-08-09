@@ -139,9 +139,9 @@ workflow {
             .map(it -> [it[0], it[1], it[2]])
             .view{"Competitive Mapping output sample has enough reads"}
 
-        cm_not_enough_reads = competitive_mapping_ch_output
-            .filter { it[3] == "false"} 
-            .view{"Competitive Mapping output sample does not have enough reads. END OF THE PIPELINE"}
+        // cm_not_enough_reads = competitive_mapping_ch_output
+        //     .filter { it[3] == "false"} 
+        //     .view{"Competitive Mapping output sample does not have enough reads. END OF THE PIPELINE"}
 
 
         // // WP5 -> Clockwork_ch is called only if  cm_enough_reads_ch exists. 

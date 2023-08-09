@@ -175,8 +175,10 @@ nextflow_pipeline {
               updir = "/mnt/volume_data/work_packages/data/h37rv_tb/1/"
               indir = "/mnt/volume_data/work_packages/data/h37rv_tb/1/1"
               outdir = "/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1"
+              outdir = "/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1"
               uploads_bucket = "/mnt/volume_data/work_packages/data/h37rv_tb/"
               inputs_bucket = "/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/"
+              outputs_bucket = "/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output"
               outputs_bucket = "/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output"
               api_token = "token"
               kraken2_db_path = "/mnt/volume_data/datasets_full/standard_05-06-2023"
@@ -194,6 +196,13 @@ nextflow_pipeline {
 
             assert workflow.success
 
+            // Assert number of files copied to inputs_bucket_local
+            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/1/1/").list().size() == 2
+
+
+            // DECONTAMINATION
+
+            // Copy decontaminated files to the uploads_bucket location 
             // Assert number of files copied to inputs_bucket_local
             assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/1/1/").list().size() == 2
 
