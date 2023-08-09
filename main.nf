@@ -118,74 +118,74 @@ workflow {
             .map(it -> [it[0], it[1], it[2]]) //The value for the new channel will have a tuble of sample name, path1, path2
             .view{"Gatekeeper output sample has enough reads"}
 
-        gk_not_enough_reads_ch = gatekeeper_ch_output
-            .filter { it[3] == "false"} //A new channel will be created only if the it[3] (enough reads) is true
-            .view{"Gatekeeper output sample does not have enough reads. END OF THE PIPELINE"}
+        // gk_not_enough_reads_ch = gatekeeper_ch_output
+        //     .filter { it[3] == "false"} //A new channel will be created only if the it[3] (enough reads) is true
+        //     .view{"Gatekeeper output sample does not have enough reads. END OF THE PIPELINE"}
         
-        //Pipeline proceeds only if gk_enough_reads_ch exists.
-        //lineagecalling_ch = lineagecalling(gk_enough_reads_ch) 
-        competitive_mapping_ch = competitive_mapping(gk_enough_reads_ch, params.manifest)
-        //Create a new channel if the condition to test (enough h37r-v reads) and the channel to use to proceed the execution (paths)
-        competitive_mapping_ch_output = competitive_mapping_ch.cm_sample_paths.merge(competitive_mapping_ch.cm_enough_reads)
+        // //Pipeline proceeds only if gk_enough_reads_ch exists.
+        // //lineagecalling_ch = lineagecalling(gk_enough_reads_ch) 
+        // competitive_mapping_ch = competitive_mapping(gk_enough_reads_ch, params.manifest)
+        // //Create a new channel if the condition to test (enough h37r-v reads) and the channel to use to proceed the execution (paths)
+        // competitive_mapping_ch_output = competitive_mapping_ch.cm_sample_paths.merge(competitive_mapping_ch.cm_enough_reads)
 
-        cm_enough_reads_ch = competitive_mapping_ch_output
-            .filter { it[3] == "true"} 
-            .map(it -> [it[0], it[1], it[2]])
-            .view{"Competitive Mapping output sample has enough reads"}
+        // cm_enough_reads_ch = competitive_mapping_ch_output
+        //     .filter { it[3] == "true"} 
+        //     .map(it -> [it[0], it[1], it[2]])
+        //     .view{"Competitive Mapping output sample has enough reads"}
 
-        cm_not_enough_reads = competitive_mapping_ch_output
-            .filter { it[3] == "false"} 
-            .view{"Competitive Mapping output sample does not have enough reads. END OF THE PIPELINE"}
+        // cm_not_enough_reads = competitive_mapping_ch_output
+        //     .filter { it[3] == "false"} 
+        //     .view{"Competitive Mapping output sample does not have enough reads. END OF THE PIPELINE"}
 
 
-        // WP5 -> Clockwork_ch is called only if  cm_enough_reads_ch exists. 
-        clockwork_ch = clockwork(cm_enough_reads_ch, params.ref_files)
+        // // WP5 -> Clockwork_ch is called only if  cm_enough_reads_ch exists. 
+        // clockwork_ch = clockwork(cm_enough_reads_ch, params.ref_files)
         
-        // WP6
-        gnomonicus_ch = gnomonicus_workflow(clockwork_ch.final_vcf, params.tb_ref_genome, params.tb_amr_cat, params.tb_minor_alleles)
-        gnomonicus_json = gnomonicus_ch.gnomonicus_json
+        // // WP6
+        // gnomonicus_ch = gnomonicus_workflow(clockwork_ch.final_vcf, params.tb_ref_genome, params.tb_amr_cat, params.tb_minor_alleles)
+        // gnomonicus_json = gnomonicus_ch.gnomonicus_json
 
-        // WP7
-        fn5_ch = find_neighbour_5(clockwork_ch.final_fasta, "test", params.api_url, params.api_token)
+        // // WP7
+        // fn5_ch = find_neighbour_5(clockwork_ch.final_fasta, "test", params.api_url, params.api_token)
 
-        // copy species specific files to bucket
-        clockwork_ch.final_fasta.concat(
-            clockwork_ch.final_vcf,
-            clockwork_ch.cortex_vcf,
-            clockwork_ch.final_gvcf,
-            clockwork_ch.samtools_vcf,
-            clockwork_ch.map_bam,
-            clockwork_ch.map_bam_bai,
-            gnomonicus_ch.gnomonicus_json,
-            fn5_ch.error_log,
-            clockwork_ch.tb_clockwork_report_json,
-            clockwork_ch.tb_clockwork_error_json,
-        ) | write_species_to_bucket
+        // // copy species specific files to bucket
+        // clockwork_ch.final_fasta.concat(
+        //     clockwork_ch.final_vcf,
+        //     clockwork_ch.cortex_vcf,
+        //     clockwork_ch.final_gvcf,
+        //     clockwork_ch.samtools_vcf,
+        //     clockwork_ch.map_bam,
+        //     clockwork_ch.map_bam_bai,
+        //     gnomonicus_ch.gnomonicus_json,
+        //     fn5_ch.error_log,
+        //     clockwork_ch.tb_clockwork_report_json,
+        //     clockwork_ch.tb_clockwork_error_json,
+        // ) | write_species_to_bucket
 
-        // WP8
-        summary(gatekeeper_ch.gatekeeper_report, 
-            competitive_mapping_ch.cm_report, 
-            lineagecalling_ch.json_report, 
-            gnomonicus_json) 
+        // // WP8
+        // summary(gatekeeper_ch.gatekeeper_report, 
+        //     competitive_mapping_ch.cm_report, 
+        //     lineagecalling_ch.json_report, 
+        //     gnomonicus_json) 
         
         //copy to bucket
         gatekeeper_ch.gatekeeper_report.concat(
             gatekeeper_ch.kraken2_error,
             gatekeeper_ch.fastp_report,
             gatekeeper_ch.fastp_error,
-            competitive_mapping_ch.cm_report,
+            //competitive_mapping_ch.cm_report,
             // call_wp4.out.competitivemapping_error_json,
             // lineagecalling_ch.lc_error_json,
-            lineagecalling_ch.json_report,
-            summary.out.main_report,
-            summary.out.error_report,
+            //lineagecalling_ch.json_report,
+            //summary.out.main_report,
+            //summary.out.error_report,
             human_read_removal_ch.hostile_report,
         ) | write_to_bucket
 
-        // copy fastq files to bucket
-        gatekeeper_ch.kraken2_filtered_samples.concat(
-            gatekeeper_ch.kraken2_outputs,
-            competitive_mapping_ch.cm_sample_paths,
-        ) | write_samples_to_bucket
+        // // copy fastq files to bucket
+        // gatekeeper_ch.kraken2_filtered_samples.concat(
+        //     gatekeeper_ch.kraken2_outputs,
+        //     competitive_mapping_ch.cm_sample_paths,
+        // ) | write_samples_to_bucket
 
 }
