@@ -77,3 +77,11 @@ sudo nextflow run . -profile local --sample_id 5 --run_id 1 --api_token $(cat ..
 It is also important to only use `run_id`s from an approved list as these are unique over **all** runs and cannot be reused.
 
 `sudo` is recommended.
+
+## Testing the full pipeline
+
+To test the full pipeline, please run the nf-test subselecting the full tag. To test the pipeline for TB samples (h37_rv), add the tag tb. 
+
+```bash
+nf-test test pipeline.nf.test --tag full,tb
+```
