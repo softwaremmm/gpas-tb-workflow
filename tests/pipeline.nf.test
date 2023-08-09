@@ -174,8 +174,10 @@ nextflow_pipeline {
               run_id  = 1
               updir = "/mnt/volume_data/work_packages/data/h37rv_tb/1/"
               indir = "/mnt/volume_data/work_packages/data/h37rv_tb/1/1"
+              outdir = "/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1"
               uploads_bucket = "/mnt/volume_data/work_packages/data/h37rv_tb/"
               inputs_bucket = "/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/"
+              outputs_bucket = "/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output"
               api_token = "token"
               kraken2_db_path = "/mnt/volume_data/datasets_full/standard_05-06-2023"
               human_genome_dir = "/mnt/volume_data/work_packages/data/human_genome/"
@@ -192,11 +194,29 @@ nextflow_pipeline {
 
             assert workflow.success
 
-        
+            // Assert number of files copied to inputs_bucket_local
+            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/1/1/").list().size() == 2
+
+
+            // DECONTAMINATION
+
+            // Copy decontaminated files to the uploads_bucket location 
             assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/1/1/WTCHG_885333_73205296_1.clean_1.fastq.gz").linesGzip.size() >= 1
             assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/1/1/WTCHG_885333_73205296_2.clean_2.fastq.gz").linesGzip.size() >= 1
-
+            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/decontamination-log.json").readLines().size() >= 0
             
+            // GATEKEEPER 
+
+            // Samples has enough Unclassified and Mycrobacteriae reads 
+            assert workflow.stdout.contains("Gatekeeper output sample has enough reads")
+
+            // Gatekeeper return FASTP related files
+            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/fastp_report.json").readLines().size() >= 0
+            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/fastp_error.json").readLines().size() == 0
+
+            //Gatekeeper return json with empty list of errors
+            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/kraken_error.json").readLines()[0] == '[]'
+
 
         }
 
