@@ -228,6 +228,16 @@ nextflow_pipeline {
             // Pipeline stores Competitive Mapping report file
             assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/competitivemapping_report.json").readLines().size() >= 1
 
+
+
+            // LINEAGE CALLING
+
+            // Pipeline stores mykrobe json report
+            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/mykrobe_report.json").readLines().size() >= 1
+
+            // Pipeline stores Lineage Calling error file
+            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/lc_error.json").readLines().size() == 0
+
         }
 
     }
