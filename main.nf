@@ -118,20 +118,20 @@ workflow {
             .map(it -> [it[0], it[1], it[2]]) //The value for the new channel will have a tuble of sample name, path1, path2
             .view{"Gatekeeper output sample has enough reads"}
 
-        // gk_not_enough_reads_ch = gatekeeper_ch_output
-        //     .filter { it[3] == "false"} //A new channel will be created only if the it[3] (enough reads) is true
-        //     .view{"Gatekeeper output sample does not have enough reads. END OF THE PIPELINE"}
+        gk_not_enough_reads_ch = gatekeeper_ch_output
+            .filter { it[3] == "false"} //A new channel will be created only if the it[3] (enough reads) is true
+            .view{"Gatekeeper output sample does not have enough reads. END OF THE PIPELINE"}
         
         // //Pipeline proceeds only if gk_enough_reads_ch exists.
         // //lineagecalling_ch = lineagecalling(gk_enough_reads_ch) 
-        // competitive_mapping_ch = competitive_mapping(gk_enough_reads_ch, params.manifest)
-        // //Create a new channel if the condition to test (enough h37r-v reads) and the channel to use to proceed the execution (paths)
-        // competitive_mapping_ch_output = competitive_mapping_ch.cm_sample_paths.merge(competitive_mapping_ch.cm_enough_reads)
+        competitive_mapping_ch = competitive_mapping(gk_enough_reads_ch, params.manifest)
+        //Create a new channel if the condition to test (enough h37r-v reads) and the channel to use to proceed the execution (paths)
+        competitive_mapping_ch_output = competitive_mapping_ch.cm_sample_paths.merge(competitive_mapping_ch.cm_enough_reads)
 
-        // cm_enough_reads_ch = competitive_mapping_ch_output
-        //     .filter { it[3] == "true"} 
-        //     .map(it -> [it[0], it[1], it[2]])
-        //     .view{"Competitive Mapping output sample has enough reads"}
+        cm_enough_reads_ch = competitive_mapping_ch_output
+            .filter { it[3] == "true"} 
+            .map(it -> [it[0], it[1], it[2]])
+            .view{"Competitive Mapping output sample has enough reads"}
 
         // cm_not_enough_reads = competitive_mapping_ch_output
         //     .filter { it[3] == "false"} 
@@ -173,7 +173,7 @@ workflow {
             gatekeeper_ch.kraken2_error,
             gatekeeper_ch.fastp_report,
             gatekeeper_ch.fastp_error,
-            //competitive_mapping_ch.cm_report,
+            competitive_mapping_ch.cm_report,
             // call_wp4.out.competitivemapping_error_json,
             // lineagecalling_ch.lc_error_json,
             //lineagecalling_ch.json_report,

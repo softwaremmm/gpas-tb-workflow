@@ -204,19 +204,29 @@ nextflow_pipeline {
             assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/1/1/WTCHG_885333_73205296_1.clean_1.fastq.gz").linesGzip.size() >= 1
             assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/1/1/WTCHG_885333_73205296_2.clean_2.fastq.gz").linesGzip.size() >= 1
             assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/decontamination-log.json").readLines().size() >= 0
-            
+        
+
+
             // GATEKEEPER 
 
             // Samples has enough Unclassified and Mycrobacteriae reads 
             assert workflow.stdout.contains("Gatekeeper output sample has enough reads")
 
-            // Gatekeeper return FASTP related files
+            // Pipeline stores Gatekeeper FASTP related files
             assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/fastp_report.json").readLines().size() >= 0
             assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/fastp_error.json").readLines().size() == 0
 
-            //Gatekeeper return json with empty list of errors
+            // Pipeline stores json Gatekeeper Kraken2 with empty list of errors
             assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/kraken_error.json").readLines()[0] == '[]'
 
+
+
+            // COMPETITIVE MAPPING 
+            // Samples has enough  h37rv_tb reads 
+            assert workflow.stdout.contains("Competitive Mapping output sample has enough reads")
+
+            // Pipeline stores Competitive Mapping report file
+            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/competitivemapping_report.json").readLines().size() >= 1
 
         }
 
