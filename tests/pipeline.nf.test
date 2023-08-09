@@ -1,33 +1,168 @@
 nextflow_pipeline {
 
-    name "Test tb pipeline"
+    name "Test TB pipeline"
     script "../main.nf"
 
-
-
-    test("Pipeline should not continue the run if Gatekeeper returns FALSE to enough number of reads") {
+    test("Gatekeeper: logs should inform if Gatekeeper returns TRUE to enough number of reads") {
 
         when {
             params {
               sample_id = 1
               run_id  = 1
-              updir = "samples/local/h37rv_tb/1"
-              indir = "samples/local/h37rv_tb/1/1"
+              updir = "/mnt/volume_data/work_packages/data/h37rv_tb/1"
+              indir = "/mnt/volume_data/work_packages/data/h37rv_tb/1"
+              uploads_bucket = "/mnt/volume_data/work_packages/data/h37rv_tb/"
               api_token = "token"
               kraken2_db_path = "/mnt/volume_data/datasets_full/standard_05-06-2023"
+              human_genome_dir = "/mnt/volume_data/work_packages/data/human_genome/"
+              manifest = "/mnt/volume_data/work_packages/data/manifest/target_101_new.fasta"
+              ref_files = "/mnt/volume_data/work_packages/data/clockwork/tb/Ref_prepare"
+              tb_ref_genome = "/mnt/volume_data/work_packages/wp6/tuberculosis_amr_catalogues/catalogues/NC_000962.3/NC_000962.3.gbk"
+              tb_amr_cat = "/mnt/volume_data/work_packages/wp6/tuberculosis_amr_catalogues/catalogues/NC_000962.3/NC_000962.3_WHO-UCN-GTB-PCI-2021.7_v1.0_GARC1_RUS.csv"
+              tb_minor_alleles = "/mnt/volume_data/work_packages/data/minor_alleles.txt"
+
             }
+
         }
 
         then {
 
-           assert workflow.success
+            assert workflow.success
 
-           assert workflow.trace.succeeded().size() == 6
+            //returns a list containing succeeded tasks
+            assert workflow.trace.succeeded().size() == 7
+
+            //returns a list containing failed tasks
+            assert workflow.trace.failed().size() == 0
+
+            //returns a list containing all tasks
+            assert workflow.trace.tasks().size() == 7
+
+
+            assert workflow.stdout.contains("Gatekeeper output sample has enough reads")
+
 
         }
 
     }
 
+    test("Gatekeeper: logs should inform if Gatekeeper returns FALSE to enough number of reads") {
+
+        when {
+            params {
+              sample_id = 1
+              run_id  = 1
+              updir = "/mnt/volume_data/work_packages/data/virus/1"
+              indir = "/mnt/volume_data/work_packages/data/virus/1"
+              uploads_bucket = "/mnt/volume_data/work_packages/data/virus/"
+              kraken2_db_path = "/mnt/volume_data/datasets_full/standard_05-06-2023"
+              human_genome_dir = "/mnt/volume_data/work_packages/data/human_genome/"
+              manifest = "/mnt/volume_data/work_packages/data/manifest/target_101_new.fasta"
+              ref_files = "/mnt/volume_data/work_packages/data/clockwork/tb/Ref_prepare"
+              tb_ref_genome = "/mnt/volume_data/work_packages/wp6/tuberculosis_amr_catalogues/catalogues/NC_000962.3/NC_000962.3.gbk"
+              tb_amr_cat = "/mnt/volume_data/work_packages/wp6/tuberculosis_amr_catalogues/catalogues/NC_000962.3/NC_000962.3_WHO-UCN-GTB-PCI-2021.7_v1.0_GARC1_RUS.csv"
+              tb_minor_alleles = "/mnt/volume_data/work_packages/data/minor_alleles.txt"
+            }
+
+        }
+
+        then {
+
+            assert workflow.success
+
+            //returns a list containing succeeded tasks
+            assert workflow.trace.succeeded().size() == 5
+
+            //returns a list containing failed tasks
+            assert workflow.trace.failed().size() == 0
+
+            //returns a list containing all tasks
+            assert workflow.trace.tasks().size() == 5
+
+
+            assert workflow.stdout.contains("Gatekeeper output sample does not have enough reads. END OF THE PIPELINE")
+        }
+
+    }
+
+    test("Competitive Mapping: logs should inform if Competitive Mapping returns TRUE to enough number of reads") {
+
+        when {
+            params {
+              sample_id = 1
+              run_id  = 1
+              updir = "/mnt/volume_data/work_packages/data/h37rv_tb/1"
+              indir = "/mnt/volume_data/work_packages/data/h37rv_tb/1"
+              uploads_bucket = "/mnt/volume_data/work_packages/data/h37rv_tb/"
+              api_token = "token"
+              kraken2_db_path = "/mnt/volume_data/datasets_full/standard_05-06-2023"
+              human_genome_dir = "/mnt/volume_data/work_packages/data/human_genome/"
+              manifest = "/mnt/volume_data/work_packages/data/manifest/target_101_new.fasta"
+              ref_files = "/mnt/volume_data/work_packages/data/clockwork/tb/Ref_prepare"
+              tb_ref_genome = "/mnt/volume_data/work_packages/wp6/tuberculosis_amr_catalogues/catalogues/NC_000962.3/NC_000962.3.gbk"
+              tb_amr_cat = "/mnt/volume_data/work_packages/wp6/tuberculosis_amr_catalogues/catalogues/NC_000962.3/NC_000962.3_WHO-UCN-GTB-PCI-2021.7_v1.0_GARC1_RUS.csv"
+              tb_minor_alleles = "/mnt/volume_data/work_packages/data/minor_alleles.txt"
+            }
+
+        }
+
+        then {
+
+            assert workflow.success
+
+            //returns a list containing succeeded tasks
+            assert workflow.trace.succeeded().size() == 7
+
+            //returns a list containing failed tasks
+            assert workflow.trace.failed().size() == 0
+
+            //returns a list containing all tasks
+            assert workflow.trace.tasks().size() == 7
+
+
+            assert workflow.stdout.contains("Competitive Mapping output sample has enough reads")
+        }
+
+    }
+
+    test("Competitive Mapping: logs should inform if Competitive Mapping returns FALSE to enough number of reads") {
+
+        when {
+            params {
+              sample_id = 1
+              run_id  = 1
+              updir = "/mnt/volume_data/work_packages/data/abscessus/1"
+              indir = "/mnt/volume_data/work_packages/data/abscessus/1"
+              uploads_bucket = "/mnt/volume_data/work_packages/data/abscessus/"
+              api_token = "token"
+              kraken2_db_path = "/mnt/volume_data/datasets_full/standard_05-06-2023"
+              human_genome_dir = "/mnt/volume_data/work_packages/data/human_genome/"
+              manifest = "/mnt/volume_data/work_packages/data/manifest/target_101_new.fasta"
+              ref_files = "/mnt/volume_data/work_packages/data/clockwork/tb/Ref_prepare"
+              tb_ref_genome = "/mnt/volume_data/work_packages/wp6/tuberculosis_amr_catalogues/catalogues/NC_000962.3/NC_000962.3.gbk"
+              tb_amr_cat = "/mnt/volume_data/work_packages/wp6/tuberculosis_amr_catalogues/catalogues/NC_000962.3/NC_000962.3_WHO-UCN-GTB-PCI-2021.7_v1.0_GARC1_RUS.csv"
+              tb_minor_alleles = "/mnt/volume_data/work_packages/data/minor_alleles.txt"
+            }
+
+        }
+
+        then {
+
+            assert workflow.success
+
+            //returns a list containing succeeded tasks
+            assert workflow.trace.succeeded().size() == 7
+
+            //returns a list containing failed tasks
+            assert workflow.trace.failed().size() == 0
+
+            //returns a list containing all tasks
+            assert workflow.trace.tasks().size() == 7
+
+            assert workflow.stdout.contains("Competitive Mapping output sample does not have enough reads. END OF THE PIPELINE")
+        }
+
+    }
 
 
 
