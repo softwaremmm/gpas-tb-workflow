@@ -139,34 +139,34 @@ workflow {
             .map(it -> [it[0], it[1], it[2]])
             .view{"Competitive Mapping output sample has enough reads"}
 
-        // cm_not_enough_reads = competitive_mapping_ch_output
-        //     .filter { it[3] == "false"} 
-        //     .view{"Competitive Mapping output sample does not have enough reads. END OF THE PIPELINE"}
+        cm_not_enough_reads = competitive_mapping_ch_output
+            .filter { it[3] == "false"} 
+            .view{"Competitive Mapping output sample does not have enough reads. END OF THE PIPELINE"}
 
 
-        // // WP5 -> Clockwork_ch is called only if  cm_enough_reads_ch exists. 
-        // clockwork_ch = clockwork(cm_enough_reads_ch, params.ref_files)
+        // WP5 -> Clockwork_ch is called only if  cm_enough_reads_ch exists. 
+        clockwork_ch = clockwork(cm_enough_reads_ch, params.ref_files)
         
-        // // WP6
-        // gnomonicus_ch = gnomonicus_workflow(clockwork_ch.final_vcf, params.tb_ref_genome, params.tb_amr_cat, params.tb_minor_alleles)
-        // gnomonicus_json = gnomonicus_ch.gnomonicus_json
+        // WP6
+        gnomonicus_ch = gnomonicus_workflow(clockwork_ch.final_vcf, params.tb_ref_genome, params.tb_amr_cat, params.tb_minor_alleles)
+        gnomonicus_json = gnomonicus_ch.gnomonicus_json
 
-        // // WP7
-        // fn5_ch = find_neighbour_5(clockwork_ch.final_fasta, "test", params.api_url, params.api_token)
+        // WP7
+        fn5_ch = find_neighbour_5(clockwork_ch.final_fasta, "test", params.api_url, params.api_token)
 
-        // // copy species specific files to bucket
-        // clockwork_ch.final_fasta.concat(
-        //     clockwork_ch.final_vcf,
-        //     clockwork_ch.cortex_vcf,
-        //     clockwork_ch.final_gvcf,
-        //     clockwork_ch.samtools_vcf,
-        //     clockwork_ch.map_bam,
-        //     clockwork_ch.map_bam_bai,
-        //     gnomonicus_ch.gnomonicus_json,
-        //     fn5_ch.error_log,
-        //     clockwork_ch.tb_clockwork_report_json,
-        //     clockwork_ch.tb_clockwork_error_json,
-        // ) | write_species_to_bucket
+        // copy species specific files to bucket
+        clockwork_ch.final_fasta.concat(
+            clockwork_ch.final_vcf,
+            clockwork_ch.cortex_vcf,
+            clockwork_ch.final_gvcf,
+            clockwork_ch.samtools_vcf,
+            clockwork_ch.map_bam,
+            clockwork_ch.map_bam_bai,
+            gnomonicus_ch.gnomonicus_json,
+            fn5_ch.error_log,
+            clockwork_ch.tb_clockwork_report_json,
+            clockwork_ch.tb_clockwork_error_json,
+        ) | write_species_to_bucket
 
         // WP8
         // summary(gatekeeper_ch.gatekeeper_report, 
@@ -189,10 +189,10 @@ workflow {
             human_read_removal_ch.hostile_report,
         ) | write_to_bucket
 
-        // // copy fastq files to bucket
-        // gatekeeper_ch.kraken2_filtered_samples.concat(
-        //     gatekeeper_ch.kraken2_outputs,
-        //     competitive_mapping_ch.cm_sample_paths,
-        // ) | write_samples_to_bucket
+        // copy fastq files to bucket
+        gatekeeper_ch.kraken2_filtered_samples.concat(
+            gatekeeper_ch.kraken2_outputs,
+            competitive_mapping_ch.cm_sample_paths,
+        ) | write_samples_to_bucket
 
 }
