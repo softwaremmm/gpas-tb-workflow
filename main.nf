@@ -2,7 +2,7 @@
 nextflow.enable.dsl=2
 
 // Kubernetes Related Buckets
-if ("$workflow.profile" != 'kubernetes') {
+if ("${workflow.profile}" != 'kubernetes') {
     params.uploads_bucket = "$projectDir/data/uploads"
     params.inputs_bucket = "$projectDir/data/inputs"
     params.outputs_bucket = "$projectDir/data/outputs"
