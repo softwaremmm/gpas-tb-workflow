@@ -196,29 +196,26 @@ nextflow_pipeline {
 
             assert workflow.success
 
-            // Assert number of files copied to inputs_bucket_local
+                        // Assert number of files copied to inputs_bucket_local
             assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/1/1/").list().size() == 2
 
 
             // DECONTAMINATION
 
-            // Copy decontaminated files to the uploads_bucket location 
+            // Copy decontaminated files to the uploads_bucket location
             // Assert number of files copied to inputs_bucket_local
             assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/1/1/").list().size() == 2
 
-
-            // DECONTAMINATION
-
-            // Copy decontaminated files to the uploads_bucket location 
+            // Copy decontaminated files to the uploads_bucket location
             assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/1/1/WTCHG_885333_73205296_1.clean_1.fastq.gz").linesGzip.size() >= 1
             assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/1/1/WTCHG_885333_73205296_2.clean_2.fastq.gz").linesGzip.size() >= 1
             assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/decontamination-log.json").readLines().size() >= 0
-        
 
 
-            // GATEKEEPER 
 
-            // Samples has enough Unclassified and Mycrobacteriae reads 
+            // GATEKEEPER
+
+            // Samples has enough Unclassified and Mycrobacteriae reads
             assert workflow.stdout.contains("Gatekeeper output sample has enough reads")
 
             // Pipeline stores Gatekeeper FASTP related files
@@ -230,8 +227,8 @@ nextflow_pipeline {
 
 
 
-            // COMPETITIVE MAPPING 
-            // Samples has enough  h37rv_tb reads 
+            // COMPETITIVE MAPPING
+            // Samples has enough  h37rv_tb reads
             assert workflow.stdout.contains("Competitive Mapping output sample has enough reads")
 
             // Pipeline stores Competitive Mapping report file
@@ -247,11 +244,18 @@ nextflow_pipeline {
             // Pipeline stores Lineage Calling error file
             assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/lc_error.json").readLines().size() == 0
 
+
+
+            // CLOCKWORK
+            //Pipeline stored all clockwork related files in a tb named folder
+            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/tb/").list().size() == 10
+            
+
+            // RESISTANCE PREDICTION
+            //Pipeline stored all clockwork related files in a tb named folder
+            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/tb/gnomonicus.json").readLines().size() >= 1
         }
 
     }
-    
-
-
 
 }
