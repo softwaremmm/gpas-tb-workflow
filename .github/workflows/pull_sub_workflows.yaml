@@ -123,7 +123,7 @@ jobs:
           mkdir -p $NEW_VERSION
           cp -r gpas-tb-workflow/* $NEW_VERSION
           tar -czf $NEW_VERSION.tar.gz $NEW_VERSION
-          curl -L
+          curl -L \
             -X POST \
             -H "Accept: application/vnd.github+json" \
             -H "Authorization: Bearer ${{secrets.PAT_TOKEN}}" \

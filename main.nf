@@ -9,11 +9,11 @@ if ("$workflow.profile" != 'kubernetes') {
     params.relatedness_bucket = "$projectDir/data/relatedness"
     params.knowledge_bucket = "$projectDir/data/relatedness/knowledge"
 } else {
-    params.uploads_bucket = "/data/uploads"
-    params.inputs_bucket = "/data/inputs"
-    params.outputs_bucket = "/data/outputs"
-    params.relatedness_bucket = "/data/relatedness"
-    params.knowledge_bucket = "/data/relatedness/knowledge"
+    params.uploads_bucket = "/workspace/buckets/upload_bucket"
+    params.inputs_bucket = "/workspace/buckets/input_bucket"
+    params.outputs_bucket = "/workspace/buckets/output_bucket"
+    params.relatedness_bucket = "/workspace/buckets/relatedness_bucket"
+    params.knowledge_bucket = "/workspace/buckets/relatedness_bucket/knowledge"
 }
 
 
