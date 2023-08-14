@@ -50,10 +50,10 @@ include { summary } from "${subwork_folder}/summary_pipeline/main.nf"
 include { human_read_removal } from "${subwork_folder}/human-read-removal_pipeline/src/workflow/human_read_removal.nf"
 
 // dirty_reads_ch = Channel.fromFilePairs("${updir}/*_{1,2}.fastq.gz", checkIfExists:true, flat:true)
-ch1 = Channel.from(743)
-ch2 = Channel.fromPath("/${updir}/*_1.fastq.gz")
-ch3 = Channel.fromPath("/${updir}/*_2.fastq.gz")
-dirty_reads_ch = ch1.merge(ch2).merge(ch3)
+sample_id_ch = Channel.from($params.sample_id)
+fq1_ch = Channel.fromPath("/${updir}/*_1.fastq.gz")
+fq2_ch = Channel.fromPath("/${updir}/*_2.fastq.gz")
+dirty_reads_ch = sample_id_ch.merge(fq1_ch).merge(fq2_ch)
 
 process write_clean_reads_to_input {
     input:
