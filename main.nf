@@ -62,14 +62,11 @@ process write_clean_reads_to_input {
 
     script:
         """
-        # FOR DEV PURPOSES ONLY
-
-        echo "Running with kb8"
-        s3fs "$WORKSPACE-dirtydata" /workspace/buckets/upload_bucket -o passwd_file=/workspace/project/s3fs_password_file -o url=https://lrbvkel2wjot.compat.objectstorage.uk-london-1.oraclecloud.com -o use_path_request_style
-        s3fs "$WORKSPACE-readyforprocessing" /workspace/buckets/input_bucket -o passwd_file=/workspace/project/s3fs_password_file -o url=https://lrbvkel2wjot.compat.objectstorage.uk-london-1.oraclecloud.com -o use_path_request_style
-        s3fs "$WORKSPACE-output" /workspace/buckets/output_bucket -o passwd_file=/workspace/project/s3fs_password_file -o url=https://lrbvkel2wjot.compat.objectstorage.uk-london-1.oraclecloud.com -o use_path_request_style
-        s3fs "$WORKSPACE-relatedness" /workspace/buckets/relatedness_bucket -o passwd_file=/workspace/project/s3fs_password_file -o url=https://lrbvkel2wjot.compat.objectstorage.uk-london-1.oraclecloud.com -o use_path_request_style
-
+        if [ ${workflow.profile} == 'kubernetes' ]
+        then
+            echo "Running with kubernetes"
+            /bin/bash ${projectDir}/lib/s3fs_setup.sh
+        fi
 
         mkdir -p ${indir}
         cp ${sample1} ${indir}
@@ -85,13 +82,11 @@ process write_to_bucket {
     
     script:
         """
-        # FOR DEV PURPOSES ONLY
-
-        echo "Running with kb8"
-        s3fs "$WORKSPACE-dirtydata" /workspace/buckets/upload_bucket -o passwd_file=/workspace/project/s3fs_password_file -o url=https://lrbvkel2wjot.compat.objectstorage.uk-london-1.oraclecloud.com -o use_path_request_style
-        s3fs "$WORKSPACE-readyforprocessing" /workspace/buckets/input_bucket -o passwd_file=/workspace/project/s3fs_password_file -o url=https://lrbvkel2wjot.compat.objectstorage.uk-london-1.oraclecloud.com -o use_path_request_style
-        s3fs "$WORKSPACE-output" /workspace/buckets/output_bucket -o passwd_file=/workspace/project/s3fs_password_file -o url=https://lrbvkel2wjot.compat.objectstorage.uk-london-1.oraclecloud.com -o use_path_request_style
-        s3fs "$WORKSPACE-relatedness" /workspace/buckets/relatedness_bucket -o passwd_file=/workspace/project/s3fs_password_file -o url=https://lrbvkel2wjot.compat.objectstorage.uk-london-1.oraclecloud.com -o use_path_request_style
+        if [ ${workflow.profile} == 'kubernetes' ]
+        then
+            echo "Running with kubernetes"
+            /bin/bash ${projectDir}/lib/s3fs_setup.sh
+        fi
 
         mkdir -p ${outdir}
         cp ${output_file} ${outdir}
@@ -106,13 +101,11 @@ process write_species_to_bucket {
 
     script:
         """
-        # FOR DEV PURPOSES ONLY
-
-        echo "Running with kb8"
-        s3fs "$WORKSPACE-dirtydata" /workspace/buckets/upload_bucket -o passwd_file=/workspace/project/s3fs_password_file -o url=https://lrbvkel2wjot.compat.objectstorage.uk-london-1.oraclecloud.com -o use_path_request_style
-        s3fs "$WORKSPACE-readyforprocessing" /workspace/buckets/input_bucket -o passwd_file=/workspace/project/s3fs_password_file -o url=https://lrbvkel2wjot.compat.objectstorage.uk-london-1.oraclecloud.com -o use_path_request_style
-        s3fs "$WORKSPACE-output" /workspace/buckets/output_bucket -o passwd_file=/workspace/project/s3fs_password_file -o url=https://lrbvkel2wjot.compat.objectstorage.uk-london-1.oraclecloud.com -o use_path_request_style
-        s3fs "$WORKSPACE-relatedness" /workspace/buckets/relatedness_bucket -o passwd_file=/workspace/project/s3fs_password_file -o url=https://lrbvkel2wjot.compat.objectstorage.uk-london-1.oraclecloud.com -o use_path_request_style
+        if [ ${workflow.profile} == 'kubernetes' ]
+        then
+            echo "Running with kubernetes"
+            /bin/bash ${projectDir}/lib/s3fs_setup.sh
+        fi
 
         mkdir -p ${outdir}/tb
         cp ${output_file} ${outdir}/tb
@@ -127,14 +120,11 @@ process write_samples_to_bucket {
 
     script:
         """
-        # FOR DEV PURPOSES ONLY
-
-        echo "Running with kb8"
-        s3fs "$WORKSPACE-dirtydata" /workspace/buckets/upload_bucket -o passwd_file=/workspace/project/s3fs_password_file -o url=https://lrbvkel2wjot.compat.objectstorage.uk-london-1.oraclecloud.com -o use_path_request_style
-        s3fs "$WORKSPACE-readyforprocessing" /workspace/buckets/input_bucket -o passwd_file=/workspace/project/s3fs_password_file -o url=https://lrbvkel2wjot.compat.objectstorage.uk-london-1.oraclecloud.com -o use_path_request_style
-        s3fs "$WORKSPACE-output" /workspace/buckets/output_bucket -o passwd_file=/workspace/project/s3fs_password_file -o url=https://lrbvkel2wjot.compat.objectstorage.uk-london-1.oraclecloud.com -o use_path_request_style
-        s3fs "$WORKSPACE-relatedness" /workspace/buckets/relatedness_bucket -o passwd_file=/workspace/project/s3fs_password_file -o url=https://lrbvkel2wjot.compat.objectstorage.uk-london-1.oraclecloud.com -o use_path_request_style
-
+        if [ ${workflow.profile} == 'kubernetes' ]
+        then
+            echo "Running with kubernetes"
+            /bin/bash ${projectDir}/lib/s3fs_setup.sh
+        fi
 
         mkdir -p ${outdir}
         cp ${sample1} ${outdir}
