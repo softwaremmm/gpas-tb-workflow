@@ -74,7 +74,7 @@ process write_clean_reads_to_input {
 }
 
 process write_to_bucket {
-    container: 'alpine:latest'
+    container 'lhr.ocir.io/lrbvkel2wjot/gpas/gatekeeper_pipeline:latest'
 
     input:
         path(output_file)
