@@ -1,0 +1,1 @@
+human-read-removal_pipeline = v0.1.2\ngatekeeper_pipeline = v0.1.4\nlineagecalling_pipeline = v0.1.1\ncompetitivemapping_pipeline = v0.1.2\nclockwork_pipeline = v0.1.4\ntb-predict-pipeline = v0.2.3\nfn5_pipeline = v1.0.1\nsummary_pipeline = v0.2.2\n
