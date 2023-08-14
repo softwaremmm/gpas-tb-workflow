@@ -116,7 +116,7 @@ process write_species_to_bucket {
 }
 
 process write_samples_to_bucket {
-    container: 'alpine:latest'
+    container 'lhr.ocir.io/lrbvkel2wjot/gpas/gatekeeper_pipeline:latest'
 
     input:
         tuple val(x), path(sample1), path(sample2)
