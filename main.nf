@@ -49,7 +49,11 @@ include { gnomonicus_workflow } from "${subwork_folder}/tb-predict-pipeline/main
 include { summary } from "${subwork_folder}/summary_pipeline/main.nf"
 include { human_read_removal } from "${subwork_folder}/human-read-removal_pipeline/src/workflow/human_read_removal.nf"
 
-dirty_reads_ch = Channel.fromFilePairs("${updir}/*_{1,2}.fastq.gz", checkIfExists:true, flat:true)
+// dirty_reads_ch = Channel.fromFilePairs("${updir}/*_{1,2}.fastq.gz", checkIfExists:true, flat:true)
+sample_id_ch = Channel.from($params.sample_id)
+fq1_ch = Channel.fromPath("/${updir}/*_1.fastq.gz")
+fq2_ch = Channel.fromPath("/${updir}/*_2.fastq.gz")
+dirty_reads_ch = sample_id_ch.merge(fq1_ch).merge(fq2_ch)
 
 process write_clean_reads_to_input {
     container 'lhr.ocir.io/lrbvkel2wjot/gpas/gatekeeper_pipeline:latest'
@@ -142,11 +146,11 @@ workflow {
     main:
 
         // wp2
-        human_read_removal_ch = human_read_removal(dirty_reads_ch, Channel.fromPath(params.human_genome_dir))
-        write_clean_reads_to_input(human_read_removal_ch.clean_fastq)
+        // human_read_removal_ch = human_read_removal(dirty_reads_ch, Channel.fromPath(params.human_genome_dir))
+        // write_clean_reads_to_input(human_read_removal_ch.clean_fastq)
 
         // wp3
-        gatekeeper_ch = gatekeeper(human_read_removal_ch.clean_fastq, params.kraken2_db_path)
+        gatekeeper_ch = gatekeeper(dirty_reads_ch, params.kraken2_db_path)
 
         kraken2_ch2 = gatekeeper_ch.kraken2_filtered_samples
 
@@ -201,7 +205,7 @@ workflow {
             lineagecalling_ch.json_report,
             summary.out.main_report,
             summary.out.error_report,
-            human_read_removal_ch.hostile_report,
+            // human_read_removal_ch.hostile_report,
         ) | write_to_bucket
 
         // copy fastq files to bucket
