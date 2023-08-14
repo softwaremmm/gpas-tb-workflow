@@ -52,7 +52,7 @@ include { human_read_removal } from "${subwork_folder}/human-read-removal_pipeli
 dirty_reads_ch = Channel.fromFilePairs("${updir}/*_{1,2}.fastq.gz", checkIfExists:true, flat:true)
 
 process write_clean_reads_to_input {
-    container: 'alpine:latest'
+    container 'lhr.ocir.io/lrbvkel2wjot/gpas/gatekeeper_pipeline:latest'
     input:
         tuple val(x), path(sample1), path(sample2)
 
