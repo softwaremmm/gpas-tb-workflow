@@ -139,18 +139,13 @@ workflow {
         human_read_removal_ch = human_read_removal(dirty_reads_ch, Channel.fromPath(params.human_genome_dir))
         write_clean_reads_to_input(human_read_removal_ch.clean_fastq)
 
-        // wp3
-        gatekeeper_ch = gatekeeper(dirty_reads_ch, params.kraken2_db_path)
+        // Gatekeeper: Trimming and positive filtering of Kraken2 Unclassified and Mycobacteriaceae reads
+        gatekeeper_ch = gatekeeper(human_read_removal_ch.clean_fastq, params.kraken2_db_path)
 
-        kraken2_ch2 = gatekeeper_ch.kraken2_filtered_samples
+        //Create a new channel if the condition to test (enough Unclassifidies and Mycrobacteriae reads) and the channel to use to proceed the execution (paths)
+        gatekeeper_ch_output = gatekeeper_ch.kraken2_filtered_samples.merge(gatekeeper_ch.kraken2_enough_reads)
 
-        // Speciation
-        competitive_mapping_ch = competitive_mapping(kraken2_ch2, params.manifest)
-        lineagecalling_ch = lineagecalling(kraken2_ch2)
-        //Create a new channel if the condition to test (enough reads) and the channel to use to proceed the execution (paths)
-        competitive_mapping_ch_output = competitive_mapping_ch.cm_sample_paths.merge(competitive_mapping_ch.cm_enough_reads)
-
-        cm_enough_reads_ch = competitive_mapping_ch_output
+        gk_enough_reads_ch = gatekeeper_ch_output
             .filter { it[3] == "true"} //A new channel will be created only if the it[3] (enough reads) is true
             .map(it -> [it[0], it[1], it[2]]) //The value for the new channel will have a tuble of sample name, path1, path2
             .view{"Gatekeeper output sample has enough reads"}
@@ -159,12 +154,16 @@ workflow {
             .filter { it[3] == "false"} //A new channel will be created only if the it[3] (enough reads) is true
             .view{"Gatekeeper output sample does not have enough reads. END OF THE PIPELINE"}
 
+
         //Pipeline proceeds only if gk_enough_reads_ch exists.
+
+        // Speciation
+        competitive_mapping_ch = competitive_mapping(gk_enough_reads_ch, params.manifest)
         lineagecalling_ch = lineagecalling(gk_enough_reads_ch)
 
-        competitive_mapping_ch = competitive_mapping(gk_enough_reads_ch, params.manifest)
         //Create a new channel if the condition to test (enough h37r-v reads) and the channel to use to proceed the execution (paths)
         competitive_mapping_ch_output = competitive_mapping_ch.cm_sample_paths.merge(competitive_mapping_ch.cm_enough_reads)
+
 
         cm_enough_reads_ch = competitive_mapping_ch_output
             .filter { it[3] == "true"}
@@ -213,7 +212,7 @@ workflow {
             gatekeeper_ch.fastp_error,
             competitive_mapping_ch.cm_report,
             // call_wp4.out.competitivemapping_error_json,
-            lineagecalling_ch.lc_error_json,
+            lineagecalling_ch.json_error,
             lineagecalling_ch.json_report,
             summary.out.main_report,
             summary.out.error_report,
