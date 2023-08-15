@@ -9,9 +9,9 @@ jobs:
       - name: Clone subworkflows
         run: |
           set -xe
-          #Make sure we have git installed
+          #Make sure we have git, tar and jq installed
           sudo apt update --fix-missing
-          sudo apt install -y git
+          sudo apt install -y git jq tar gzip
 
           #Git setup so we can actually push
           git config --global user.email "it-support@gpas.global"
@@ -34,6 +34,11 @@ jobs:
           
           git checkout main
           git checkout -b $NEW_VERSION-branch main
+
+          original_path=$(pwd)
+
+          #Remove the contents of the dummy data dir
+          rm -rf data/*
 
           #Pull in all of the sub workflows
           mkdir -p sub_workflows
@@ -71,8 +76,10 @@ jobs:
             if [ -s $r/minimal_files.txt ]; then
               mv $r/* tmp
 
-              for f in $(cat tmp/minimal_files.txt); do
-                mv tmp/$f $r
+              for f in $(cat tmp/minimal_files.txt);do
+                #Retain dir structure
+                mkdir -p $r/$(dirname $f)
+                cp tmp/$f $r/$(dirname $f)
               done
 
               #Now we have just the files required to run, clean up and move on
@@ -85,9 +92,12 @@ jobs:
             echo -nE $(find $r | grep -E "\.nf" | xargs cat | grep -E "\w*container\ *=? \ *'.*'" | cut -d \' -f 2 | uniq | sed 's/$/\\n/' | tr -d '\n') >> container_versions.txt
           done
 
+          #Ensure we add everything by cd-ing to the main git dir
+          cd $original_path
+
           #Push if there is anything to push
           git add . || echo "No changes to add"
-          git commit -m "[bot] test" || echo "No changes to commit"
+          git commit -m "[bot] Update WP8 to $NEW_VERSION" || echo "No changes to commit"
           git push origin $NEW_VERSION-branch || echo "No changes to push"
 
           #Create a release
@@ -99,9 +109,33 @@ jobs:
             -H "Authorization: Bearer ${{secrets.PAT_TOKEN}}" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             https://api.github.com/repos/GlobalPathogenAnalysisService/gpas-tb-workflow/releases \
-            -d "{\"tag_name\": \"$NEW_VERSION\", \"target_commitish\": \"$NEW_VERSION-branch\", \"name\": \"$NEW_VERSION\", \"body\": \"# Pipeline versions\n$(cat pipeline_versions.txt)\n# Container versions\n$(cat container_versions.txt)\", \"draft\": false, \"prerelease\": false, \"generate_release_notes\": false}"
+            -d "{\"tag_name\": \"$NEW_VERSION\", \"target_commitish\": \"$NEW_VERSION-branch\", \"name\": \"$NEW_VERSION\", \"body\": \"# Pipeline versions\n$(cat sub_workflows/pipeline_versions.txt)\n# Container versions\n$(cat sub_workflows/container_versions.txt)\", \"draft\": false, \"prerelease\": false, \"generate_release_notes\": false}" > gh_release.json
+
+          #For debugging...
+          cat gh_release.json
+
+          #Parse the JSON response to get the ID of the release we just created
+          RELEASE_ID=$(cat gh_release.json | jq ".id")
+          rm gh_release.json
+
+          #Create release asset
+          cd ..
+          mkdir -p $NEW_VERSION
+          cp -r gpas-tb-workflow/* $NEW_VERSION
+          tar -czf $NEW_VERSION.tar.gz $NEW_VERSION
+          curl -L \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{secrets.PAT_TOKEN}}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            -H "Content-Type: application/octet-stream" \
+            "https://uploads.github.com/repos/GlobalPathogenAnalysisService/gpas-tb-workflow/releases/$RELEASE_ID/assets?name=$NEW_VERSION.tar.gz" \
+            --data-binary "@$NEW_VERSION.tar.gz"
           
+
+
           #Clean up the branch now we're done with it
+          cd gpas-tb-workflow
           git push origin --delete $NEW_VERSION-branch
 
 

@@ -29,28 +29,19 @@ wget -qO- https://get.nextflow.io | bash
 Install Docker Desktop.
 
 ## Installation
+Download the artefact from the [latest release](https://github.com/GlobalPathogenAnalysisService/gpas-tb-workflow/releases/latest).
 
-To run this workflow, clone it:
+The `main` branch (and other branches) are unlikely to ever have a complete set of populated sub-workflows, and if they do, they are most likely outdated.
 
+## Development
+Use of the latest release's artefact does not include things such as the `.git` directory, so for development please clone and create a branch to work on:
 ```
-git clone https://github.com/GlobalPathogenAnalysisService/gpas-tb-workflow.git
-```
-
-create a directory called `sub_workflows/` inside the root of the clone e.g.
-
-```
+git clone git@github.com:GlobalPathogenAnalysisService/gpas-tb-workflow.git
 cd gpas-tb-workflow
-mkdir sub-workflows
+git checkout -b <branch name>
 ```
 
-clone each of the sub workflows from the table above into this directory e.g.
-
-```
-cd sub-workflows
-git clone <repository>
-```
-
-The [clone_sub_workflows](./clone_sub_workflows.sh) script might help with this in development.
+If required, clone subworkflows: `bash clone_sub_workflows.sh`. However, sub_workflows should not be committed due to size and version ambiguity!
 
 ## Running the Pipeline Locally
 
@@ -77,3 +68,6 @@ sudo nextflow run . -profile local --sample_id 5 --run_id 1 --api_token $(cat ..
 It is also important to only use `run_id`s from an approved list as these are unique over **all** runs and cannot be reused.
 
 `sudo` is recommended.
+
+## Releases
+Releases are automatically triggered upon sub-workflow release. This pulls in the latest releases of all sub-workflows, producing a set of files which should run as a complete pipeline. This set of files is included as a release artefact with the name `<release version>.tar.gz` which is used by the `gpas-poller`.

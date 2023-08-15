@@ -2,18 +2,18 @@
 nextflow.enable.dsl=2
 
 // Kubernetes Related Buckets
-if ("$workflow.profile" != 'kubernetes') {
+if ("${workflow.profile}" != 'kubernetes') {
     params.uploads_bucket = "$projectDir/data/uploads"
     params.inputs_bucket = "$projectDir/data/inputs"
     params.outputs_bucket = "$projectDir/data/outputs"
     params.relatedness_bucket = "$projectDir/data/relatedness"
     params.knowledge_bucket = "$projectDir/data/relatedness/knowledge"
 } else {
-    params.uploads_bucket = "/data/uploads"
-    params.inputs_bucket = "/data/inputs"
-    params.outputs_bucket = "/data/outputs"
-    params.relatedness_bucket = "/data/relatedness"
-    params.knowledge_bucket = "/data/relatedness/knowledge"
+    params.uploads_bucket = "/workspace/buckets/upload_bucket"
+    params.inputs_bucket = "/workspace/buckets/input_bucket"
+    params.outputs_bucket = "/workspace/buckets/output_bucket"
+    params.relatedness_bucket = "/workspace/buckets/relatedness_bucket"
+    params.knowledge_bucket = "/workspace/buckets/relatedness_bucket/knowledge"
 }
 
 
@@ -49,14 +49,25 @@ include { gnomonicus_workflow } from "${subwork_folder}/tb-predict-pipeline/main
 include { summary } from "${subwork_folder}/summary_pipeline/main.nf"
 include { human_read_removal } from "${subwork_folder}/human-read-removal_pipeline/src/workflow/human_read_removal.nf"
 
-dirty_reads_ch = Channel.fromFilePairs("${updir}/*_{1,2}.fastq.gz", checkIfExists:true, flat:true)
+// dirty_reads_ch = Channel.fromFilePairs("${updir}/*_{1,2}.fastq.gz", checkIfExists:true, flat:true)
+sample_id_ch = Channel.from(params.sample_id)
+fq1_ch = Channel.fromPath("/${updir}/*_1.fastq.gz")
+fq2_ch = Channel.fromPath("/${updir}/*_2.fastq.gz")
+dirty_reads_ch = sample_id_ch.merge(fq1_ch).merge(fq2_ch)
 
 process write_clean_reads_to_input {
+    container 'lhr.ocir.io/lrbvkel2wjot/gpas/gatekeeper_pipeline:latest'
     input:
         tuple val(x), path(sample1), path(sample2)
 
     script:
         """
+        if [ ${workflow.profile} == 'kubernetes' ]
+        then
+            echo "Running with kubernetes"
+            /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKSPACE
+        fi
+
         mkdir -p ${indir}
         cp ${sample1} ${indir}
         cp ${sample2} ${indir}
@@ -64,33 +75,57 @@ process write_clean_reads_to_input {
 }
 
 process write_to_bucket {
+    container 'lhr.ocir.io/lrbvkel2wjot/gpas/gatekeeper_pipeline:latest'
+
     input:
         path(output_file)
     
     script:
         """
+        if [ ${workflow.profile} == 'kubernetes' ]
+        then
+            echo "Running with kubernetes"
+            /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKSPACE
+        fi
+
         mkdir -p ${outdir}
         cp ${output_file} ${outdir}
         """
 }
 
 process write_species_to_bucket {
+    container 'lhr.ocir.io/lrbvkel2wjot/gpas/gatekeeper_pipeline:latest'
+
     input:
         path(output_file)
 
     script:
         """
+        if [ ${workflow.profile} == 'kubernetes' ]
+        then
+            echo "Running with kubernetes"
+            /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKSPACE
+        fi
+
         mkdir -p ${outdir}/tb
         cp ${output_file} ${outdir}/tb
         """
 }
 
 process write_samples_to_bucket {
+    container 'lhr.ocir.io/lrbvkel2wjot/gpas/gatekeeper_pipeline:latest'
+
     input:
         tuple val(x), path(sample1), path(sample2)
 
     script:
         """
+        if [ ${workflow.profile} == 'kubernetes' ]
+        then
+            echo "Running with kubernetes"
+            /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKSPACE
+        fi
+
         mkdir -p ${outdir}
         cp ${sample1} ${outdir}
         cp ${sample2} ${outdir}
@@ -104,22 +139,43 @@ workflow {
         human_read_removal_ch = human_read_removal(dirty_reads_ch, Channel.fromPath(params.human_genome_dir))
         write_clean_reads_to_input(human_read_removal_ch.clean_fastq)
 
-        // wp3
-        gatekeeper_ch = gatekeeper(human_read_removal_ch, params.kraken2_db_path)
+        // Gatekeeper: Trimming and positive filtering of Kraken2 Unclassified and Mycobacteriaceae reads
+        gatekeeper_ch = gatekeeper(human_read_removal_ch.clean_fastq, params.kraken2_db_path)
 
-        kraken2_ch2 = gatekeeper_ch.kraken2_filtered_samples
+        //Create a new channel if the condition to test (enough Unclassifidies and Mycrobacteriae reads) and the channel to use to proceed the execution (paths)
+        gatekeeper_ch_output = gatekeeper_ch.kraken2_filtered_samples.merge(gatekeeper_ch.kraken2_enough_reads)
 
-        // Speciation
-        competitive_mapping_ch = competitive_mapping(kraken2_ch2, params.manifest)
-        lineagecalling_ch = lineagecalling(kraken2_ch2)
-        //Create a new channel if the condition to test (enough reads) and the channel to use to proceed the execution (paths)
-        competitive_mapping_ch_output = competitive_mapping_ch.cm_sample_paths.merge(competitive_mapping_ch.cm_enough_reads)
- 
-        cm_enough_reads_ch = competitive_mapping_ch_output
+        gk_enough_reads_ch = gatekeeper_ch_output
             .filter { it[3] == "true"} //A new channel will be created only if the it[3] (enough reads) is true
             .map(it -> [it[0], it[1], it[2]]) //The value for the new channel will have a tuble of sample name, path1, path2
+            .view{"Gatekeeper output sample has enough reads"}
 
-        // WP5 -> It will only be called and proceed the execution if cm_enough_reads_ch is defined. 
+        gk_not_enough_reads_ch = gatekeeper_ch_output
+            .filter { it[3] == "false"} //A new channel will be created only if the it[3] (enough reads) is true
+            .view{"Gatekeeper output sample does not have enough reads. END OF THE PIPELINE"}
+
+
+        //Pipeline proceeds only if gk_enough_reads_ch exists.
+
+        // Speciation
+        competitive_mapping_ch = competitive_mapping(gk_enough_reads_ch, params.manifest)
+        lineagecalling_ch = lineagecalling(gk_enough_reads_ch)
+
+        //Create a new channel if the condition to test (enough h37r-v reads) and the channel to use to proceed the execution (paths)
+        competitive_mapping_ch_output = competitive_mapping_ch.cm_sample_paths.merge(competitive_mapping_ch.cm_enough_reads)
+
+
+        cm_enough_reads_ch = competitive_mapping_ch_output
+            .filter { it[3] == "true"}
+            .map(it -> [it[0], it[1], it[2]])
+            .view{"Competitive Mapping output sample has enough reads"}
+
+        cm_not_enough_reads = competitive_mapping_ch_output
+            .filter { it[3] == "false"}
+            .view{"Competitive Mapping output sample does not have enough reads. END OF THE PIPELINE"}
+
+
+        // WP5 -> Clockwork_ch is called only if  cm_enough_reads_ch exists.
         clockwork_ch = clockwork(cm_enough_reads_ch, params.ref_files)
         
         // WP6
@@ -156,7 +212,7 @@ workflow {
             gatekeeper_ch.fastp_error,
             competitive_mapping_ch.cm_report,
             // call_wp4.out.competitivemapping_error_json,
-            // lineagecalling_ch.lc_error_json,
+            lineagecalling_ch.json_error,
             lineagecalling_ch.json_report,
             summary.out.main_report,
             summary.out.error_report,
