@@ -199,12 +199,12 @@ workflow {
             clockwork_ch.tb_clockwork_error_json,
         ) | write_species_to_bucket
 
-        // WP8
-        summary(gatekeeper_ch.gatekeeper_report, 
-            competitive_mapping_ch.cm_report, 
-            lineagecalling_ch.json_report, 
-            gnomonicus_json) 
-        
+        gatekeeper_ch.gatekeeper_report.concat(
+            competitive_mapping_ch.cm_report,
+            lineagecalling_ch.json_report,
+            gnomonicus_ch.gnomonicus_json
+        ).toList() | summary // WP8
+
         //copy to bucket
         gatekeeper_ch.gatekeeper_report.concat(
             gatekeeper_ch.kraken2_error,
