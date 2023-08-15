@@ -120,6 +120,12 @@ process write_samples_to_bucket {
 
     script:
         """
+        if [ ${workflow.profile} == 'kubernetes' ]
+        then
+            echo "Running with kubernetes"
+            /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKFLOW
+        fi
+
         mkdir -p ${outdir}
         cp ${sample1} ${outdir}
         cp ${sample2} ${outdir}
