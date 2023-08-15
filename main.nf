@@ -65,7 +65,7 @@ process write_clean_reads_to_input {
         if [ ${workflow.profile} == 'kubernetes' ]
         then
             echo "Running with kubernetes"
-            /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKFLOW
+            /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKSPACE
         fi
 
         mkdir -p ${indir}
@@ -85,7 +85,7 @@ process write_to_bucket {
         if [ ${workflow.profile} == 'kubernetes' ]
         then
             echo "Running with kubernetes"
-            /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKFLOW
+            /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKSPACE
         fi
 
         mkdir -p ${outdir}
@@ -104,7 +104,7 @@ process write_species_to_bucket {
         if [ ${workflow.profile} == 'kubernetes' ]
         then
             echo "Running with kubernetes"
-            /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKFLOW
+            /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKSPACE
         fi
 
         mkdir -p ${outdir}/tb
@@ -123,7 +123,7 @@ process write_samples_to_bucket {
         if [ ${workflow.profile} == 'kubernetes' ]
         then
             echo "Running with kubernetes"
-            /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKFLOW
+            /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKSPACE
         fi
 
         mkdir -p ${outdir}
