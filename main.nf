@@ -80,7 +80,7 @@ process write_to_bucket {
 
     input:
         path(output_file)
-    
+
     script:
         """
         if [ ${workflow.profile} == 'kubernetes' ]
@@ -178,7 +178,7 @@ workflow {
 
         // WP5 -> Clockwork_ch is called only if  cm_enough_reads_ch exists.
         clockwork_ch = clockwork(cm_enough_reads_ch, params.ref_files)
-        
+
         // WP6
         gnomonicus_ch = gnomonicus_workflow(clockwork_ch.final_vcf, params.tb_ref_genome, params.tb_amr_cat, params.tb_minor_alleles)
         gnomonicus_json = gnomonicus_ch.gnomonicus_json
