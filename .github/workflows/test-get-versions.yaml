@@ -9,15 +9,19 @@ jobs:
         run: |
           set -xe
 
-          #Make sure we have curl
-          # sudo apt update
-          # sudo apt install curl
-          
-          #Get docker install script
-          # curl -fsSL https://get.docker.com -o get-docker.sh
+          #Change IFS so we only interpret newlines as splits for `for` loops
+          DEFAULT_IFS=$(echo $IFS)
+          IFS=$'\n'
 
-          #Install docker
-          # sudo sh get-docker.sh
+          for container in $(cat get-software-version-commands.json | jq "keys[]");
+          do
+            for command in $(cat get-software-version-commands.json | jq ".${container}[]" | tr -d \");
+            do
+              echo $(echo $container | tr -d \") --> $command = $(sudo docker run $(echo $container | tr -d \"):latest $command)
+            done
+          done
 
-          sudo docker run lhr.ocir.io/lrbvkel2wjot/oxfordmmm/fn5:latest fn5 --version
+          IFS=$(echo $DEFAULT_IFS)
+
+
 
