@@ -1,0 +1,23 @@
+name: Get versions
+on: push
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get versions
+        run: |
+          set -xe
+
+          #Make sure we have curl
+          sudo apt update
+          sudo apt install curl
+          
+          #Get docker install script
+          curl -fsSL https://get.docker.com -o get-docker.sh
+
+          #Install docker
+          sudo sh get-docker.sh
+
+          sudo docker run lhr.ocir.io/lrbvkel2wjot/oxfordmmm/fn5:latest fn5 --version
+
