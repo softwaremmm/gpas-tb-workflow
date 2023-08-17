@@ -27,11 +27,12 @@ jobs:
             for command in $(cat get-software-version-commands.json | jq ".${container}[]" | tr -d \");
             do
               echo sudo docker run $(echo $container | tr -d \"):latest $command
-              echo $(echo $container | tr -d \") --> $command = foo
+              echo $(echo $container | tr -d \") --> $command = $(sudo docker run $(echo $container | tr -d \"):latest $command)
             done
           done
 
           IFS=$(echo $DEFAULT_IFS)
+          sudo docker run lhr.ocir.io/lrbvkel2wjot/oxfordmmm/fn5:latest fn5 --version
 
 
 
