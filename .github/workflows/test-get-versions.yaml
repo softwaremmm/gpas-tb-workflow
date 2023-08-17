@@ -22,13 +22,23 @@ jobs:
           DEFAULT_IFS=$(echo $IFS)
           IFS=$'\n'
 
+          #Variable interpolation is a bit weird here - for some reason, $command is always produced
+          # surrounded by single quotes which cannot be removed with `tr`.
+          #So to get this to work, we build a string based on `sudo docker run` to include the container,
+          # version and command, and then eval it
+          DOCKER_RUN="sudo docker run "
+
           for container in $(cat get-software-version-commands.json | jq "keys[]");
           do
-            for command in $(cat get-software-version-commands.json | jq ".${container}[]" | tr -d \");
+            #TODO: get container tag out of container_versions.txt
+            TAG="latest"
+            for command in $(cat get-software-version-commands.json | jq ".${container}[]");
             do
               IFS=$(echo $DEFAULT_IFS)
-              echo sudo docker run $(echo $container | tr -d \"):latest $command
-              echo $(echo $container | tr -d \") --> $command = $(sudo docker run $(echo $container | tr -d \"):latest $command)
+              # command=${command//\'/}
+              DOCKER_RUN+="$(echo $container | tr -d \"):latest $(echo $command | tr -d \")"
+              eval $DOCKER_RUN
+              DOCKER_RUN="sudo docker run "
               IFS=$'\n'
             done
           done
