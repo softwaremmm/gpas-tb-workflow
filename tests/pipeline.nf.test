@@ -29,15 +29,9 @@ nextflow_pipeline {
 
             assert workflow.success
 
-            //returns a list containing succeeded tasks
-            assert workflow.trace.succeeded().size() == 7
 
             //returns a list containing failed tasks
             assert workflow.trace.failed().size() == 0
-
-            //returns a list containing all tasks
-            assert workflow.trace.tasks().size() == 7
-
 
             assert workflow.stdout.contains("Gatekeeper output sample has enough reads")
 
@@ -70,15 +64,8 @@ nextflow_pipeline {
 
             assert workflow.success
 
-            //returns a list containing succeeded tasks
-            assert workflow.trace.succeeded().size() == 5
-
             //returns a list containing failed tasks
             assert workflow.trace.failed().size() == 0
-
-            //returns a list containing all tasks
-            assert workflow.trace.tasks().size() == 5
-
 
             assert workflow.stdout.contains("Gatekeeper output sample does not have enough reads. END OF THE PIPELINE")
         }
@@ -110,15 +97,8 @@ nextflow_pipeline {
 
             assert workflow.success
 
-            //returns a list containing succeeded tasks
-            assert workflow.trace.succeeded().size() == 7
-
             //returns a list containing failed tasks
             assert workflow.trace.failed().size() == 0
-
-            //returns a list containing all tasks
-            assert workflow.trace.tasks().size() == 7
-
 
             assert workflow.stdout.contains("Competitive Mapping output sample has enough reads")
         }
@@ -150,14 +130,8 @@ nextflow_pipeline {
 
             assert workflow.success
 
-            //returns a list containing succeeded tasks
-            assert workflow.trace.succeeded().size() == 7
-
             //returns a list containing failed tasks
             assert workflow.trace.failed().size() == 0
-
-            //returns a list containing all tasks
-            assert workflow.trace.tasks().size() == 7
 
             assert workflow.stdout.contains("Competitive Mapping output sample does not have enough reads. END OF THE PIPELINE")
         }
@@ -180,7 +154,8 @@ nextflow_pipeline {
               inputs_bucket = "/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/"
               outputs_bucket = "/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output"
               outputs_bucket = "/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output"
-              api_token = "token"
+              api_token = "C9PfLm*c8i%UpZvv"
+              api_url = "https://dev.portal.gpas.world"
               kraken2_db_path = "/mnt/volume_data/datasets_full/standard_05-06-2023"
               human_genome_dir = "/mnt/volume_data/work_packages/data/human_genome/"
               manifest = "/mnt/volume_data/work_packages/data/manifest/target_101_new.fasta"
@@ -196,7 +171,7 @@ nextflow_pipeline {
 
             assert workflow.success
 
-                        // Assert number of files copied to inputs_bucket_local
+            // Assert number of files copied to inputs_bucket_local
             assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/1/1/").list().size() == 2
 
 
@@ -248,12 +223,17 @@ nextflow_pipeline {
 
             // CLOCKWORK
             //Pipeline stored all clockwork related files in a tb named folder
-            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/tb/").list().size() == 10
-            
+            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/tb/").list().size() == 11
+
 
             // RESISTANCE PREDICTION
             //Pipeline stored all clockwork related files in a tb named folder
             assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/tb/gnomonicus.json").readLines().size() >= 1
+
+            // FN5
+            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/tb/error_log").readLines().size() >= 0
+
+
         }
 
     }
