@@ -9,6 +9,15 @@ jobs:
         run: |
           set -xe
 
+          sudo apt update
+          sudo apt install git
+
+          #We want to start in this repo
+          git clone https://${{secrets.PAT_TOKEN}}@github.com/GlobalPathogenAnalysisService/gpas-tb-workflow.git
+          cd gpas-tb-workflow
+          git checkout add-software-versions
+
+
           #Change IFS so we only interpret newlines as splits for `for` loops
           DEFAULT_IFS=$(echo $IFS)
           IFS=$'\n'
