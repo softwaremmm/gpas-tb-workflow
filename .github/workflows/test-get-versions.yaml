@@ -26,8 +26,10 @@ jobs:
           do
             for command in $(cat get-software-version-commands.json | jq ".${container}[]" | tr -d \");
             do
+              IFS=$(echo $DEFAULT_IFS)
               echo sudo docker run $(echo $container | tr -d \"):latest $command
               echo $(echo $container | tr -d \") --> $command = $(sudo docker run $(echo $container | tr -d \"):latest $command)
+              IFS=$'\n'
             done
           done
 
