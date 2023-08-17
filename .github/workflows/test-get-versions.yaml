@@ -26,8 +26,8 @@ jobs:
           do
             for command in $(cat get-software-version-commands.json | jq ".${container}[]" | tr -d \");
             do
-              command=$(echo $command | tr -d \")
-              echo $(echo $container | tr -d \") --> $command = $(sudo docker run $(echo $container | tr -d \"):latest $command)
+              echo sudo docker run $(echo $container | tr -d \"):latest $command
+              echo $(echo $container | tr -d \") --> $command = foo
             done
           done
 
