@@ -8,43 +8,171 @@ jobs:
       - name: Get versions
         run: |
           set -xe
+          #Make sure we have git, tar and jq installed
+          sudo apt update --fix-missing
+          sudo apt install -y git jq tar gzip
 
-          sudo apt update
-          sudo apt install git
+          #Git setup so we can actually push
+          git config --global user.email "it-support@gpas.global"
+          git config --global user.name "gpas-github-bot"
 
           #We want to start in this repo
           git clone https://${{secrets.PAT_TOKEN}}@github.com/GlobalPathogenAnalysisService/gpas-tb-workflow.git
           cd gpas-tb-workflow
+
+          #Find out what the next version will be
+          #Based on SARS-CoV2_workflows actiont to do the same
+          #This requires an actual release first though
+          CURRENT_VERSION=$(git tag -l --sort=-version:refname | head -n 1)
+          echo "Current Version = $CURRENT_VERSION"
+          readarray -d . -t strarr <<< "$CURRENT_VERSION"
+          ((strarr[-1]+=1))
+          NEW_VERSION="${strarr[0]}"
+          for elem in "${strarr[@]:1}";do NEW_VERSION="$NEW_VERSION.$elem"; done
+          echo "This version = $NEW_VERSION"
+          
           git checkout add-software-versions
 
+          original_path=$(pwd)
 
-          #Change IFS so we only interpret newlines as splits for `for` loops
-          DEFAULT_IFS=$(echo $IFS)
-          IFS=$'\n'
+          #Remove the contents of the dummy data dir
+          rm -rf data/*
 
-          #Variable interpolation is a bit weird here - for some reason, $command is always produced
-          # surrounded by single quotes which cannot be removed with `tr`.
-          #So to get this to work, we build a string based on `sudo docker run` to include the container,
-          # version and command, and then eval it
-          DOCKER_RUN="sudo docker run "
+          #Pull in all of the sub workflows
+          mkdir -p sub_workflows
+          cd sub_workflows
 
-          for container in $(cat get-software-version-commands.json | jq "keys[]");
-          do
-            #TODO: get container tag out of container_versions.txt
-            TAG="latest"
-            for command in $(cat get-software-version-commands.json | jq ".${container}[]");
+          #Make sure there's nothing there to start with
+          rm -rf ./*
+
+          #Temp folder to make extracting files easy
+          mkdir -p tmp
+
+          #
+
+          get_software_versions(){
+            local container_tag=$1
+
+            #Pull apart the container name and the tag name
+            local container=$(echo $container_tag | cut -d : -f 1)
+            local tag=$(echo $container_tag | cut -d : -f 2)
+            
+            #IFS changes to force `for` loop over lines not spaces
+            DEFAULT_IFS=$(echo $IFS)
+            IFS=$'\n'
+
+            for command in $(cat $original_path/get-software-version-commands.json | jq ".${container}[]");
             do
+              #Just in case IFS causes issues, set to default during this
               IFS=$(echo $DEFAULT_IFS)
-              # command=${command//\'/}
-              DOCKER_RUN+="$(echo $container | tr -d \"):latest $(echo $command | tr -d \")"
-              eval $DOCKER_RUN
+
+              #Build docker run command
               DOCKER_RUN="sudo docker run "
+              DOCKER_RUN+="$container:$tag $(echo $command | tr -d \")"
+
+              #Get version of this tool
+              echo $DOCKER_RUN
+              eval $DOCKER_RUN >> $original_path/software_versions.txt
+
               IFS=$'\n'
             done
+            
+            IFS=$(echo $DEFAULT_IFS)
+
+          }
+
+          for repo in $(cat ../includerepos.txt); do
+            #Clone the repo
+            git clone https://${{secrets.PAT_TOKEN}}@github.com/$repo.git
+
+            #Pull out the repo name (without `GlobalPathogenAnalysisService/`)
+            r=$(basename $repo)
+
+            cd $r
+          
+            #Use most recent tags
+            git fetch --all
+            git fetch --tags
+
+            pipeline_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
+            echo -n "$r = $pipeline_tag\n" >> ../pipeline_versions.txt
+            git checkout $pipeline_tag
+
+            cd ..
+
+            #Now we have the latest release, cut out everything not-required
+            rm -rf $r/.git*
+            
+            #If a minimal files has been declared, use it. Otherwise just take everything for now
+            if [ -s $r/minimal_files.txt ]; then
+              mv $r/* tmp
+
+              for f in $(cat tmp/minimal_files.txt);do
+                #Retain dir structure
+                mkdir -p $r/$(dirname $f)
+                cp tmp/$f $r/$(dirname $f)
+              done
+
+              #Now we have just the files required to run, clean up and move on
+              rm -rf tmp/*
+            fi
+
+            #Find which containers are used within the nextflow as a single \n separated line
+            #One version for `container = "<foo>"`, one for `container = '<foo>'`
+            echo -nE $(find $r | grep -E "\.nf" | xargs cat | grep -E '\w*container\ *=? \ *".*"' | cut -d \" -f 2 | uniq | sed 's/$/\\n/' | tr -d '\n') >> container_versions.txt
+            echo -nE $(find $r | grep -E "\.nf" | xargs cat | grep -E "\w*container\ *=? \ *'.*'" | cut -d \' -f 2 | uniq | sed 's/$/\\n/' | tr -d '\n') >> container_versions.txt
           done
 
-          IFS=$(echo $DEFAULT_IFS)
-          sudo docker run lhr.ocir.io/lrbvkel2wjot/oxfordmmm/fn5:latest fn5 --version
+          for container in $(cat container_versions.txt);
+          do
+            echo $container
+            get_software_versions $container
+            echo
+            echo
+          done
+
+          #Ensure we add everything by cd-ing to the main git dir
+          # cd $original_path
+
+
+
+
+
+
+          # #We want to start in this repo
+          # git clone https://${{secrets.PAT_TOKEN}}@github.com/GlobalPathogenAnalysisService/gpas-tb-workflow.git
+          # cd gpas-tb-workflow
+          # git checkout add-software-versions
+
+
+          # #Change IFS so we only interpret newlines as splits for `for` loops
+          # DEFAULT_IFS=$(echo $IFS)
+          # IFS=$'\n'
+
+          # #Variable interpolation is a bit weird here - for some reason, $command is always produced
+          # # surrounded by single quotes which cannot be removed with `tr`.
+          # #So to get this to work, we build a string based on `sudo docker run` to include the container,
+          # # version and command, and then eval it
+          # DOCKER_RUN="sudo docker run "
+
+          # for container in $(cat get-software-version-commands.json | jq "keys[]");
+          # do
+          #   #TODO: get container tag out of container_versions.txt
+          #   TAG="latest"
+          #   for command in $(cat get-software-version-commands.json | jq ".${container}[]");
+          #   do
+          #     IFS=$(echo $DEFAULT_IFS)
+          #     # command=${command//\'/}
+          #     DOCKER_RUN+="$(echo $container | tr -d \"):latest $(echo $command | tr -d \")"
+          #     #eval $DOCKER_RUN
+          #     echo $DOCKER_RUN
+          #     DOCKER_RUN="sudo docker run "
+          #     IFS=$'\n'
+          #   done
+          # done
+
+          # IFS=$(echo $DEFAULT_IFS)
+          # sudo docker run lhr.ocir.io/lrbvkel2wjot/oxfordmmm/fn5:latest fn5 --version
 
 
 
