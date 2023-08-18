@@ -132,6 +132,8 @@ jobs:
             echo
           done
 
+          cat $original_path/software_versions.txt
+
           #Ensure we add everything by cd-ing to the main git dir
           # cd $original_path
 
