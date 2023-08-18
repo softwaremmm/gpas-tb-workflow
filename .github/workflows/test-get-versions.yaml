@@ -123,8 +123,8 @@ jobs:
             echo -nE $(find $r | grep -E "\.nf" | xargs cat | grep -E "\w*container\ *=? \ *'.*'" | cut -d \' -f 2 | uniq | sed 's/$/\\n/' | tr -d '\n') >> container_versions.txt
           done
 
-          IFS="\n"
-          for container in $(cat container_versions.txt);
+          # IFS="\n"
+          for container in $(cat container_versions.txt | sed 's/\\n/\'$'\n''/g');
           do
             echo $container
             get_software_versions $container
