@@ -61,7 +61,7 @@ jobs:
             DEFAULT_IFS=$(echo $IFS)
             IFS=$'\n'
 
-            for command in $(cat $original_path/get-software-version-commands.json | jq ".${container}[]");
+            for command in $(cat $original_path/get-software-version-commands.json | jq ".\"${container}\"[]");
             do
               #Just in case IFS causes issues, set to default during this
               IFS=$(echo $DEFAULT_IFS)
