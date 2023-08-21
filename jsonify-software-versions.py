@@ -20,6 +20,9 @@ if __name__ == "__main__":
     # <container name> --> <command to get software version> --> <software version>
     data = [line.split(" --> ") for line in data]
 
+    for line in data:
+        print(line)
+
     # This should be written as a JSON of:
     # {
     #   <container>: {

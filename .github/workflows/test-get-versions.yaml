@@ -136,6 +136,8 @@ jobs:
               echo
           done
 
+          cat software_versions.txt
+
           python3 ../jsonify-software-versions.py software_versions.txt
 
           rm software_versions.txt
