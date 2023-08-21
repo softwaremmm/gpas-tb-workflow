@@ -48,7 +48,6 @@ jobs:
           #Temp folder to make extracting files easy
           mkdir -p tmp
 
-          #
 
           get_software_versions(){
             local container_tag=$1
@@ -56,30 +55,35 @@ jobs:
             #Pull apart the container name and the tag name
             local container=$(echo $container_tag | cut -d : -f 1)
             local tag=$(echo $container_tag | cut -d : -f 2)
-            
+
             #IFS changes to force `for` loop over lines not spaces
             DEFAULT_IFS=$(echo $IFS)
             IFS=$'\n'
 
             for command in $(cat $original_path/get-software-version-commands.json | jq -r ".\"${container}\"[]");
             do
-              #Just in case IFS causes issues, set to default during this
-              IFS=$(echo $DEFAULT_IFS)
 
-              #Build docker run command
-              DOCKER_RUN="sudo docker run "
-              DOCKER_RUN+="$container:$tag $command"
+                #Build docker run command
+                DOCKER_RUN="sudo docker run "
+                DOCKER_RUN+="$container:$tag $command"
 
-              #Get version of this tool
-              echo $DOCKER_RUN
-              eval $DOCKER_RUN >> $original_path/software_versions.txt
+                #Get version of this tool
+                echo $DOCKER_RUN
+                eval $DOCKER_RUN > tmp.txt
 
-              IFS=$'\n'
+                #Ensure values are single line
+                v=$(cat tmp.txt | sed 's/$/\\n/' | tr -d '\n')
+                #Remove trailing string literal \n
+                v=${v%??}
+                rm tmp.txt
+
+                echo -e $container --\> $command --\> $v >> software_versions.txt
+
             done
-            
+
             IFS=$(echo $DEFAULT_IFS)
 
-          }
+        }
 
           for repo in $(cat ../includerepos.txt); do
             #Clone the repo
@@ -126,56 +130,15 @@ jobs:
           # IFS="\n"
           for container in $(cat container_versions.txt | sed 's/\\n/\'$'\n''/g');
           do
-            echo $container
-            get_software_versions $container
-            echo
-            echo
+              echo $container
+              get_software_versions $container
+              echo
+              echo
           done
 
-          cat $original_path/software_versions.txt
+          python3 ../jsonify-software-versions.py software_versions.txt
 
-          #Ensure we add everything by cd-ing to the main git dir
-          # cd $original_path
+          rm software_versions.txt
 
-
-
-
-
-
-          # #We want to start in this repo
-          # git clone https://${{secrets.PAT_TOKEN}}@github.com/GlobalPathogenAnalysisService/gpas-tb-workflow.git
-          # cd gpas-tb-workflow
-          # git checkout add-software-versions
-
-
-          # #Change IFS so we only interpret newlines as splits for `for` loops
-          # DEFAULT_IFS=$(echo $IFS)
-          # IFS=$'\n'
-
-          # #Variable interpolation is a bit weird here - for some reason, $command is always produced
-          # # surrounded by single quotes which cannot be removed with `tr`.
-          # #So to get this to work, we build a string based on `sudo docker run` to include the container,
-          # # version and command, and then eval it
-          # DOCKER_RUN="sudo docker run "
-
-          # for container in $(cat get-software-version-commands.json | jq "keys[]");
-          # do
-          #   #TODO: get container tag out of container_versions.txt
-          #   TAG="latest"
-          #   for command in $(cat get-software-version-commands.json | jq ".${container}[]");
-          #   do
-          #     IFS=$(echo $DEFAULT_IFS)
-          #     # command=${command//\'/}
-          #     DOCKER_RUN+="$(echo $container | tr -d \"):latest $(echo $command | tr -d \")"
-          #     #eval $DOCKER_RUN
-          #     echo $DOCKER_RUN
-          #     DOCKER_RUN="sudo docker run "
-          #     IFS=$'\n'
-          #   done
-          # done
-
-          # IFS=$(echo $DEFAULT_IFS)
-          # sudo docker run lhr.ocir.io/lrbvkel2wjot/oxfordmmm/fn5:latest fn5 --version
-
-
+          cat software-versions.json
 
