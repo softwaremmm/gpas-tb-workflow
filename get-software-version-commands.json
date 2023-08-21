@@ -11,7 +11,7 @@
     ],
     "lhr.ocir.io/lrbvkel2wjot/gpas/competitivemapping_pipeline": [
         "minimap2 --version",
-        "samtools --version \\| grep -E 'samtools\\ '"
+        "samtools --version \\| grep -E \\'samtools\\ \\'"
     ],
     "lhr.ocir.io/lrbvkel2wjot/oxfordmmm/clockwork": [
         "clockwork version"

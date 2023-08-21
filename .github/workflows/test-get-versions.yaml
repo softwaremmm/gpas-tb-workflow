@@ -61,14 +61,14 @@ jobs:
             DEFAULT_IFS=$(echo $IFS)
             IFS=$'\n'
 
-            for command in $(cat $original_path/get-software-version-commands.json | jq ".\"${container}\"[]");
+            for command in $(cat $original_path/get-software-version-commands.json | jq -r ".\"${container}\"[]");
             do
               #Just in case IFS causes issues, set to default during this
               IFS=$(echo $DEFAULT_IFS)
 
               #Build docker run command
               DOCKER_RUN="sudo docker run "
-              DOCKER_RUN+="$container:$tag $(echo $command | tr -d \")"
+              DOCKER_RUN+="$container:$tag $command"
 
               #Get version of this tool
               echo $DOCKER_RUN
