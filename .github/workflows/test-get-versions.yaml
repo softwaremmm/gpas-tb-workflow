@@ -62,6 +62,11 @@ jobs:
 
             for command in $(cat $original_path/get-software-version-commands.json | jq -r ".\"${container}\"[]");
             do
+                #As some tools print version to stderr (as does docker pull)
+                #Pull the containers before doing docker run
+                DOCKER_PULL="sudo docker pull "
+                DOCKER_PULL+="$container:$tag"
+                eval $DOCKER_PULL
 
                 #Build docker run command
                 DOCKER_RUN="sudo docker run "
