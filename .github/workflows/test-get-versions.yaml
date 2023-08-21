@@ -83,7 +83,7 @@ jobs:
 
             IFS=$(echo $DEFAULT_IFS)
 
-        }
+          }
 
           for repo in $(cat ../includerepos.txt); do
             #Clone the repo
