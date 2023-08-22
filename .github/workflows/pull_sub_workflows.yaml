@@ -32,8 +32,8 @@ jobs:
           for elem in "${strarr[@]:1}";do NEW_VERSION="$NEW_VERSION.$elem"; done
           echo "This version = $NEW_VERSION"
           
-          git checkout add-software-versions
-          git checkout -b $NEW_VERSION-branch add-software-versions
+          git checkout main
+          git checkout -b $NEW_VERSION-branch main
 
           original_path=$(pwd)
 
