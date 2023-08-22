@@ -56,7 +56,7 @@ fq2_ch = Channel.fromPath("/${updir}/*_2.fastq.gz")
 dirty_reads_ch = sample_id_ch.merge(fq1_ch).merge(fq2_ch)
 
 process write_clean_reads_to_input {
-    container 'lhr.ocir.io/lrbvkel2wjot/gpas/gatekeeper_pipeline:latest'
+    
     input:
         tuple val(x), path(sample1), path(sample2)
 
@@ -75,7 +75,7 @@ process write_clean_reads_to_input {
 }
 
 process write_to_bucket {
-    container 'lhr.ocir.io/lrbvkel2wjot/gpas/gatekeeper_pipeline:latest'
+    
 
     input:
         path(output_file)
@@ -94,7 +94,7 @@ process write_to_bucket {
 }
 
 process write_species_to_bucket {
-    container 'lhr.ocir.io/lrbvkel2wjot/gpas/gatekeeper_pipeline:latest'
+    
 
     input:
         path(output_file)
@@ -113,7 +113,7 @@ process write_species_to_bucket {
 }
 
 process write_samples_to_bucket {
-    container 'lhr.ocir.io/lrbvkel2wjot/gpas/gatekeeper_pipeline:latest'
+    
 
     input:
         tuple val(x), path(sample1), path(sample2)
