@@ -1,39 +1,20 @@
 {
-    "lhr.ocir.io/lrbvkel2wjot/gpas/hostile": [
-        "hostile --version"
-    ],
-    "lhr.ocir.io/lrbvkel2wjot/gpas/gatekeeper_pipeline": [
-        "fastp --version 2> /dev/stdout",
-        "kraken2 --version | head -n 1"
-    ],
-    "lhr.ocir.io/lrbvkel2wjot/gpas/lineagecalling_pipeline": [
-        "mykrobe --version",
-        "conda list | grep mccortex | tr -s ' ' | cut -d ' ' -f 2"
-    ],
-    "lhr.ocir.io/lrbvkel2wjot/gpas/competitivemapping_pipeline": [
-        "minimap2 --version",
-        "samtools --version | grep -E 'samtools\\ '"
-    ],
-    "lhr.ocir.io/lrbvkel2wjot/oxfordmmm/clockwork": [
-        "clockwork version",
-        "samtools --version | grep -E 'samtools\\ '",
-        "bcftools --version | head -n 1",
-        "fastqc --version",
-        "fqtools -version",
-        "gramtools --version | jq \".version_number\" | tr -d \\\"",
-        "minimap2 --version",
-        "mykrobe --version",
-        "seqtk 2> /dev/stdout | grep Version",
-        "vcftools --version",
-        "vt --version 2> /dev/stdout | head -n 1"
-    ],
-    "lhr.ocir.io/lrbvkel2wjot/oxfordmmm/fn5": [
-        "fn5 --version"
-    ],
-    "lhr.ocir.io/lrbvkel2wjot/oxfordmmm/gnomonicus": [
-        "gnomonicus --version"
-    ],
-    "lhr.ocir.io/lrbvkel2wjot/gpas/summary_pipeline": [
-        "pip show summary_pipeline | grep Version"
-    ]
+    "hostile": "hostile --version",
+    "fastp": "fastp --version 2> /dev/stdout",
+    "kraken2": "kraken2 --version | head -n 1",
+    "mykrobe": "mykrobe --version",
+    "mccortex": "conda list | grep mccortex | tr -s ' ' | cut -d ' ' -f 2",
+    "minimap2": "minimap2 --version",
+    "samtools": "samtools --version | grep -E 'samtools\\ '",
+    "clockwork": "clockwork version",
+    "bcftools": "bcftools --version | head -n 1",
+    "fastqc": "fastqc --version",
+    "fqtools": "fqtools -version",
+    "gramtools": "gramtools --version | jq \".version_number\" | tr -d \\\"",
+    "seqtk": "seqtk 2> /dev/stdout | grep Version",
+    "vcftools": "vcftools --version",
+    "vt": "vt --version 2> /dev/stdout | head -n 1",
+    "fn5": "fn5 --version",
+    "gnomonicus": "gnomonicus --version",
+    "summary_pipeline": "pip show summary_pipeline | grep Version"
 }

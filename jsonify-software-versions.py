@@ -17,13 +17,13 @@ if __name__ == "__main__":
         data = [line.replace("\n", "") for line in f]
 
     # Expected format. Line separated values of:
-    # <container name> --> <command to get software version> --> <software version>
+    # <container name> --> <software name> --> <software version>
     data = [line.split(" --> ") for line in data]
 
     # This should be written as a JSON of:
     # {
     #   <container>: {
-    #       <command>: <version>
+    #       <software>: <version>
     #   }
     # }
     json_data = defaultdict(dict)

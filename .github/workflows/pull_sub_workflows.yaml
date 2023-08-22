@@ -61,13 +61,17 @@ jobs:
             DEFAULT_IFS=$(echo $IFS)
             IFS=$'\n'
 
-            for command in $(cat $original_path/get-software-version-commands.json | jq -r ".\"${container}\"[]");
+            for tool in $(cat $original_path/get-container-tools.json | jq -r ".\"${container}\"[]");
             do
                 #As some tools print version to stderr (as does docker pull)
                 #Pull the containers before doing docker run
                 DOCKER_PULL="sudo docker pull "
                 DOCKER_PULL+="$container:$tag"
                 eval $DOCKER_PULL
+
+                #Pull out the command from the tools JSON
+                command=$(cat $original_path/get-software-version-commands.json| jq -r ".\"$tool\"")
+                echo $tool --\> $command 
 
                 #Build docker run command
                 DOCKER_RUN="sudo docker run "
@@ -83,7 +87,7 @@ jobs:
                 v=${v%??}
                 rm tmp.txt
 
-                echo -e $container --\> $command --\> $v >> software_versions.txt
+                echo -e $container --\> $tool --\> $v >> software_versions.txt
 
             done
 
