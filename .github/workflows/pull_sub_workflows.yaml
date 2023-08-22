@@ -87,7 +87,7 @@ jobs:
                 v=${v%??}
                 rm tmp.txt
 
-                echo -e $container --\> $tool --\> $v >> software_versions.txt
+                echo -e $container:$tag --\> $tool --\> $v >> software_versions.txt
 
             done
 
