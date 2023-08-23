@@ -22,6 +22,7 @@ params.sample_id = 1
 params.run_id = 1
 params.help = ''
 params.api_url = 'https://dev.portal.gpas.world'
+params.species = 'tb'
 
 // the location in the buckets for the current run
 outdir = "$params.outputs_bucket/$params.sample_id/$params.run_id"
@@ -183,7 +184,7 @@ workflow {
         gnomonicus_json = gnomonicus_ch.gnomonicus_json
 
         //WP7
-        fn5_ch = find_neighbour_5(clockwork_ch.final_fasta, "test", params.api_url, params.api_token)
+        fn5_ch = find_neighbour_5(clockwork_ch.final_fasta, params.species, params.api_url, params.api_token)
 
         // copy species specific files to bucket
         clockwork_ch.final_fasta.concat(
