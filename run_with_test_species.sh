@@ -44,5 +44,5 @@ else
     echo "API_TOKEN set"
 fi
 
-echo nextflow run . -profile $PROFILE --sample_id $SAMPLE_ID --run_id $RUN_ID --api_token $API_TOKEN --species test
+nextflow run . -profile $PROFILE --sample_id $SAMPLE_ID --run_id $RUN_ID --api_token $API_TOKEN --species test
 
