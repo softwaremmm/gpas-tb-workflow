@@ -203,6 +203,7 @@ workflow {
         gatekeeper_ch.gatekeeper_report.concat(
             competitive_mapping_ch.cm_report,
             lineagecalling_ch.json_report,
+            clockwork_ch.tb_clockwork_report_json,
             gnomonicus_ch.gnomonicus_json
         ).toList() | summary // WP8
 
