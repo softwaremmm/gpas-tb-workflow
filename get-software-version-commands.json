@@ -1,0 +1,20 @@
+{
+    "hostile": "hostile --version",
+    "fastp": "fastp --version 2> /dev/stdout",
+    "kraken2": "kraken2 --version | head -n 1",
+    "mykrobe": "mykrobe --version",
+    "mccortex": "conda list | grep mccortex | tr -s ' ' | cut -d ' ' -f 2",
+    "minimap2": "minimap2 --version",
+    "samtools": "samtools --version | grep -E 'samtools\\ '",
+    "clockwork": "clockwork version",
+    "bcftools": "bcftools --version | head -n 1",
+    "fastqc": "fastqc --version",
+    "fqtools": "fqtools -version",
+    "gramtools": "gramtools --version | jq \".version_number\" | tr -d \\\"",
+    "seqtk": "seqtk 2> /dev/stdout | grep Version",
+    "vcftools": "vcftools --version",
+    "vt": "vt --version 2> /dev/stdout | head -n 1",
+    "fn5": "fn5 --version",
+    "gnomonicus": "gnomonicus --version",
+    "summary_pipeline": "pip show summary_pipeline | grep Version"
+}

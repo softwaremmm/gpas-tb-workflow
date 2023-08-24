@@ -9,9 +9,9 @@ jobs:
       - name: Clone subworkflows
         run: |
           set -xe
-          #Make sure we have git installed
+          #Make sure we have git, tar and jq installed
           sudo apt update --fix-missing
-          sudo apt install -y git
+          sudo apt install -y git jq tar gzip
 
           #Git setup so we can actually push
           git config --global user.email "it-support@gpas.global"
@@ -35,6 +35,11 @@ jobs:
           git checkout main
           git checkout -b $NEW_VERSION-branch main
 
+          original_path=$(pwd)
+
+          #Remove the contents of the dummy data dir
+          rm -rf data/*
+
           #Pull in all of the sub workflows
           mkdir -p sub_workflows
           cd sub_workflows
@@ -44,6 +49,51 @@ jobs:
 
           #Temp folder to make extracting files easy
           mkdir -p tmp
+
+          get_software_versions(){
+            local container_tag=$1
+
+            #Pull apart the container name and the tag name
+            local container=$(echo $container_tag | cut -d : -f 1)
+            local tag=$(echo $container_tag | cut -d : -f 2)
+
+            #IFS changes to force `for` loop over lines not spaces
+            DEFAULT_IFS=$(echo $IFS)
+            IFS=$'\n'
+
+            for tool in $(cat $original_path/get-container-tools.json | jq -r ".\"${container}\"[]");
+            do
+                #As some tools print version to stderr (as does docker pull)
+                #Pull the containers before doing docker run
+                DOCKER_PULL="sudo docker pull "
+                DOCKER_PULL+="$container:$tag"
+                eval $DOCKER_PULL
+
+                #Pull out the command from the tools JSON
+                command=$(cat $original_path/get-software-version-commands.json| jq -r ".\"$tool\"")
+                echo $tool --\> $command 
+
+                #Build docker run command
+                DOCKER_RUN="sudo docker run "
+                DOCKER_RUN+="$container:$tag $command"
+
+                #Get version of this tool
+                echo $DOCKER_RUN
+                eval $DOCKER_RUN > tmp.txt
+
+                #Ensure values are single line
+                v=$(cat tmp.txt | sed 's/$/\\n/' | tr -d '\n')
+                #Remove trailing string literal \n
+                v=${v%??}
+                rm tmp.txt
+
+                echo -e $container:$tag --\> $tool --\> $v >> software_versions.txt
+
+            done
+
+            IFS=$(echo $DEFAULT_IFS)
+
+          }
 
           for repo in $(cat ../includerepos.txt); do
             #Clone the repo
@@ -71,8 +121,10 @@ jobs:
             if [ -s $r/minimal_files.txt ]; then
               mv $r/* tmp
 
-              for f in $(cat tmp/minimal_files.txt); do
-                mv tmp/$f $r
+              for f in $(cat tmp/minimal_files.txt);do
+                #Retain dir structure
+                mkdir -p $r/$(dirname $f)
+                cp tmp/$f $r/$(dirname $f)
               done
 
               #Now we have just the files required to run, clean up and move on
@@ -85,9 +137,26 @@ jobs:
             echo -nE $(find $r | grep -E "\.nf" | xargs cat | grep -E "\w*container\ *=? \ *'.*'" | cut -d \' -f 2 | uniq | sed 's/$/\\n/' | tr -d '\n') >> container_versions.txt
           done
 
+          for container in $(cat container_versions.txt | sed 's/\\n/\'$'\n''/g');
+          do
+              echo $container
+              get_software_versions $container
+              echo
+              echo
+          done
+
+          python3 ../jsonify-software-versions.py software_versions.txt
+
+          rm software_versions.txt
+
+          echo -n gpas-tb-workflow = $NEW_VERSION >> pipeline_versions.txt
+
+          #Ensure we add everything by cd-ing to the main git dir
+          cd $original_path
+
           #Push if there is anything to push
           git add . || echo "No changes to add"
-          git commit -m "[bot] test" || echo "No changes to commit"
+          git commit -m "[bot] Update WP8 to $NEW_VERSION" || echo "No changes to commit"
           git push origin $NEW_VERSION-branch || echo "No changes to push"
 
           #Create a release
@@ -99,9 +168,33 @@ jobs:
             -H "Authorization: Bearer ${{secrets.PAT_TOKEN}}" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             https://api.github.com/repos/GlobalPathogenAnalysisService/gpas-tb-workflow/releases \
-            -d "{\"tag_name\": \"$NEW_VERSION\", \"target_commitish\": \"$NEW_VERSION-branch\", \"name\": \"$NEW_VERSION\", \"body\": \"# Pipeline versions\n$(cat pipeline_versions.txt)\n# Container versions\n$(cat container_versions.txt)\", \"draft\": false, \"prerelease\": false, \"generate_release_notes\": false}"
+            -d "{\"tag_name\": \"$NEW_VERSION\", \"target_commitish\": \"$NEW_VERSION-branch\", \"name\": \"$NEW_VERSION\", \"body\": \"# Pipeline versions\n$(cat sub_workflows/pipeline_versions.txt)\n# Container versions\n$(cat sub_workflows/container_versions.txt)\", \"draft\": false, \"prerelease\": false, \"generate_release_notes\": false}" > gh_release.json
+
+          #For debugging...
+          cat gh_release.json
+
+          #Parse the JSON response to get the ID of the release we just created
+          RELEASE_ID=$(cat gh_release.json | jq ".id")
+          rm gh_release.json
+
+          #Create release asset
+          cd ..
+          mkdir -p $NEW_VERSION
+          cp -r gpas-tb-workflow/* $NEW_VERSION
+          tar -czf $NEW_VERSION.tar.gz $NEW_VERSION
+          curl -L \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{secrets.PAT_TOKEN}}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            -H "Content-Type: application/octet-stream" \
+            "https://uploads.github.com/repos/GlobalPathogenAnalysisService/gpas-tb-workflow/releases/$RELEASE_ID/assets?name=$NEW_VERSION.tar.gz" \
+            --data-binary "@$NEW_VERSION.tar.gz"
           
+
+
           #Clean up the branch now we're done with it
+          cd gpas-tb-workflow
           git push origin --delete $NEW_VERSION-branch
 
 
