@@ -149,7 +149,7 @@ jobs:
 
           rm software_versions.txt
 
-          echo -n gpas-tb-workflow = $NEW_VERSION\n >> pipeline_versions.txt
+          echo -n gpas-tb-workflow = $NEW_VERSION >> pipeline_versions.txt
 
           #Ensure we add everything by cd-ing to the main git dir
           cd $original_path
