@@ -135,8 +135,8 @@ process write_samples_to_bucket {
 
 workflow {
     main:
-
-        // wp2
+	
+        // Decontamination
         human_read_removal_ch = human_read_removal(dirty_reads_ch, Channel.fromPath(params.human_genome_dir))
         write_clean_reads_to_input(human_read_removal_ch.clean_fastq)
 
@@ -175,9 +175,6 @@ workflow {
             .filter { it[3] == "false"}
             .view{"Competitive Mapping output sample does not have enough reads. END OF THE PIPELINE"}
 
-        // cm_not_enough_reads = competitive_mapping_ch_output
-        //     .filter { it[3] == "false"}
-        //     .view{"Competitive Mapping output sample does not have enough reads. END OF THE PIPELINE"}
 
         // WP5 -> Clockwork_ch is called only if  cm_enough_reads_ch exists.
         clockwork_ch = clockwork(cm_enough_reads_ch, params.ref_files)
@@ -208,7 +205,7 @@ workflow {
             lineagecalling_ch.json_report,
             clockwork_ch.tb_clockwork_report_json,
             gnomonicus_ch.gnomonicus_json
-        ).toList() | summary // WP8
+        ).toList() | summary
 
         //copy to bucket
         gatekeeper_ch.gatekeeper_report.concat(
@@ -216,7 +213,6 @@ workflow {
             gatekeeper_ch.fastp_report,
             gatekeeper_ch.fastp_error,
             competitive_mapping_ch.cm_report,
-            // call_wp4.out.competitivemapping_error_json,
             lineagecalling_ch.json_error,
             lineagecalling_ch.json_report,
             summary.out.main_report,

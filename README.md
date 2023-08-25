@@ -71,6 +71,7 @@ sudo nextflow run . -profile local --sample_id 5 --run_id 1 --api_token $(cat ..
 ## Testing the full pipeline
 
 To test the full pipeline, please run the nf-test subselecting the full tag. To test the pipeline for TB samples (h37_rv), add the tag tb. 
+Add a valid token in api_token variable. 
 
 ```bash
 nf-test test pipeline.nf.test --tag full,tb

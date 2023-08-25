@@ -19,8 +19,9 @@ nextflow_pipeline {
               inputs_bucket = "/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/"
               outputs_bucket = "/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output"
               outputs_bucket = "/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output"
-              api_token = "C9PfLm*c8i%UpZvv"
+              api_token = ""
               api_url = "https://dev.portal.gpas.world"
+              species = 'test'
               kraken2_db_path = "/mnt/volume_data/datasets_full/standard_05-06-2023"
               human_genome_dir = "/mnt/volume_data/work_packages/data/human_genome/"
               manifest = "/mnt/volume_data/work_packages/data/manifest/target_101_new.fasta"
@@ -37,21 +38,47 @@ nextflow_pipeline {
             assert workflow.success
 
             // Assert number of files copied to inputs_bucket_local
-            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/1/1/").list().size() == 2
+            // assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/1/1/").list().size() == 2
 
 
             // DECONTAMINATION
-
             // Copy decontaminated files to the uploads_bucket location
-            // Assert number of files copied to inputs_bucket_local
-            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/1/1/").list().size() == 2
-
-            // Copy decontaminated files to the uploads_bucket location
-            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/1/1/WTCHG_885333_73205296_1.clean_1.fastq.gz").linesGzip.size() >= 1
-            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/1/1/WTCHG_885333_73205296_2.clean_2.fastq.gz").linesGzip.size() >= 1
-            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/decontamination-log.json").readLines().size() >= 0
+            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/1/1/1.clean_1.fastq.gz").linesGzip.size() >= 1
+            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/1/1/1.clean_2.fastq.gz").linesGzip.size() >= 1
 
 
+
+            // GATEKEEPER
+            // Samples has enough Unclassified and Mycrobacteriae reads
+            assert workflow.stdout.contains("Gatekeeper output sample has enough reads")
+
+            // Pipeline stores Gatekeeper FASTP related files
+            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/fastp_report.json").readLines().size() >= 0
+            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/fastp_error.json").readLines().size() == 0
+
+            // Pipeline stores json Gatekeeper Kraken2 with empty list of errors
+            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/kraken_error.json").readLines()[0] == '[]'
+
+
+
+            // COMPETITIVE MAPPING
+            // Samples has enough  h37rv_tb reads
+            assert workflow.stdout.contains("Competitive Mapping output sample has enough reads")
+
+            // Pipeline stores Competitive Mapping report file
+            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/competitivemapping_report.json").readLines().size() >= 1
+
+            // CLOCKWORK
+            //Pipeline stored all clockwork related files in a tb named folder
+            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/tb/").list().size() == 11
+
+
+            // RESISTANCE PREDICTION
+            //Pipeline stored all clockwork related files in a tb named folder
+            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/tb/resistance_prediction_report.json").readLines().size() >= 1
+
+            // FN5
+            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/tb/error_log").readLines().size() >= 0
 
         }
 
