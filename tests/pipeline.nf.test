@@ -53,12 +53,14 @@ nextflow_pipeline {
             assert workflow.stdout.contains("Gatekeeper output sample has enough reads")
 
             // Pipeline stores Gatekeeper FASTP related files
-            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/fastp_report.json").readLines().size() >= 0
-            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/fastp_error.json").readLines().size() == 0
+            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/read_preprocessing_report.json").readLines().size() >= 0
+            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/read_preprocessing_error.json").readLines().size() == 0
 
             // Pipeline stores json Gatekeeper Kraken2 with empty list of errors
-            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/kraken_error.json").readLines()[0] == '[]'
-
+            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/speciation_error.json").readLines()[0] == '[]'
+            
+             // Pipeline stores gatekeeper report
+            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/speciation_report.json").readLines().size() >= 0
 
 
             // COMPETITIVE MAPPING
@@ -66,7 +68,7 @@ nextflow_pipeline {
             assert workflow.stdout.contains("Competitive Mapping output sample has enough reads")
 
             // Pipeline stores Competitive Mapping report file
-            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/competitivemapping_report.json").readLines().size() >= 1
+            assert path("/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1/species_comparison_report.json").readLines().size() >= 1
 
             // CLOCKWORK
             //Pipeline stored all clockwork related files in a tb named folder
