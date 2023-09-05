@@ -1,0 +1,1 @@
+human-read-removal_pipeline = v0.1.4\ngatekeeper_pipeline = v0.1.9\nlineagecalling_pipeline = v0.1.5\ncompetitivemapping_pipeline = v0.1.8\nclockwork_pipeline = v0.2.2\ntb-predict-pipeline = v0.3.0\nfn5_pipeline = v1.0.3\nsummary_pipeline = 1.1.7\ngpas-tb-workflow = v0.0.55
