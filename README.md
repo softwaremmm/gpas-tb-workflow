@@ -1,5 +1,5 @@
 # gpas-tb-workflow
-TB variant calling pipeline
+TB pipeline
 
 The workflow consist of multiple steps (sometimes referred to as "Work Packages"):
 
