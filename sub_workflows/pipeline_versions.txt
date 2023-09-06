@@ -1,1 +1,0 @@
-human-read-removal_pipeline = unknown\ngatekeeper_pipeline = unknown\nlineagecalling_pipeline = unknown\ncompetitivemapping_pipeline = unknown\nclockwork_pipeline = unknown\ntb-predict-pipeline = unknown\nfn5_pipeline = unknown\nsummary_pipeline = unknown\ngpas-tb-workflow = unknown

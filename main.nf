@@ -52,6 +52,7 @@ include { human_read_removal } from "${subwork_folder}/human-read-removal_pipeli
 
 // metadata
 pipeline_versions_file = Channel.fromPath( "${subwork_folder}/pipeline_versions.txt" )
+                                .filter{ file(it).exists() == true }
 
 // dirty_reads_ch = Channel.fromFilePairs("${updir}/*_{1,2}.fastq.gz", checkIfExists:true, flat:true)
 sample_id_ch = Channel.from(params.sample_id)
