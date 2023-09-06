@@ -173,4 +173,4 @@ tests/.nf-test/
 tests/tests/
 tests/.nf-test/
 
-!sub_workflows/**
+sub_workflows/
