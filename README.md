@@ -45,8 +45,6 @@ If required, clone subworkflows: `bash clone_sub_workflows.sh`. However, sub_wor
 
 ## Running the Pipeline Locally
 
-Minimal sample data is in `data/uploads/1/` folder. `params.sample_id` and `params.run_id` both default to 1.
-
 If you want to use different samples then create a structure under `data/uploads` to put your two FASTQ files into. FASTQ files must adopt the pipeline standard file naming convention i.e. `*_{1,2}.fastq.gz`
 
 e.g. if you use sample_id 5 and run_id 1 then you would have the folder structure
