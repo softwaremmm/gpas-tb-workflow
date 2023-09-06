@@ -1,5 +1,5 @@
 # gpas-tb-workflow
-Example of a TB variant calling pipeline for testing nextflow deployments
+TB variant calling pipeline
 
 The workflow consist of multiple steps (sometimes referred to as "Work Packages"):
 
