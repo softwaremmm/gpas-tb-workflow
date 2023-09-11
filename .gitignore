@@ -168,9 +168,12 @@ work/
 *fq.gz
 data/outputs/1
 trace-20230718-36090998.txt
+trace*
 
 tests/.nf-test/
 tests/tests/
 tests/.nf-test/
 
 !sub_workflows/**
+
+data
