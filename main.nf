@@ -214,21 +214,16 @@ workflow {
 
         //copy to bucket
         gatekeeper_ch.gatekeeper_report.concat(
-            gatekeeper_ch.kraken2_error,
             gatekeeper_ch.fastp_report,
-            gatekeeper_ch.fastp_error,
+            gatekeeper_ch.kraken2_outputs.map{it -> [it[1]]},
             competitive_mapping_ch.cm_report,
-            // call_wp4.out.competitivemapping_error_json,
-            lineagecalling_ch.json_error,
             lineagecalling_ch.json_report,
             summary.out.main_report,
-            summary.out.error_report,
-            human_read_removal_ch.hostile_report,
+            human_read_removal_ch.hostile_report,            
         ) | write_to_bucket
 
         // copy fastq files to bucket
-        gatekeeper_ch.kraken2_filtered_samples.concat(
-            gatekeeper_ch.kraken2_outputs,
+        gatekeeper_ch.kraken2_filtered_samples.concat(            
             competitive_mapping_ch.cm_sample_paths,
         ) | write_samples_to_bucket
 
