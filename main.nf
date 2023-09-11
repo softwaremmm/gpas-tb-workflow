@@ -50,6 +50,10 @@ include { gnomonicus_workflow } from "${subwork_folder}/tb-predict-pipeline/main
 include { summary } from "${subwork_folder}/summary_pipeline/main.nf"
 include { human_read_removal } from "${subwork_folder}/human-read-removal_pipeline/src/workflow/human_read_removal.nf"
 
+// metadata
+pipeline_versions_file = Channel.fromPath( "${subwork_folder}/pipeline_versions.txt" )
+                                .filter{ file(it).exists() == true }
+
 // dirty_reads_ch = Channel.fromFilePairs("${updir}/*_{1,2}.fastq.gz", checkIfExists:true, flat:true)
 sample_id_ch = Channel.from(params.sample_id)
 fq1_ch = Channel.fromPath("/${updir}/*_1.fastq.gz")
@@ -200,7 +204,8 @@ workflow {
             clockwork_ch.tb_clockwork_error_json,
         ) | write_species_to_bucket
 
-        gatekeeper_ch.gatekeeper_report.concat(
+        pipeline_versions_file.concat(
+            gatekeeper_ch.gatekeeper_report,
             competitive_mapping_ch.cm_report,
             lineagecalling_ch.json_report,
             clockwork_ch.tb_clockwork_report_json,
@@ -209,20 +214,16 @@ workflow {
 
         //copy to bucket
         gatekeeper_ch.gatekeeper_report.concat(
-            gatekeeper_ch.kraken2_error,
             gatekeeper_ch.fastp_report,
-            gatekeeper_ch.fastp_error,
+            gatekeeper_ch.kraken2_outputs.map{it -> [it[1]]},
             competitive_mapping_ch.cm_report,
-            lineagecalling_ch.json_error,
             lineagecalling_ch.json_report,
             summary.out.main_report,
-            summary.out.error_report,
-            human_read_removal_ch.hostile_report,
+            human_read_removal_ch.hostile_report,            
         ) | write_to_bucket
 
         // copy fastq files to bucket
-        gatekeeper_ch.kraken2_filtered_samples.concat(
-            gatekeeper_ch.kraken2_outputs,
+        gatekeeper_ch.kraken2_filtered_samples.concat(            
             competitive_mapping_ch.cm_sample_paths,
         ) | write_samples_to_bucket
 

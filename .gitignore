@@ -157,7 +157,7 @@ cython_debug/
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
+.idea/
 .nextflow.log*
 work/
 .nextflow/
@@ -168,10 +168,12 @@ work/
 *fq.gz
 data/outputs/1
 trace-20230718-36090998.txt
+trace*
 
 tests/.nf-test/
 tests/tests/
 tests/.nf-test/
 
-sub_workflows/
-.idea/
+!sub_workflows/**
+
+data
