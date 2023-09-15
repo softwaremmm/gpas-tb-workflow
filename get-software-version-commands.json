@@ -3,7 +3,7 @@
     "fastp": "fastp --version 2> /dev/stdout",
     "kraken2": "kraken2 --version | head -n 1",
     "mykrobe": "mykrobe --version",
-    "mccortex": "conda list | grep mccortex | tr -s ' ' | cut -d ' ' -f 2",
+    "mccortex": "cat /app/mykrobe/mccortex/mccortex_version",
     "minimap2": "minimap2 --version",
     "samtools": "samtools --version | grep -E 'samtools\\ '",
     "clockwork": "clockwork version",
