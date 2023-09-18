@@ -177,3 +177,6 @@ tests/.nf-test/
 !sub_workflows/**
 
 data
+
+# Tests
+.nf-test*
