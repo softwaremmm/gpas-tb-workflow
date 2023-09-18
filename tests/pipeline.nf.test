@@ -1,34 +1,16 @@
 nextflow_pipeline {
 
     name "Test TB pipeline"
-    script "../main.nf"
+    script "./main.nf"
 
     test("Pipeline should succeeded and execute all subworflows if sample is TB") {
-        tag "full"
-        tag "tb"
 
         when {
             params {
-              sample_id = 1
-              run_id  = 1
-              updir = "/mnt/volume_data/work_packages/data/h37rv_tb/1/"
-              indir = "/mnt/volume_data/work_packages/data/h37rv_tb/1/1"
-              outdir = "/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1"
-              outdir = "/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output/1/1"
-              uploads_bucket = "/mnt/volume_data/work_packages/data/h37rv_tb/"
-              inputs_bucket = "/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/"
-              outputs_bucket = "/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output"
-              outputs_bucket = "/mnt/volume_data/work_packages/data/inputs_bucket_local/h37rv_tb/output"
+              sample_id = "WTCHG_885333_73205296_12x"
+              run_id  = 101
               api_token = ""
-              api_url = "https://dev.portal.gpas.world"
               species = 'test'
-              kraken2_db_path = "/mnt/volume_data/datasets_full/standard_05-06-2023"
-              human_genome_dir = "/mnt/volume_data/work_packages/data/human_genome/"
-              manifest = "/mnt/volume_data/work_packages/data/manifest/target_101_new.fasta"
-              ref_files = "/mnt/volume_data/work_packages/data/clockwork/tb/Ref_prepare"
-              tb_ref_genome = "/mnt/volume_data/work_packages/wp6/tuberculosis_amr_catalogues/catalogues/NC_000962.3/NC_000962.3.gbk"
-              tb_amr_cat = "/mnt/volume_data/work_packages/wp6/tuberculosis_amr_catalogues/catalogues/NC_000962.3/NC_000962.3_WHO-UCN-GTB-PCI-2021.7_v1.0_GARC1_RUS.csv"
-              tb_minor_alleles = "/mnt/volume_data/work_packages/data/minor_alleles.txt"
             }
 
         }
