@@ -9,7 +9,8 @@ nextflow_pipeline {
             params {
               sample_id = "WTCHG_885333_73205296_12x"
               run_id  = 101
-              api_token = ""
+              api_token_file = file('../NEXTFLOW_API_KEY')
+              api_token = api_token_file.getText()
               species = 'test'
             }
 
