@@ -59,7 +59,7 @@ uploads
 And would use the following command to run the NextFlow:
 
 ```bash
-sudo nextflow run . -profile local --sample_id 5 --run_id 1 --api_token $(cat ../NEXTFLOW_API_KEY)
+sudo ./run_with_test_species.sh -profile local --sample_id 5 --run_id 1 --api_token $(cat ../NEXTFLOW_API_KEY)
 ```
 
 `NEXTFLOW_API_KEY` is a file containing the API needed for FN5 to communicate with the database it needs in order to function.
