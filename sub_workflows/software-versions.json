@@ -1,0 +1,52 @@
+{
+  "lhr.ocir.io/lrbvkel2wjot/gpas/hostile:0.1.0": {
+    "hostile": "0.1.0"
+  },
+  "lhr.ocir.io/lrbvkel2wjot/gpas/gatekeeper_pipeline:v0.0.2-rc1": {
+    "fastp": "fastp 0.23.4",
+    "kraken2": "Kraken version 2.1.3"
+  },
+  "lhr.ocir.io/lrbvkel2wjot/gpas/lineagecalling_container:v0.13.1": {
+    "mykrobe": "mykrobe v0.12.2",
+    "mccortex": "5a7a0b1 Merge branch 'master' into geno_kmer_count"
+  },
+  "lhr.ocir.io/lrbvkel2wjot/gpas/competitivemapping_pipeline:latest": {
+    "minimap2": "2.26-r1175",
+    "samtools": "samtools 1.17"
+  },
+  "lhr.ocir.io/lrbvkel2wjot/oxfordmmm/clockwork:v0.12.2": {
+    "clockwork": "0.12.2",
+    "samtools": "samtools 1.15.1",
+    "bcftools": "bcftools 1.15.1",
+    "fastqc": "FastQC v0.11.5",
+    "fqtools": "fqtools 2.1 2016-10-04 (zlib 1.2.11; htslib 1.10.2-3ubuntu0.1)",
+    "gramtools": "1.6.0",
+    "minimap2": "2.24-r1122",
+    "mykrobe": "mykrobe v0.12.1",
+    "seqtk": "Version: 1.2-r94",
+    "vcftools": "VCFtools (0.1.15)",
+    "vt": "vt v0.57721"
+  },
+  "lhr.ocir.io/lrbvkel2wjot/oxfordmmm/clockwork:dev": {
+    "clockwork": "0.12.1",
+    "samtools": "samtools 1.15.1",
+    "bcftools": "bcftools 1.15.1",
+    "fastqc": "FastQC v0.11.5",
+    "fqtools": "fqtools 2.1 2016-10-04 (zlib 1.2.11; htslib 1.10.2-3ubuntu0.1)",
+    "gramtools": "1.6.0",
+    "minimap2": "2.24-r1122",
+    "mykrobe": "mykrobe v0.12.1",
+    "seqtk": "Version: 1.2-r94",
+    "vcftools": "VCFtools (0.1.15)",
+    "vt": "vt v0.57721"
+  },
+  "lhr.ocir.io/lrbvkel2wjot/oxfordmmm/gnomonicus:v2.1.2": {
+    "gnomonicus": "gnomonicus 2.1.2"
+  },
+  "lhr.ocir.io/lrbvkel2wjot/oxfordmmm/fn5:v1.0.0": {
+    "fn5": "v1.0.0"
+  },
+  "lhr.ocir.io/lrbvkel2wjot/gpas/summary_pipeline:1.2.2": {
+    "summary_pipeline": "Version: 1.2.2"
+  }
+}
