@@ -8,12 +8,14 @@ if ("${workflow.profile}" != 'kubernetes') {
     params.outputs_bucket = "$projectDir/data/outputs"
     params.relatedness_bucket = "$projectDir/data/relatedness"
     params.knowledge_bucket = "$projectDir/data/relatedness/knowledge"
+    params.kraken2_db_path = "${params.knowledge_bucket}/kraken2_db"
 } else {
     params.uploads_bucket = "/workspace/buckets/upload_bucket"
     params.inputs_bucket = "/workspace/buckets/input_bucket"
     params.outputs_bucket = "/workspace/buckets/output_bucket"
     params.relatedness_bucket = "/workspace/buckets/relatedness_bucket"
     params.knowledge_bucket = "/workspace/buckets/relatedness_bucket/knowledge"
+    params.kraken2_db_path = "$projectDir/kraken2_db"
 }
 
 
@@ -31,7 +33,6 @@ updir = "$params.uploads_bucket/$params.sample_id"
 reldir = "$params.relatedness_bucket/$params.sample_id/$params.run_id"
 
 // knowledge parameters
-params.kraken2_db_path = "${params.knowledge_bucket}/kraken2_db"
 params.manifest = "${params.knowledge_bucket}/manifest/target_101_new.fasta"
 params.ref_files = "${params.knowledge_bucket}/clockwork/tb/Ref_prepare"
 params.tb_ref_genome = "${params.knowledge_bucket}/tuberculosis_amr_catalogues/catalogues/NC_000962.3/NC_000962.3.gbk"
