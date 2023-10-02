@@ -61,6 +61,40 @@ fq1_ch = Channel.fromPath("/${updir}/*_1.fastq.gz")
 fq2_ch = Channel.fromPath("/${updir}/*_2.fastq.gz")
 dirty_reads_ch = sample_id_ch.merge(fq1_ch).merge(fq2_ch)
 
+process gather_knowledge {
+    
+    // Write knowledge (reference data) paths to JSON
+
+    input:
+        path(manifest)        
+        path(ref_files)
+        path(tb_ref_genome)
+        path(tb_amr_cat)
+        path(tb_minor_alleles)
+        path(human_genome_dir)
+
+    output:
+        path("knowledge.json"), emit: knowledge
+
+    script:
+        """
+        if [ ${workflow.profile} == 'kubernetes' ]
+        then
+            echo "Running with kubernetes"
+            /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKSPACE
+        fi
+
+        echo '{' > knowledge.json
+        echo '"manifest": "${manifest}",' >> knowledge.json
+        echo '"ref_files": "${ref_files}",' >> knowledge.json
+        echo '"tb_ref_genome": "${tb_ref_genome}",' >> knowledge.json
+        echo '"tb_amr_cat": "${tb_amr_cat}",' >> knowledge.json
+        echo '"tb_minor_alleles": "${tb_minor_alleles}",' >> knowledge.json
+        echo '"human_genome_dir": "${human_genome_dir}"' >> knowledge.json
+        echo '}' >> knowledge.json
+        """
+}
+
 process write_clean_reads_to_input {
     
     input:
