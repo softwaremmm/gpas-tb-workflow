@@ -175,6 +175,14 @@ process write_samples_to_bucket {
 workflow {
     main:
 
+        // This step is for provenance tracking only
+        knowledge_ch = gather_knowledge(params.manifest,
+                                        params.ref_files,
+                                        params.tb_ref_genome,
+                                        params.tb_amr_cat,
+                                        params.tb_minor_alleles,
+                                        params.human_genome_dir)
+
         // wp2
         human_read_removal_ch = human_read_removal(dirty_reads_ch, Channel.fromPath(params.human_genome_dir))
         write_clean_reads_to_input(human_read_removal_ch.clean_fastq)
@@ -240,6 +248,7 @@ workflow {
         ) | write_species_to_bucket
 
         pipeline_versions_file.concat(
+            knowledge_ch.knowledge,
             gatekeeper_ch.gatekeeper_report,
             competitive_mapping_ch.cm_report,
             lineagecalling_ch.json_report,
