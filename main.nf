@@ -36,7 +36,7 @@ reldir = "$params.relatedness_bucket/$params.sample_id/$params.run_id"
 params.manifest = "${params.knowledge_bucket}/manifest/target_101_new.fasta"
 params.ref_files = "${params.knowledge_bucket}/clockwork/tb/Ref_prepare"
 params.tb_ref_genome = "${params.knowledge_bucket}/tuberculosis_amr_catalogues/catalogues/NC_000962.3/NC_000962.3.gbk"
-params.tb_amr_cat = "${params.knowledge_bucket}/tuberculosis_amr_catalogues/catalogues/NC_000962.3/NC_000962.3_WHO-UCN-GTB-PCI-2021.7_v1.0_GARC1_RUS.csv"
+params.tb_amr_cat = "${params.knowledge_bucket}/tuberculosis_amr_catalogues/catalogues/NC_000962.3/NC_000962.3_WHO-UCN-GTB-PCI-2021.7_v1.0_GARC1_RFUS.csv"
 params.tb_minor_alleles = "${params.knowledge_bucket}/minor_alleles.txt"
 params.human_genome_dir = "${params.knowledge_bucket}/human-genome"
 
