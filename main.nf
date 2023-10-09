@@ -25,6 +25,7 @@ params.run_id = 1
 params.help = ''
 params.api_url = 'https://dev.portal.gpas.world'
 params.species = 'tb'
+params.api_token = ''
 
 // the location in the buckets for the current run
 outdir = "$params.outputs_bucket/$params.sample_id/$params.run_id"
