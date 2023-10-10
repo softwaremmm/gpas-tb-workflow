@@ -34,7 +34,8 @@ updir = "$params.uploads_bucket/$params.sample_id"
 reldir = "$params.relatedness_bucket/$params.sample_id/$params.run_id"
 
 // knowledge parameters
-params.manifest = "${params.knowledge_bucket}/manifest/target_101_new.fasta"
+params.manifest = "${params.knowledge_bucket}/manifest/manifest_20231001"
+params.species_list = "${params.knowledge_bucket}/manifest/species_list_manifest_20231001.csv"
 params.ref_files = "${params.knowledge_bucket}/clockwork/tb/Ref_prepare"
 params.tb_ref_genome = "${params.knowledge_bucket}/tuberculosis_amr_catalogues/catalogues/NC_000962.3/NC_000962.3.gbk"
 params.tb_amr_cat = "${params.knowledge_bucket}/tuberculosis_amr_catalogues/catalogues/NC_000962.3/NC_000962.3_WHO-UCN-GTB-PCI-2021.7_v1.0_GARC1_RFUS.csv"
@@ -207,7 +208,7 @@ workflow {
         //Pipeline proceeds only if gk_enough_reads_ch exists.
 
         // Speciation
-        competitive_mapping_ch = competitive_mapping(gk_enough_reads_ch, params.manifest)
+        competitive_mapping_ch = competitive_mapping(gk_enough_reads_ch, params.manifest, params.species_list)
         lineagecalling_ch = lineagecalling(gk_enough_reads_ch)
 
         //Create a new channel if the condition to test (enough h37r-v reads) and the channel to use to proceed the execution (paths)
