@@ -68,7 +68,8 @@ process gather_knowledge {
     // Write knowledge (reference data) paths to JSON
 
     input:
-        path(manifest)        
+        path(manifest)    
+        path(species_list)    
         path(ref_files)
         path(tb_ref_genome)
         path(tb_amr_cat)
@@ -88,6 +89,7 @@ process gather_knowledge {
 
         echo '{' > knowledge.json
         echo '"manifest": "${manifest}",' >> knowledge.json
+        echo '"species_list": "${species_list}",' >> knowledge.json
         echo '"ref_files": "${ref_files}",' >> knowledge.json
         echo '"tb_ref_genome": "${tb_ref_genome}",' >> knowledge.json
         echo '"tb_amr_cat": "${tb_amr_cat}",' >> knowledge.json
@@ -179,6 +181,7 @@ workflow {
 
         // This step is for provenance tracking only
         knowledge_ch = gather_knowledge(params.manifest,
+                                        params.species_list,
                                         params.ref_files,
                                         params.tb_ref_genome,
                                         params.tb_amr_cat,
