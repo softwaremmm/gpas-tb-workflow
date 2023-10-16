@@ -14,6 +14,9 @@ dist/
 downloads/
 eggs/
 .eggs/
+
+!lib/s3fs_teardown.sh
+!lib/s3fs_setup.sh
 lib/
 lib64/
 parts/

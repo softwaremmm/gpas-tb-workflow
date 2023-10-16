@@ -64,12 +64,12 @@ fq2_ch = Channel.fromPath("/${updir}/*_2.fastq.gz")
 dirty_reads_ch = sample_id_ch.merge(fq1_ch).merge(fq2_ch)
 
 process gather_knowledge {
-    
+
     // Write knowledge (reference data) paths to JSON
 
     input:
-        path(manifest)    
-        path(species_list)    
+        path(manifest)
+        path(species_list)
         path(ref_files)
         path(tb_ref_genome)
         path(tb_amr_cat)
@@ -96,11 +96,12 @@ process gather_knowledge {
         echo '"tb_minor_alleles": "${tb_minor_alleles}",' >> knowledge.json
         echo '"human_genome_dir": "${human_genome_dir}"' >> knowledge.json
         echo '}' >> knowledge.json
+        /bin/bash ${projectDir}/lib/s3fs_teardown.sh
         """
 }
 
 process write_clean_reads_to_input {
-    
+
     input:
         tuple val(x), path(sample1), path(sample2)
 
@@ -119,7 +120,7 @@ process write_clean_reads_to_input {
 }
 
 process write_to_bucket {
-    
+
 
     input:
         path(output_file)
@@ -138,7 +139,7 @@ process write_to_bucket {
 }
 
 process write_species_to_bucket {
-    
+
 
     input:
         path(output_file)
@@ -157,7 +158,7 @@ process write_species_to_bucket {
 }
 
 process write_samples_to_bucket {
-    
+
 
     input:
         tuple val(x), path(sample1), path(sample2)
@@ -268,11 +269,11 @@ workflow {
             competitive_mapping_ch.cm_report,
             lineagecalling_ch.json_report,
             summary.out.main_report,
-            human_read_removal_ch.hostile_report,            
+            human_read_removal_ch.hostile_report,
         ) | write_to_bucket
 
         // copy fastq files to bucket
-        gatekeeper_ch.kraken2_filtered_samples.concat(            
+        gatekeeper_ch.kraken2_filtered_samples.concat(
             competitive_mapping_ch.cm_sample_paths,
         ) | write_samples_to_bucket
 
