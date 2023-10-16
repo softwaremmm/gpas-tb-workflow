@@ -1,0 +1,6 @@
+{
+    "Sequencing Quality": {
+        "Mixed calls": $het_count,
+        "Fixed coverage": $fixed_coverage_percentage
+    }
+}
