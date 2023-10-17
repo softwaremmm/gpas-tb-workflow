@@ -97,7 +97,7 @@ process gather_knowledge {
         echo '"human_genome_dir": "${human_genome_dir}"' >> knowledge.json
         echo '}' >> knowledge.json
 
-        rc=$?
+        rc="$?"
         if [ ${workflow.profile} == 'kubernetes' ]
         then
             /bin/bash ${projectDir}/lib/s3fs_teardown.sh
@@ -123,7 +123,7 @@ process write_clean_reads_to_input {
         cp ${sample1} ${indir}
         cp ${sample2} ${indir}
 
-        rc=$?
+        rc="$?"
         if [ ${workflow.profile} == 'kubernetes' ]
         then
             /bin/bash ${projectDir}/lib/s3fs_teardown.sh
@@ -149,7 +149,7 @@ process write_to_bucket {
         mkdir -p ${outdir}
         cp ${output_file} ${outdir}
 
-        rc=$?
+        rc="$?"
         if [ ${workflow.profile} == 'kubernetes' ]
         then
             /bin/bash ${projectDir}/lib/s3fs_teardown.sh
@@ -175,7 +175,7 @@ process write_species_to_bucket {
         mkdir -p ${outdir}/tb
         cp ${output_file} ${outdir}/tb
 
-        rc=$?
+        rc="$?"
         if [ ${workflow.profile} == 'kubernetes' ]
         then
             /bin/bash ${projectDir}/lib/s3fs_teardown.sh
@@ -202,7 +202,7 @@ process write_samples_to_bucket {
         cp ${sample1} ${outdir}
         cp ${sample2} ${outdir}
 
-        rc=$?
+        rc="$?"
         if [ ${workflow.profile} == 'kubernetes' ]
         then
             /bin/bash ${projectDir}/lib/s3fs_teardown.sh
