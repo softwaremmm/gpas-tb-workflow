@@ -202,11 +202,11 @@ process write_samples_to_bucket {
         cp ${sample1} ${outdir}
         cp ${sample2} ${outdir}
 
-        rc="$?"
+        rc="\$?"
         if [ ${workflow.profile} == 'kubernetes' ]
         then
             /bin/bash ${projectDir}/lib/s3fs_teardown.sh
-            exit $rc
+            exit \$rc
         fi
         """
 }
