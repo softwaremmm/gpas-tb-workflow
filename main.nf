@@ -147,7 +147,7 @@ process write_to_bucket {
         fi
 
         mkdir -p ${outdir}
-        cp ${output_file} ${outdir}
+        cp ${output_file} ${outdir}/${params.sample_id}_\$(basename ${output_file})
 
         rc="\$?"
         if [ ${workflow.profile} == 'kubernetes' ]
