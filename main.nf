@@ -267,7 +267,7 @@ workflow {
         clockwork_ch = clockwork(cm_enough_reads_ch, params.ref_files)
 
         // WP6
-        gnomonicus_ch = gnomonicus_workflow(clockwork_ch.final_vcf, params.tb_ref_genome, params.tb_amr_cat, params.tb_minor_alleles)
+        gnomonicus_ch = gnomonicus_workflow(clockwork_ch.final_vcf, params.tb_ref_genome, params.tb_amr_cat, params.tb_minor_alleles, clockwork_ch.final_fasta)
         gnomonicus_json = gnomonicus_ch.gnomonicus_json
 
         //WP7
