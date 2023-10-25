@@ -1,7 +1,6 @@
 WORKSPACE=$1
 
 set -e
-set -x
 
 # Make our own password file from the secret which is mounted as an env variable
 echo $S3FS_FROM_NEXTFLOW > s3fs_password_file
