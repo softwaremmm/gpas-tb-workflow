@@ -36,6 +36,7 @@ reldir = "$params.relatedness_bucket/$params.sample_id/$params.run_id"
 // knowledge parameters
 params.manifest = "${params.knowledge_bucket}/manifest/manifest_20231001"
 params.species_list = "${params.knowledge_bucket}/manifest/species_list_manifest_20231001.csv"
+params.name_mapping = "${params.knowledge_bucket}/manifest/competitive_mapping_mykrobe_names_20231026.csv"
 params.ref_files = "${params.knowledge_bucket}/clockwork/tb/Ref_prepare"
 params.tb_ref_genome = "${params.knowledge_bucket}/tuberculosis_amr_catalogues/catalogues/NC_000962.3/NC_000962.3.gbk"
 params.tb_amr_cat = "${params.knowledge_bucket}/tuberculosis_amr_catalogues/catalogues/NC_000962.3/NC_000962.3_WHO-UCN-GTB-PCI-2021.7_v1.0_GARC1_RFUS.csv"
@@ -70,6 +71,7 @@ process gather_knowledge {
     input:
         path(manifest)
         path(species_list)
+        path(name_mapping)
         path(ref_files)
         path(tb_ref_genome)
         path(tb_amr_cat)
@@ -90,6 +92,7 @@ process gather_knowledge {
         echo '{' > knowledge.json
         echo '"manifest": "${manifest}",' >> knowledge.json
         echo '"species_list": "${species_list}",' >> knowledge.json
+        echo '"name_mapping": "${name_mapping}",' >> knowledge.json
         echo '"ref_files": "${ref_files}",' >> knowledge.json
         echo '"tb_ref_genome": "${tb_ref_genome}",' >> knowledge.json
         echo '"tb_amr_cat": "${tb_amr_cat}",' >> knowledge.json
@@ -217,6 +220,7 @@ workflow {
         // This step is for provenance tracking only
         knowledge_ch = gather_knowledge(params.manifest,
                                         params.species_list,
+                                        params.name_mapping,
                                         params.ref_files,
                                         params.tb_ref_genome,
                                         params.tb_amr_cat,
@@ -287,11 +291,14 @@ workflow {
             clockwork_ch.tb_clockwork_error_json,
         ) | write_species_to_bucket
 
+        // Make summary
+        name_mapping_ch = Channel.fromPath(params.name_mapping)
         pipeline_versions_file.concat(
-            knowledge_ch.knowledge,
+            knowledge_ch.knowledge,            
             gatekeeper_ch.gatekeeper_report,
             competitive_mapping_ch.cm_report,
             lineagecalling_ch.json_report,
+            name_mapping_ch,
             clockwork_ch.tb_clockwork_report_json,
             gnomonicus_ch.gnomonicus_json
         ).toList() | summary // WP8
