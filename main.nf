@@ -109,6 +109,23 @@ process gather_knowledge {
         """
 }
 
+process rename_name_mapping {
+
+    // Rename name_mapping reference data file
+    // for consumption by summary pipeline
+
+    input:
+        path(name_mapping)
+
+    output:
+        path("name_mapping.csv"), emit: name_mapping
+
+    script:
+        """
+        mv "${name_mapping}" name_mapping.csv
+        """
+}
+
 process write_clean_reads_to_input {
 
     input:
@@ -292,13 +309,13 @@ workflow {
         ) | write_species_to_bucket
 
         // Make summary
-        name_mapping_ch = Channel.fromPath(params.name_mapping)
+        name_mapping_ch = rename_name_mapping(params.name_mapping)
         pipeline_versions_file.concat(
             knowledge_ch.knowledge,            
             gatekeeper_ch.gatekeeper_report,
             competitive_mapping_ch.cm_report,
             lineagecalling_ch.json_report,
-            name_mapping_ch,
+            name_mapping_ch.name_mapping,
             clockwork_ch.tb_clockwork_report_json,
             gnomonicus_ch.gnomonicus_json
         ).toList() | summary // WP8
