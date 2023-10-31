@@ -66,6 +66,11 @@ dirty_reads_ch = sample_id_ch.merge(fq1_ch).merge(fq2_ch)
 
 process gather_knowledge {
 
+    debug true
+    pod label: "name", value: "gpas-tb-workflow:gather_knowledge"
+    pod label: "sample_id", value: "${params.sample_id}"
+    pod label: "run_id", value: "${params.run_id}"
+
     // Write knowledge (reference data) paths to JSON
 
     input:
@@ -128,6 +133,11 @@ process rename_name_mapping {
 
 process write_clean_reads_to_input {
 
+    debug true
+    pod label: "name", value: "gpas-tb-workflow:write_clean_reads_to_input"
+    pod label: "sample_id", value: "${params.sample_id}"
+    pod label: "run_id", value: "${params.run_id}"
+
     input:
         tuple val(x), path(sample1), path(sample2)
 
@@ -154,6 +164,10 @@ process write_clean_reads_to_input {
 
 process write_to_bucket {
 
+    debug true
+    pod label: "name", value: "gpas-tb-workflow:write_to_bucket"
+    pod label: "sample_id", value: "${params.sample_id}"
+    pod label: "run_id", value: "${params.run_id}"
 
     input:
         path(output_file)
@@ -180,6 +194,10 @@ process write_to_bucket {
 
 process write_species_to_bucket {
 
+    debug true
+    pod label: "name", value: "gpas-tb-workflow:write_species_to_bucket"
+    pod label: "sample_id", value: "${params.sample_id}"
+    pod label: "run_id", value: "${params.run_id}"
 
     input:
         path(output_file)
@@ -206,6 +224,10 @@ process write_species_to_bucket {
 
 process write_samples_to_bucket {
 
+    debug true
+    pod label: "name", value: "gpas-tb-workflow:write_samples_to_bucket"
+    pod label: "sample_id", value: "${params.sample_id}"
+    pod label: "run_id", value: "${params.run_id}"
 
     input:
         tuple val(x), path(sample1), path(sample2)
