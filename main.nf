@@ -325,7 +325,6 @@ workflow {
             clockwork_ch.map_bam,
             clockwork_ch.map_bam_bai,
             gnomonicus_ch.gnomonicus_json,
-            fn5_ch.error_log,
             clockwork_ch.tb_clockwork_report_json,
             clockwork_ch.tb_clockwork_error_json,
         ) | write_species_to_bucket
