@@ -6,18 +6,15 @@ jobs:
     concurrency: pull_sub_workflows
     runs-on: ubuntu-latest
     steps:
-      - name: Login to OCR
-        uses: docker/login-action@v2
-        with:
-          registry: lhr.ocir.io
-          username: ${{ secrets.OCR_USERNAME }}
-          password: ${{ secrets.OCR_TOKEN }}
       - name: Clone subworkflows
         run: |
           set -xe
           #Make sure we have git, tar and jq installed
           sudo apt update --fix-missing
           sudo apt install -y git jq tar gzip
+
+          #Docker login so we can pull
+          docker login lhr.ocir.io -u ${{secrets.OCR_USERNAME}} -p $(echo "${{secrets.OCR_TOKEN}}")
 
           #Git setup so we can actually push
           git config --global user.email "it-support@gpas.global"
