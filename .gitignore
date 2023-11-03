@@ -180,3 +180,5 @@ tests/.nf-test/
 !sub_workflows/**
 
 data
+
+.idea/
