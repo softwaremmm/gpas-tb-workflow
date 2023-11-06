@@ -6,15 +6,26 @@ jobs:
     concurrency: pull_sub_workflows
     runs-on: ubuntu-latest
     steps:
+      - name: Login to OCR
+        uses: docker/login-action@v2
+        with:
+          registry: lhr.ocir.io
+          username: ${{ secrets.OCR_USERNAME }}
+          password: ${{ secrets.OCR_TOKEN }}
+
+      - name: Debug docker info
+        run: |
+          cat ~/.docker/config.json
+          echo "user: $USER"
+          printf "groups \n $(groups)"
+          printf "Current user group \n $(groups $USER)"
+
       - name: Clone subworkflows
         run: |
           set -xe
           #Make sure we have git, tar and jq installed
           sudo apt update --fix-missing
           sudo apt install -y git jq tar gzip
-
-          #Docker login so we can pull
-          docker login lhr.ocir.io -u ${{secrets.OCR_USERNAME}} -p $(echo "${{secrets.OCR_TOKEN}}")
 
           #Git setup so we can actually push
           git config --global user.email "it-support@gpas.global"
@@ -68,7 +79,7 @@ jobs:
             do
                 #As some tools print version to stderr (as does docker pull)
                 #Pull the containers before doing docker run
-                DOCKER_PULL="sudo docker pull "
+                DOCKER_PULL="docker pull "
                 DOCKER_PULL+="$container:$tag"
                 eval $DOCKER_PULL
 
@@ -77,7 +88,7 @@ jobs:
                 echo $tool --\> $command 
 
                 #Build docker run command
-                DOCKER_RUN="sudo docker run "
+                DOCKER_RUN="docker run "
                 DOCKER_RUN+="$container:$tag $command"
 
                 #Get version of this tool
@@ -119,7 +130,7 @@ jobs:
 
             #Now we have the latest release, cut out everything not-required
             rm -rf $r/.git*
-            
+          
             #If a minimal files has been declared, use it. Otherwise just take everything for now
             if [ -s $r/minimal_files.txt ]; then
               mv $r/* tmp
@@ -194,8 +205,8 @@ jobs:
             "https://uploads.github.com/repos/GlobalPathogenAnalysisService/gpas-tb-workflow/releases/$RELEASE_ID/assets?name=$NEW_VERSION.tar.gz" \
             --data-binary "@$NEW_VERSION.tar.gz"
           
-
-
+          
+          
           #Clean up the branch now we're done with it
           cd gpas-tb-workflow
           git push origin --delete $NEW_VERSION-branch
