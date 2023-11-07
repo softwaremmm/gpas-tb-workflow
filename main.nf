@@ -127,7 +127,7 @@ process rename_name_mapping {
 
     script:
         """
-        mv "${name_mapping}" name_mapping.csv
+        cp "${name_mapping}" name_mapping.csv
         """
 }
 
