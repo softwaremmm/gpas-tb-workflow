@@ -135,6 +135,7 @@ process rename_name_mapping {
 
         cp "${name_mapping}" name_mapping.csv
 
+        rc="\$?"
         if [ ${workflow.profile} == 'kubernetes' ]
         then
             /bin/bash ${projectDir}/lib/s3fs_teardown.sh
