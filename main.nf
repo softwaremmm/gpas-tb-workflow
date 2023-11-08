@@ -127,7 +127,19 @@ process rename_name_mapping {
 
     script:
         """
+        if [ ${workflow.profile} == 'kubernetes' ]
+        then
+            echo "Running with kubernetes"
+            /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKSPACE
+        fi
+
         cp "${name_mapping}" name_mapping.csv
+
+        if [ ${workflow.profile} == 'kubernetes' ]
+        then
+            /bin/bash ${projectDir}/lib/s3fs_teardown.sh
+            exit \$rc
+        fi
         """
 }
 
