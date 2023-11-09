@@ -36,7 +36,7 @@ reldir = "$params.relatedness_bucket/$params.sample_id/$params.run_id"
 // knowledge parameters
 params.manifest = "${params.knowledge_bucket}/manifest/manifest_20231001"
 params.species_list = "${params.knowledge_bucket}/manifest/species_list_manifest_20231001.csv"
-params.name_mapping = "${params.knowledge_bucket}/manifest/competitive_mapping_mykrobe_names_20231026.csv"
+params.name_mapping = "${params.knowledge_bucket}/manifest/competitive_mapping_mykrobe_names_20231109.csv"
 params.ref_files = "${params.knowledge_bucket}/clockwork/tb/Ref_prepare"
 params.tb_ref_genome = "${params.knowledge_bucket}/tuberculosis_amr_catalogues/catalogues/NC_000962.3/NC_000962.3.gbk"
 params.tb_amr_cat = "${params.knowledge_bucket}/tuberculosis_amr_catalogues/catalogues/NC_000962.3/NC_000962.3_WHO-UCN-GTB-PCI-2021.7_v1.1_GARC1_RFUS.csv"
