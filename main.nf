@@ -52,7 +52,12 @@ include { competitive_mapping } from "${subwork_folder}/competitivemapping_pipel
 include { lineagecalling } from "${subwork_folder}/lineagecalling_pipeline/main.nf"
 include { gnomonicus_workflow } from "${subwork_folder}/tb-predict-pipeline/main.nf"
 include { summary } from "${subwork_folder}/summary_pipeline/main.nf"
-include { human_read_removal } from "${subwork_folder}/human-read-removal_pipeline/src/workflow/human_read_removal.nf"
+if (params.feat_ont) {
+    include { human_read_removal } from "/home/ubuntu/pipelines/human-read-removal_pipeline/src/workflow/human_read_removal.nf"
+}
+else {
+    include { human_read_removal } from "${subwork_folder}/human-read-removal_pipeline/src/workflow/human_read_removal.nf"
+}
 
 // metadata
 pipeline_versions_file = Channel.fromPath( "${subwork_folder}/pipeline_versions.txt" )
@@ -280,11 +285,27 @@ workflow {
                                         params.human_genome_dir)
 
         // wp2
-        human_read_removal_ch = human_read_removal(dirty_reads_ch, Channel.fromPath(params.human_genome_dir))
-        write_clean_reads_to_input(human_read_removal_ch.clean_fastq)
+
+        if (params.feat_ont) {
+            // Make fastq channel compact for human_read_removal
+            dirty_read_compact = dirty_reads_ch.map{
+                it -> tuple(it[0], [it[1], it[2]])
+            }
+            human_read_removal_ch = human_read_removal(dirty_read_compact, Channel.fromPath(params.human_genome_dir), Channel.value('illumina'))
+            // Expand fastq channel
+            clean_fastq_ch = human_read_removal_ch.clean_fastq.map {
+                it -> tuple(it[0], it[1][0], it[1][1])
+            }
+        }
+        else {
+            human_read_removal_ch = human_read_removal(dirty_reads_ch, Channel.fromPath(params.human_genome_dir))
+            clean_fastq_ch = human_read_removal_ch.clean_fastq
+        }
+        
+        write_clean_reads_to_input(clean_fastq_ch)
 
         // Gatekeeper: Trimming and positive filtering of Kraken2 Unclassified and Mycobacteriaceae reads
-        gatekeeper_ch = gatekeeper(human_read_removal_ch.clean_fastq, params.kraken2_db_path)
+        gatekeeper_ch = gatekeeper(clean_fastq_ch, params.kraken2_db_path)
 
         //Create a new channel if the condition to test (enough Unclassifidies and Mycrobacteriae reads) and the channel to use to proceed the execution (paths)
         gatekeeper_ch_output = gatekeeper_ch.kraken2_filtered_samples.merge(gatekeeper_ch.kraken2_enough_reads)
