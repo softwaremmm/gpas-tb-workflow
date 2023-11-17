@@ -194,7 +194,7 @@ process write_to_bucket {
         fi
 
         mkdir -p ${outdir}
-        cp ${output_file} ${outdir}
+        cp ${output_file} ${outdir}/${params.sample_id}_\$(basename ${output_file})
 
         rc="\$?"
         if [ ${workflow.profile} == 'kubernetes' ]
@@ -224,7 +224,7 @@ process write_species_to_bucket {
         fi
 
         mkdir -p ${outdir}/tb
-        cp ${output_file} ${outdir}/tb
+        cp ${output_file} ${outdir}/tb/${params.sample_id}_\$(basename ${output_file})
 
         rc="\$?"
         if [ ${workflow.profile} == 'kubernetes' ]
@@ -254,8 +254,8 @@ process write_samples_to_bucket {
         fi
 
         mkdir -p ${outdir}
-        cp ${sample1} ${outdir}
-        cp ${sample2} ${outdir}
+        cp ${sample1} ${outdir}/${params.sample_id}_\$(basename ${sample1})
+        cp ${sample2} ${outdir}/${params.sample_id}_\$(basename ${sample2})
 
         rc="\$?"
         if [ ${workflow.profile} == 'kubernetes' ]
