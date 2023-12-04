@@ -14,7 +14,7 @@
         "minimap2",
         "samtools"
     ],
-    "lhr.ocir.io/lrbvkel2wjot/oxfordmmm/clockwork": [
+    "lhr.ocir.io/lrbvkel2wjot/gpas/clockwork": [
         "clockwork",
         "samtools",
         "bcftools",
@@ -26,6 +26,9 @@
         "seqtk",
         "vcftools",
         "vt"
+    ],
+    "lhr.ocir.io/lrbvkel2wjot/gpas/clockwork_bcftools": [
+        "bcftools"
     ],
     "lhr.ocir.io/lrbvkel2wjot/oxfordmmm/fn5": [
         "fn5"
