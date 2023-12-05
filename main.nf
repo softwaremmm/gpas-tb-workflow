@@ -26,7 +26,7 @@ params.help = ''
 params.api_url = 'https://dev.portal.gpas.world'
 params.species = 'tb'
 params.api_token = ''
-// Only used if params.feat_ont true in nextflow.config
+// Currently only illumina supported for whole pipeline
 params.seq_platform = ''
 supported_seq_platforms = ['illumina']
 
@@ -312,24 +312,17 @@ workflow {
 
         // wp2
 
-        if (params.feat_ont) {
-
-            // make fastq channel compact for human_read_removal
-            dirty_read_compact = dirty_reads_ch.map{
-                it -> tuple(it[0], [it[1], it[2]])
-            }
-            check_valid_input(dirty_read_compact, params.seq_platform)
-
-            human_read_removal_ch = human_read_removal(dirty_read_compact, Channel.fromPath(params.human_genome_dir), params.seq_platform)
-
-            // expand fastq channel
-            clean_fastq_ch = human_read_removal_ch.clean_fastq.map {
-                it -> tuple(it[0], it[1][0], it[1][1])
-            }
+        // make fastq channel compact for human_read_removal
+        dirty_read_compact = dirty_reads_ch.map{
+            it -> tuple(it[0], [it[1], it[2]])
         }
-        else {
-            human_read_removal_ch = human_read_removal(dirty_reads_ch, Channel.fromPath(params.human_genome_dir))
-            clean_fastq_ch = human_read_removal_ch.clean_fastq
+        check_valid_input(dirty_read_compact, params.seq_platform)
+
+        human_read_removal_ch = human_read_removal(dirty_read_compact, Channel.fromPath(params.human_genome_dir), params.seq_platform)
+
+        // expand fastq channel for rest of pipeline
+        clean_fastq_ch = human_read_removal_ch.clean_fastq.map {
+            it -> tuple(it[0], it[1][0], it[1][1])
         }
         
         write_clean_reads_to_input(clean_fastq_ch)
