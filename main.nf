@@ -26,6 +26,9 @@ params.help = ''
 params.api_url = 'https://dev.portal.gpas.world'
 params.species = 'tb'
 params.api_token = ''
+// Only used if params.feat_ont true in nextflow.config
+params.seq_platform = ''
+supported_seq_platforms = ['illumina']
 
 // the location in the buckets for the current run
 outdir = "$params.outputs_bucket/$params.sample_id/$params.run_id"
@@ -52,12 +55,7 @@ include { competitive_mapping } from "${subwork_folder}/competitivemapping_pipel
 include { lineagecalling } from "${subwork_folder}/lineagecalling_pipeline/main.nf"
 include { gnomonicus_workflow } from "${subwork_folder}/tb-predict-pipeline/main.nf"
 include { summary } from "${subwork_folder}/summary_pipeline/main.nf"
-if (params.feat_ont) {
-    include { human_read_removal } from "/home/ubuntu/pipelines/human-read-removal_pipeline/src/workflow/human_read_removal.nf"
-}
-else {
-    include { human_read_removal } from "${subwork_folder}/human-read-removal_pipeline/src/workflow/human_read_removal.nf"
-}
+include { human_read_removal } from "${subwork_folder}/human-read-removal_pipeline/src/workflow/human_read_removal.nf"
 
 // metadata
 pipeline_versions_file = Channel.fromPath( "${subwork_folder}/pipeline_versions.txt" )
@@ -271,6 +269,34 @@ process write_samples_to_bucket {
         """
 }
 
+process check_valid_input {
+    take:
+        fastq_files
+        seq_platform
+
+    main:
+        // seq_platform should be a String, not a channel
+        if (seq_platform.getClass() != java.lang.String) {
+            throw new Exception("seq_platform should be a string, not a ${seq_platform.getClass()}")
+        }
+
+        // Should be supported by this workflow
+        if (! (seq_platform in supported_seq_platforms)) {
+            throw new Exception("seq platform supported. Should be one of $supported_seq_platforms!")
+        }
+
+        // Check if correct number of fastq files
+        if (seq_platform == 'ont') {
+            fastq_files.filter {
+                it -> it[1] instanceof Path
+            }.ifEmpty{throw new Exception("invalid fastqs ~ ont expects a single fastq file provided as a path")}
+        } else if (seq_platform == 'illumina') {
+            fastq_files.filter {
+                it -> it[1] instanceof Collection && it[1].size() == 2
+            }.ifEmpty{throw new Exception("invalid fastqs ~ illumina expects 2 fastq files provided as a tuple")}
+        }
+}
+
 workflow {
     main:
 
@@ -287,12 +313,15 @@ workflow {
         // wp2
 
         if (params.feat_ont) {
-            // Make fastq channel compact for human_read_removal
+            check_valid_input(dirty_reads_ch, params.seq_platform)
+
+            // make fastq channel compact for human_read_removal
             dirty_read_compact = dirty_reads_ch.map{
                 it -> tuple(it[0], [it[1], it[2]])
             }
-            human_read_removal_ch = human_read_removal(dirty_read_compact, Channel.fromPath(params.human_genome_dir), Channel.value('illumina'))
-            // Expand fastq channel
+            human_read_removal_ch = human_read_removal(dirty_read_compact, Channel.fromPath(params.human_genome_dir), params.seq_platform)
+
+            // expand fastq channel
             clean_fastq_ch = human_read_removal_ch.clean_fastq.map {
                 it -> tuple(it[0], it[1][0], it[1][1])
             }
