@@ -269,7 +269,7 @@ process write_samples_to_bucket {
         """
 }
 
-process check_valid_input {
+workflow check_valid_input {
     take:
         fastq_files
         seq_platform
@@ -313,12 +313,13 @@ workflow {
         // wp2
 
         if (params.feat_ont) {
-            check_valid_input(dirty_reads_ch, params.seq_platform)
 
             // make fastq channel compact for human_read_removal
             dirty_read_compact = dirty_reads_ch.map{
                 it -> tuple(it[0], [it[1], it[2]])
             }
+            check_valid_input(dirty_read_compact, params.seq_platform)
+
             human_read_removal_ch = human_read_removal(dirty_read_compact, Channel.fromPath(params.human_genome_dir), params.seq_platform)
 
             // expand fastq channel
