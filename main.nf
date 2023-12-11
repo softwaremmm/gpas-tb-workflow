@@ -26,6 +26,9 @@ params.help = ''
 params.api_url = 'https://dev.portal.gpas.world'
 params.species = 'tb'
 params.api_token = ''
+// Currently only illumina supported for whole pipeline
+params.seq_platform = ''
+supported_seq_platforms = ['illumina']
 
 // the location in the buckets for the current run
 outdir = "$params.outputs_bucket/$params.sample_id/$params.run_id"
@@ -266,6 +269,34 @@ process write_samples_to_bucket {
         """
 }
 
+workflow check_valid_input {
+    take:
+        fastq_files
+        seq_platform
+
+    main:
+        // seq_platform should be a String, not a channel
+        if (seq_platform.getClass() != java.lang.String) {
+            throw new Exception("seq_platform should be a string, not a ${seq_platform.getClass()}")
+        }
+
+        // Should be supported by this workflow
+        if (! (seq_platform in supported_seq_platforms)) {
+            throw new Exception("seq platform supported. Should be one of $supported_seq_platforms!")
+        }
+
+        // Check if correct number of fastq files
+        if (seq_platform == 'ont') {
+            fastq_files.filter {
+                it -> it[1] instanceof Path
+            }.ifEmpty{throw new Exception("invalid fastqs ~ ont expects a single fastq file provided as a path")}
+        } else if (seq_platform == 'illumina') {
+            fastq_files.filter {
+                it -> it[1] instanceof Collection && it[1].size() == 2
+            }.ifEmpty{throw new Exception("invalid fastqs ~ illumina expects 2 fastq files provided as a tuple")}
+        }
+}
+
 workflow {
     main:
 
@@ -280,11 +311,24 @@ workflow {
                                         params.human_genome_dir)
 
         // wp2
-        human_read_removal_ch = human_read_removal(dirty_reads_ch, Channel.fromPath(params.human_genome_dir))
-        write_clean_reads_to_input(human_read_removal_ch.clean_fastq)
+
+        // make fastq channel compact for human_read_removal
+        dirty_read_compact = dirty_reads_ch.map{
+            it -> tuple(it[0], [it[1], it[2]])
+        }
+        check_valid_input(dirty_read_compact, params.seq_platform)
+
+        human_read_removal_ch = human_read_removal(dirty_read_compact, Channel.fromPath(params.human_genome_dir), params.seq_platform)
+
+        // expand fastq channel for rest of pipeline
+        clean_fastq_ch = human_read_removal_ch.clean_fastq.map {
+            it -> tuple(it[0], it[1][0], it[1][1])
+        }
+        
+        write_clean_reads_to_input(clean_fastq_ch)
 
         // Gatekeeper: Trimming and positive filtering of Kraken2 Unclassified and Mycobacteriaceae reads
-        gatekeeper_ch = gatekeeper(human_read_removal_ch.clean_fastq, params.kraken2_db_path)
+        gatekeeper_ch = gatekeeper(clean_fastq_ch, params.kraken2_db_path)
 
         //Create a new channel if the condition to test (enough Unclassifidies and Mycrobacteriae reads) and the channel to use to proceed the execution (paths)
         gatekeeper_ch_output = gatekeeper_ch.kraken2_filtered_samples.merge(gatekeeper_ch.kraken2_enough_reads)
