@@ -95,6 +95,7 @@ process gather_knowledge {
         then
             echo "Running with kubernetes"
             /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKSPACE
+            trap 'PROCESS_EXIT=\$?; /bin/bash ${projectDir}/lib/s3fs_teardown.sh; exit \$PROCESS_EXIT;' EXIT
         fi
 
         echo '{' > knowledge.json
@@ -107,13 +108,6 @@ process gather_knowledge {
         echo '"tb_minor_alleles": "${tb_minor_alleles}",' >> knowledge.json
         echo '"human_genome_dir": "${human_genome_dir}"' >> knowledge.json
         echo '}' >> knowledge.json
-
-        rc="\$?"
-        if [ ${workflow.profile} == 'kubernetes' ]
-        then
-            /bin/bash ${projectDir}/lib/s3fs_teardown.sh
-            exit \$rc
-        fi
         """
 }
 
@@ -134,16 +128,10 @@ process rename_name_mapping {
         then
             echo "Running with kubernetes"
             /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKSPACE
+            trap 'PROCESS_EXIT=\$?; /bin/bash ${projectDir}/lib/s3fs_teardown.sh; exit \$PROCESS_EXIT;' EXIT
         fi
 
         cp "${name_mapping}" name_mapping.csv
-
-        rc="\$?"
-        if [ ${workflow.profile} == 'kubernetes' ]
-        then
-            /bin/bash ${projectDir}/lib/s3fs_teardown.sh
-            exit \$rc
-        fi
         """
 }
 
@@ -163,18 +151,12 @@ process write_clean_reads_to_input {
         then
             echo "Running with kubernetes"
             /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKSPACE
+            trap 'PROCESS_EXIT=\$?; /bin/bash ${projectDir}/lib/s3fs_teardown.sh; exit \$PROCESS_EXIT;' EXIT
         fi
 
         mkdir -p ${indir}
         cp ${sample1} ${indir}
         cp ${sample2} ${indir}
-
-        rc="\$?"
-        if [ ${workflow.profile} == 'kubernetes' ]
-        then
-            /bin/bash ${projectDir}/lib/s3fs_teardown.sh
-            exit \$rc
-        fi
         """
 }
 
@@ -194,17 +176,11 @@ process write_to_bucket {
         then
             echo "Running with kubernetes"
             /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKSPACE
+            trap 'PROCESS_EXIT=\$?; /bin/bash ${projectDir}/lib/s3fs_teardown.sh; exit \$PROCESS_EXIT;' EXIT
         fi
 
         mkdir -p ${outdir}
         cp ${output_file} ${outdir}/${params.sample_id}_\$(basename ${output_file})
-
-        rc="\$?"
-        if [ ${workflow.profile} == 'kubernetes' ]
-        then
-            /bin/bash ${projectDir}/lib/s3fs_teardown.sh
-            exit \$rc
-        fi
         """
 }
 
@@ -224,17 +200,11 @@ process write_species_to_bucket {
         then
             echo "Running with kubernetes"
             /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKSPACE
+            trap 'PROCESS_EXIT=\$?; /bin/bash ${projectDir}/lib/s3fs_teardown.sh; exit \$PROCESS_EXIT;' EXIT
         fi
 
         mkdir -p ${outdir}/tb
         cp ${output_file} ${outdir}/tb/${params.sample_id}_\$(basename ${output_file})
-
-        rc="\$?"
-        if [ ${workflow.profile} == 'kubernetes' ]
-        then
-            /bin/bash ${projectDir}/lib/s3fs_teardown.sh
-            exit \$rc
-        fi
         """
 }
 
@@ -254,18 +224,12 @@ process write_samples_to_bucket {
         then
             echo "Running with kubernetes"
             /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKSPACE
+            trap 'PROCESS_EXIT=\$?; /bin/bash ${projectDir}/lib/s3fs_teardown.sh; exit \$PROCESS_EXIT;' EXIT
         fi
 
         mkdir -p ${outdir}
         cp ${sample1} ${outdir}/${params.sample_id}_\$(basename ${sample1})
         cp ${sample2} ${outdir}/${params.sample_id}_\$(basename ${sample2})
-
-        rc="\$?"
-        if [ ${workflow.profile} == 'kubernetes' ]
-        then
-            /bin/bash ${projectDir}/lib/s3fs_teardown.sh
-            exit \$rc
-        fi
         """
 }
 
