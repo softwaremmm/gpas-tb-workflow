@@ -58,7 +58,7 @@ include { summary } from "${subwork_folder}/summary_pipeline/main.nf"
 include { human_read_removal } from "${subwork_folder}/human-read-removal_pipeline/src/workflow/human_read_removal.nf"
 
 // metadata
-pipeline_versions_file = Channel.fromPath( "${subwork_folder}/pipeline_versions.txt" )
+pipeline_versions_file = Channel.fromPath( "${projectDir}/PIPELINE_BUILD" )
                                 .filter{ file(it).exists() == true }
 
 // dirty_reads_ch = Channel.fromFilePairs("${updir}/*_{1,2}.fastq.gz", checkIfExists:true, flat:true)
