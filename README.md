@@ -42,6 +42,7 @@ git checkout -b <branch name>
 ```
 
 If required, clone subworkflows: `bash clone_sub_workflows.sh`. However, sub_workflows should not be committed due to size and version ambiguity!
+By default this script fetches the `main` branch of all defined subworkflows. To fetch the latest releases instead, use `bash clone_sub_workflows.sh latest` 
 
 ## Running the Pipeline Locally
 
@@ -65,6 +66,3 @@ sudo ./run_with_test_species.sh -profile local --sample_id 5 --run_id 1 --api_to
 `NEXTFLOW_API_KEY` is a file containing the API needed for FN5 to communicate with the database it needs in order to function.
 
 `sudo` is recommended.
-
-## Releases
-Releases are automatically triggered upon sub-workflow release. This pulls in the latest releases of all sub-workflows, producing a set of files which should run as a complete pipeline. This set of files is included as a release artefact with the name `<release version>.tar.gz` which is used by the `gpas-poller`.
