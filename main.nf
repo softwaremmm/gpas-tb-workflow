@@ -143,7 +143,8 @@ process write_clean_reads_to_input {
     pod label: "run_id", value: "${params.run_id}"
 
     input:
-        tuple val(x), path(sample1), path(sample2)
+        tuple val(x), path(samples)
+        val(seq_platform)
 
     script:
         """
@@ -155,8 +156,14 @@ process write_clean_reads_to_input {
         fi
 
         mkdir -p ${indir}
-        cp ${sample1} ${indir}
-        cp ${sample2} ${indir}
+        if [ $seq_platform == 'ont' ]
+        then
+            cp ${samples} ${indir}
+        elif [ $seq_platform == 'illumina' ]
+        then
+            cp ${samples[0]} ${indir}
+            cp ${samples[1]} ${indir}
+        fi
         """
 }
 
@@ -216,7 +223,8 @@ process write_samples_to_bucket {
     pod label: "run_id", value: "${params.run_id}"
 
     input:
-        tuple val(x), path(sample1), path(sample2)
+        tuple val(x), path(samples)
+        val(seq_platform)
 
     script:
         """
@@ -228,8 +236,14 @@ process write_samples_to_bucket {
         fi
 
         mkdir -p ${outdir}
-        cp ${sample1} ${outdir}/${params.sample_id}_\$(basename ${sample1})
-        cp ${sample2} ${outdir}/${params.sample_id}_\$(basename ${sample2})
+        if [ $seq_platform == 'ont' ]
+        then
+            cp ${samples} ${outdir}/${params.sample_id}_\$(basename ${samples})
+        elif [ $seq_platform == 'illumina' ]
+        then
+            cp ${samples[0]} ${outdir}/${params.sample_id}_\$(basename ${samples[0]})
+            cp ${samples[1]} ${outdir}/${params.sample_id}_\$(basename ${samples[1]})
+        fi
         """
 }
 
@@ -283,47 +297,43 @@ workflow {
         check_valid_input(dirty_read_compact, params.seq_platform)
 
         human_read_removal_ch = human_read_removal(dirty_read_compact, Channel.fromPath(params.human_genome_dir), params.seq_platform)
-
-        // expand fastq channel for rest of pipeline
-        clean_fastq_ch = human_read_removal_ch.clean_fastq.map {
-            it -> tuple(it[0], it[1][0], it[1][1])
-        }
+        clean_fastq_ch = human_read_removal_ch.clean_fastq
         
-        write_clean_reads_to_input(clean_fastq_ch)
+        write_clean_reads_to_input(clean_fastq_ch, params.seq_platform)
 
         // Gatekeeper: Trimming and positive filtering of Kraken2 Unclassified and Mycobacteriaceae reads
-        gatekeeper_ch = gatekeeper(clean_fastq_ch, params.kraken2_db_path)
+        gatekeeper_ch = gatekeeper(clean_fastq_ch, params.kraken2_db_path, params.seq_platform)
 
         //Create a new channel if the condition to test (enough Unclassifidies and Mycrobacteriae reads) and the channel to use to proceed the execution (paths)
         gatekeeper_ch_output = gatekeeper_ch.kraken2_filtered_samples.merge(gatekeeper_ch.kraken2_enough_reads)
 
         gk_enough_reads_ch = gatekeeper_ch_output
-            .filter { it[3] == "true"} //A new channel will be created only if the it[3] (enough reads) is true
-            .map(it -> [it[0], it[1], it[2]]) //The value for the new channel will have a tuble of sample name, path1, path2
+            .filter { it[2] == "true"} //A new channel will be created only if the it[2] (enough reads) is true
+            .map(it -> [it[0], it[1]]) //The value for the new channel will have a tuble of sample name, [fastq path(s)]
             .view{"Gatekeeper output sample has enough reads"}
 
         gk_not_enough_reads_ch = gatekeeper_ch_output
-            .filter { it[3] == "false"} //A new channel will be created only if the it[3] (enough reads) is true
+            .filter { it[2] == "false"} //A new channel will be created only if the it[2] (enough reads) is true
             .view{"Gatekeeper output sample does not have enough reads. END OF THE PIPELINE"}
 
 
         //Pipeline proceeds only if gk_enough_reads_ch exists.
 
         // Speciation
-        competitive_mapping_ch = competitive_mapping(gk_enough_reads_ch, params.manifest, params.species_list)
-        lineagecalling_ch = lineagecalling(gk_enough_reads_ch)
+        competitive_mapping_ch = competitive_mapping(gk_enough_reads_ch, params.manifest, params.species_list, params.seq_platform)
+        lineagecalling_ch = lineagecalling(gk_enough_reads_ch, params.seq_platform)
 
         //Create a new channel if the condition to test (enough h37r-v reads) and the channel to use to proceed the execution (paths)
         competitive_mapping_ch_output = competitive_mapping_ch.cm_sample_paths.merge(competitive_mapping_ch.cm_enough_reads)
 
 
         cm_enough_reads_ch = competitive_mapping_ch_output
-            .filter { it[3] == "true"}
-            .map(it -> [it[0], it[1], it[2]])
+            .filter { it[2] == "true"}
+            .map(it -> [it[0], it[1]])
             .view{"Competitive Mapping output sample has enough reads"}
 
         cm_not_enough_reads = competitive_mapping_ch_output
-            .filter { it[3] == "false"}
+            .filter { it[2] == "false"}
             .view{"Competitive Mapping output sample does not have enough reads. END OF THE PIPELINE"}
 
 
@@ -373,8 +383,10 @@ workflow {
         ) | write_to_bucket
 
         // copy fastq files to bucket
-        gatekeeper_ch.kraken2_filtered_samples.concat(
-            competitive_mapping_ch.cm_sample_paths,
-        ) | write_samples_to_bucket
-
+        write_samples_to_bucket(
+            gatekeeper_ch.kraken2_filtered_samples.concat(
+            competitive_mapping_ch.cm_sample_paths
+            ),
+            params.seq_platform
+        )
 }
