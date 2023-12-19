@@ -28,7 +28,7 @@ params.species = 'tb'
 params.api_token = ''
 // Currently only illumina supported for whole pipeline
 params.seq_platform = ''
-supported_seq_platforms = ['illumina']
+supported_seq_platforms = ['illumina', 'ont']
 
 // the location in the buckets for the current run
 outdir = "$params.outputs_bucket/$params.sample_id/$params.run_id"
@@ -45,6 +45,8 @@ params.tb_ref_genome = "${params.knowledge_bucket}/tuberculosis_amr_catalogues/c
 params.tb_amr_cat = "${params.knowledge_bucket}/tuberculosis_amr_catalogues/catalogues/NC_000962.3/NC_000962.3_WHO-UCN-GTB-PCI-2021.7_v1.1_GARC1_RFUS.csv"
 params.tb_minor_alleles = "${params.knowledge_bucket}/minor_alleles.txt"
 params.human_genome_dir = "${params.knowledge_bucket}/human-genome"
+params.sundial_ref = "${params.knowledge_bucket}/sundial"
+params.sundial_mask = "${params.knowledge_bucket}/sundial/compass-mask_20231215.bed"
 
 // sub workflows import
 subwork_folder = "${projectDir}/sub_workflows"
@@ -56,16 +58,19 @@ include { lineagecalling } from "${subwork_folder}/lineagecalling_pipeline/main.
 include { gnomonicus_workflow } from "${subwork_folder}/tb-predict-pipeline/main.nf"
 include { summary } from "${subwork_folder}/summary_pipeline/main.nf"
 include { human_read_removal } from "${subwork_folder}/human-read-removal_pipeline/src/workflow/human_read_removal.nf"
+include { run_sundial_snps } from "${subwork_folder}/sundial/main.nf"
 
 // metadata
 pipeline_versions_file = Channel.fromPath( "${projectDir}/PIPELINE_BUILD" )
                                 .filter{ file(it).exists() == true }
 
-// dirty_reads_ch = Channel.fromFilePairs("${updir}/*_{1,2}.fastq.gz", checkIfExists:true, flat:true)
-sample_id_ch = Channel.from(params.sample_id)
-fq1_ch = Channel.fromPath("/${updir}/*_1.fastq.gz")
-fq2_ch = Channel.fromPath("/${updir}/*_2.fastq.gz")
-dirty_reads_ch = sample_id_ch.merge(fq1_ch).merge(fq2_ch)
+dirty_reads_ch = Channel.fromFilePairs("${updir}/*_{1,2}.fastq.gz", checkIfExists:true, flat:false).view()
+// dirty_reads_ch = Channel.fromPath("${updir}/*.fastq.gz", checkIfExists:true).map(it -> [it.simpleName, it])
+
+// sample_id_ch = Channel.from(params.sample_id)
+// fq1_ch = Channel.fromPath("/${updir}/*_1.fastq.gz")
+// fq2_ch = Channel.fromPath("/${updir}/*_2.fastq.gz")
+// dirty_reads_ch = sample_id_ch.merge(fq1_ch).merge(fq2_ch).map(it -> [it[0], [it[1], it[2]]])
 
 process gather_knowledge {
 
@@ -85,6 +90,8 @@ process gather_knowledge {
         path(tb_amr_cat)
         path(tb_minor_alleles)
         path(human_genome_dir)
+        path(sundial_ref)
+        path(sundial_mask)
 
     output:
         path("knowledge.json"), emit: knowledge
@@ -106,7 +113,9 @@ process gather_knowledge {
         echo '"tb_ref_genome": "${tb_ref_genome}",' >> knowledge.json
         echo '"tb_amr_cat": "${tb_amr_cat}",' >> knowledge.json
         echo '"tb_minor_alleles": "${tb_minor_alleles}",' >> knowledge.json
-        echo '"human_genome_dir": "${human_genome_dir}"' >> knowledge.json
+        echo '"human_genome_dir": "${human_genome_dir}",' >> knowledge.json
+        echo '"sundial_ref": "${sundial_ref}",' >> knowledge.json
+        echo '"sundial_mask": "${sundial_mask}"' >> knowledge.json
         echo '}' >> knowledge.json
         """
 }
@@ -286,17 +295,15 @@ workflow {
                                         params.tb_ref_genome,
                                         params.tb_amr_cat,
                                         params.tb_minor_alleles,
-                                        params.human_genome_dir)
+                                        params.human_genome_dir,
+                                        params.sundial_ref,
+                                        params.sundial_mask)
 
         // wp2
 
-        // make fastq channel compact for human_read_removal
-        dirty_read_compact = dirty_reads_ch.map{
-            it -> tuple(it[0], [it[1], it[2]])
-        }
-        check_valid_input(dirty_read_compact, params.seq_platform)
+        check_valid_input(dirty_reads_ch, params.seq_platform)
 
-        human_read_removal_ch = human_read_removal(dirty_read_compact, Channel.fromPath(params.human_genome_dir), params.seq_platform)
+        human_read_removal_ch = human_read_removal(dirty_reads_ch, Channel.fromPath(params.human_genome_dir), params.seq_platform)
         clean_fastq_ch = human_read_removal_ch.clean_fastq
         
         write_clean_reads_to_input(clean_fastq_ch, params.seq_platform)
@@ -337,28 +344,49 @@ workflow {
             .view{"Competitive Mapping output sample does not have enough reads. END OF THE PIPELINE"}
 
 
-        // WP5 -> Clockwork_ch is called only if  cm_enough_reads_ch exists.
-        clockwork_ch = clockwork(cm_enough_reads_ch, params.ref_files)
+        // WP5 -> Clockwork/Sundial_ch is called only if cm_enough_reads_ch exists.
+        if (params.seq_platform == 'illumina') {
+            println "Running clockwork"
+            clockwork_ch = clockwork(cm_enough_reads_ch.map(it -> [it[0], it[1][0], it[1][1]]), params.ref_files)
+            final_vcf_ch = clockwork_ch.final_vcf
+            final_fasta_ch = clockwork_ch.final_fasta
+            assemble_report = clockwork_ch.tb_clockwork_report_json
+            assembler_files = clockwork_ch.final_fasta.concat(
+                clockwork_ch.final_vcf,
+                clockwork_ch.cortex_vcf,
+                clockwork_ch.final_gvcf,
+                clockwork_ch.samtools_vcf,
+                clockwork_ch.map_bam,
+                clockwork_ch.map_bam_bai,
+                clockwork_ch.tb_clockwork_report_json,
+                clockwork_ch.tb_clockwork_error_json,
+            )
+        } else if (params.seq_platform == 'ont') {
+            println "Running sundial"
+            sundial_ch = run_sundial_snps(cm_enough_reads_ch, params.sundial_ref, params.sundial_mask)
+            final_vcf_ch = sundial_ch.final_vcf.map(it[1])
+            final_fasta_ch = sundial_ch.final_fasta.map(it[1])
+            assemble_report = sundial_ch.sundial_report_json.map(it[1])
+            assembler_files = sundial_ch.alignment.concat(
+                sundial_ch.gvcf,
+                sundial_ch.final_fasta,
+                sundial_ch.final_vcf,
+                sundial_ch.full_consensus,
+                sundial_ch.variants_vcf,
+                sundial_ch.sundial_report_json,
+            ).map(it[1])
+        }
 
         // WP6
-        gnomonicus_ch = gnomonicus_workflow(clockwork_ch.final_vcf, params.tb_ref_genome, params.tb_amr_cat, params.tb_minor_alleles, clockwork_ch.final_fasta)
+        gnomonicus_ch = gnomonicus_workflow(final_vcf_ch, params.tb_ref_genome, params.tb_amr_cat, params.tb_minor_alleles, final_fasta_ch)
         gnomonicus_json = gnomonicus_ch.gnomonicus_json
 
         //WP7
-        fn5_ch = find_neighbour_5(clockwork_ch.final_fasta, params.species, params.api_url, params.api_token)
+        // fn5_ch = find_neighbour_5(final_fasta_ch, params.species, params.api_url, params.api_token)
 
         // copy species specific files to bucket
-        clockwork_ch.final_fasta.concat(
-            clockwork_ch.final_vcf,
-            clockwork_ch.cortex_vcf,
-            clockwork_ch.final_gvcf,
-            clockwork_ch.samtools_vcf,
-            clockwork_ch.map_bam,
-            clockwork_ch.map_bam_bai,
-            gnomonicus_ch.gnomonicus_json,
-            clockwork_ch.tb_clockwork_report_json,
-            clockwork_ch.tb_clockwork_error_json,
-        ) | write_species_to_bucket
+        assembler_files.concat(gnomonicus_ch.gnomonicus_json)
+         | write_species_to_bucket
 
         // Make summary
         name_mapping_ch = rename_name_mapping(params.name_mapping)
@@ -368,7 +396,7 @@ workflow {
             competitive_mapping_ch.cm_report,
             lineagecalling_ch.json_report,
             name_mapping_ch.name_mapping,
-            clockwork_ch.tb_clockwork_report_json,
+            assemble_report, // Want to update summarise, as current sundial just mimicks clockwork
             gnomonicus_ch.gnomonicus_json
         ).toList() | summary // WP8
 
@@ -385,7 +413,7 @@ workflow {
         // copy fastq files to bucket
         write_samples_to_bucket(
             gatekeeper_ch.kraken2_filtered_samples.concat(
-            competitive_mapping_ch.cm_sample_paths
+                competitive_mapping_ch.cm_sample_paths
             ),
             params.seq_platform
         )

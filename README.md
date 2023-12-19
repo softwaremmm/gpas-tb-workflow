@@ -57,6 +57,8 @@ uploads
         └── bob_2.fastq.gz
 ```
 
+You will also need to login to docker (`docker login lhr.ocir.io`) in order to be able to pull the containers.
+
 And would use the following command to run the NextFlow:
 
 ```bash
