@@ -1,12 +1,2 @@
 WORKSPACE=$1
-
-set -e
-
-# Make our own password file from the secret which is mounted as an env variable
-echo $S3FS_FROM_NEXTFLOW > s3fs_password_file
-chmod 600 s3fs_password_file
-
-s3fs "$WORKSPACE-dirtydata" /workspace/buckets/upload_bucket -o passwd_file=./s3fs_password_file -o url=https://lrbvkel2wjot.compat.objectstorage.uk-london-1.oraclecloud.com -o use_path_request_style
-s3fs "$WORKSPACE-readyforprocessing" /workspace/buckets/input_bucket -o passwd_file=./s3fs_password_file -o url=https://lrbvkel2wjot.compat.objectstorage.uk-london-1.oraclecloud.com -o use_path_request_style
-s3fs "$WORKSPACE-output" /workspace/buckets/output_bucket -o passwd_file=./s3fs_password_file -o url=https://lrbvkel2wjot.compat.objectstorage.uk-london-1.oraclecloud.com -o use_path_request_style
-s3fs "$WORKSPACE-relatedness" /workspace/buckets/relatedness_bucket -o passwd_file=./s3fs_password_file -o url=https://lrbvkel2wjot.compat.objectstorage.uk-london-1.oraclecloud.com -o use_path_request_style
+echo "Would have mounted buckets for $WORKSPACE here"
