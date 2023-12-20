@@ -64,8 +64,12 @@ include { run_sundial_snps } from "${subwork_folder}/sundial/main.nf"
 pipeline_versions_file = Channel.fromPath( "${projectDir}/PIPELINE_BUILD" )
                                 .filter{ file(it).exists() == true }
 
-dirty_reads_ch = Channel.fromFilePairs("${updir}/*_{1,2}.fastq.gz", checkIfExists:true, flat:false).view()
-// dirty_reads_ch = Channel.fromPath("${updir}/*.fastq.gz", checkIfExists:true).map(it -> [it.simpleName, it])
+if (params.seq_platform == 'illumina') {
+    dirty_reads_ch = Channel.fromFilePairs("${updir}/*_{1,2}.fastq.gz", checkIfExists:true, flat:false).view()
+}
+else if (params.seq_platform == 'ont') {
+    dirty_reads_ch = Channel.fromPath("${updir}/*.fastq.gz", checkIfExists:true).map(it -> [it.simpleName, it]).first()
+}
 
 // sample_id_ch = Channel.from(params.sample_id)
 // fq1_ch = Channel.fromPath("/${updir}/*_1.fastq.gz")
@@ -364,9 +368,9 @@ workflow {
         } else if (params.seq_platform == 'ont') {
             println "Running sundial"
             sundial_ch = run_sundial_snps(cm_enough_reads_ch, params.sundial_ref, params.sundial_mask)
-            final_vcf_ch = sundial_ch.final_vcf.map(it[1])
-            final_fasta_ch = sundial_ch.final_fasta.map(it[1])
-            assemble_report = sundial_ch.sundial_report_json.map(it[1])
+            final_vcf_ch = sundial_ch.final_vcf.map(it -> it[1])
+            final_fasta_ch = sundial_ch.final_fasta.map(it -> it[1])
+            assemble_report = sundial_ch.sundial_report_json.map(it -> it[1])
             assembler_files = sundial_ch.alignment.concat(
                 sundial_ch.gvcf,
                 sundial_ch.final_fasta,
@@ -374,7 +378,7 @@ workflow {
                 sundial_ch.full_consensus,
                 sundial_ch.variants_vcf,
                 sundial_ch.sundial_report_json,
-            ).map(it[1])
+            ).map(it -> it[1])
         }
 
         // WP6
