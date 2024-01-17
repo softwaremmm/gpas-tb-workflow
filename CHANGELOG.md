@@ -1,3 +1,9 @@
+## 1.2.0 (2024-01-17)
+
+### Feat
+
+- use commitizen for version control
+
 ## v1.1.2 (2024-01-10)
 
 ### Fix
