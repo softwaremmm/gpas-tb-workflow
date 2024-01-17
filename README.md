@@ -44,6 +44,38 @@ git checkout -b <branch name>
 If required, clone subworkflows: `bash clone_sub_workflows.sh`. However, sub_workflows should not be committed due to size and version ambiguity!
 By default this script fetches the `main` branch of all defined subworkflows. To fetch the latest releases instead, use `bash clone_sub_workflows.sh latest` 
 
+## Conventional Commits
+Use conventional commits when developing for this repo. 
+You should install the pre-commit hooks to check your commit messages. A tool `pre-commit` can be used for this.
+You can also install `commitizen` to help with writing conventional commits.
+You can install both through pip/conda. Or see [wiki for other options](https://github.com/GlobalPathogenAnalysisService/Wiki/blob/main/Commitizen.md#installing-commitizenpre-commit)
+
+To install hooks run
+```bash
+pre-commit install --hook-type commit-msg
+```
+
+To make commit with commitizen run
+```bash
+cz c
+```
+
+## Tags and Releases
+
+[Commitizen](https://commitizen-tools.github.io/commitizen/) is used to manage versioning of releases. This tool
+can be used to make commits to this repository. Regardless, [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) 
+are required to ensure correct version numbering and changelog population.
+
+**Do not add tags by hand.**
+
+On merging a Pull Request a [GitHub action will run](.github/workflows/bump.yaml), causing Commitizen to:
+* Determine the new [semver](https://semver.org/) based on conventional commits.
+* Replace the previous semver in [.cz.toml](.cz.toml) and other files as specified therein.
+* Update the [CHANGELOG](CHANGELOG.md) based on commit messages.
+* Commit these changes to the `main` branch.
+* Create a tag for this commit with the tag name of the newly determined semver.
+* Create a new release from this tag.
+
 ## Running the Pipeline Locally
 
 If you want to use different samples then create a structure under `data/uploads` to put your two FASTQ files into. FASTQ files must adopt the pipeline standard file naming convention i.e. `*_{1,2}.fastq.gz`
