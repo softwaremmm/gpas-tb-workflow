@@ -24,6 +24,11 @@ while [[ $# -gt 0 ]]; do
       shift # past argument
       shift # past value
       ;;
+    --seq_platform)
+      SEQ_PLATFORM="$2"
+      shift # past argument
+      shift # past value
+      ;;
     -*|--*)
       echo "Unknown option $1"
       exit 1
@@ -36,6 +41,7 @@ set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 echo "PROFILE   = ${PROFILE}"
 echo "SAMPLE ID = ${SAMPLE_ID}"
 echo "RUN ID    = ${RUN_ID}"
+echo "SEQ PLATFORM    = ${SEQ_PLATFORM}"
 if [ -z "$API_TOKEN" ]
 then
     echo "Missing --api_token!"
@@ -44,5 +50,6 @@ else
     echo "API_TOKEN set"
 fi
 
-nextflow run . -profile $PROFILE --sample_id $SAMPLE_ID --run_id $RUN_ID --api_token $API_TOKEN --species test --seq_platform illumina
+nextflow run . -profile $PROFILE --sample_id $SAMPLE_ID --run_id $RUN_ID --api_token $API_TOKEN --species test \
+  --seq_platform $SEQ_PLATFORM -resume
 

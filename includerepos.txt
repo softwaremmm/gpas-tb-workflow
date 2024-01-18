@@ -6,3 +6,4 @@ GlobalPathogenAnalysisService/clockwork_pipeline
 GlobalPathogenAnalysisService/tb-predict-pipeline
 GlobalPathogenAnalysisService/fn5_pipeline
 GlobalPathogenAnalysisService/summary_pipeline
+GlobalPathogenAnalysisService/sundial

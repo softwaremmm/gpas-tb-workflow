@@ -8,7 +8,7 @@ The workflow consist of multiple steps (sometimes referred to as "Work Packages"
 | **2** Decontamination / Human Read Removal | [hostile](https://github.com/bede/hostile) | Double check on removal of human reads from input data | [human-read-removal_pipeline](https://github.com/GlobalPathogenAnalysisService/human-read-removal_pipeline) | quay.io/biocontainers/hostile:0.1.0--pyhdfd78af_0 | 
 | **3** Gatekeeper | kraken2 | Quality checking and read filtering | [gatekeeper_pipeline](https://github.com/GlobalPathogenAnalysisService/gatekeeper_pipeline) | lhr.ocir.io/lrbvkel2wjot/gpas/gatekeeper_pipeline:latest |
 | **4** Speciation | minimap2, samtools, mykrobe | Competitive Mapping and Lineage Calling (mykrobe) | [lineagecalling_pipeline](https://github.com/GlobalPathogenAnalysisService/lineagecalling_pipeline) [competitivemapping_pipeline](https://github.com/GlobalPathogenAnalysisService/competitivemapping_pipeline) | lhr.ocir.io/lrbvkel2wjot/gpas/lineagecalling_pipeline:latest lhr.ocir.io/lrbvkel2wjot/gpas/competitivemapping_pipeline:latest |
-| **5** Assembly | clockwork, minos | Variant calling | [clockwork_pipeline](https://github.com/GlobalPathogenAnalysisService/clockwork_pipeline) | lhr.ocir.io/lrbvkel2wjot/oxfordmmm/clockwork:latest |
+| **5** Assembly | clockwork, minos, sundial | Variant calling | [clockwork_pipeline](https://github.com/GlobalPathogenAnalysisService/clockwork_pipeline) [sundial](https://github.com/GlobalPathogenAnalysisService/sundial) | lhr.ocir.io/lrbvkel2wjot/oxfordmmm/clockwork:latest lhr.ocir.io/lrbvkel2wjot/oxfordmmm/sundial:latest |
 | **6** Resistance Prediction | gnomonicus | Variants, mutations and effects of a specified (minos) VCF file | [tb-predict-pipeline](https://github.com/GlobalPathogenAnalysisService/tb-predict-pipeline) | oxfordmmm/gnomonicus:latest |
 | **7** Relatedness | Find Neighbour 5 | SNP distance calculation | [fn5_pipeline](https://github.com/GlobalPathogenAnalysisService/fn5_pipeline) | lhr.ocir.io/lrbvkel2wjot/oxfordmmm/fn5:latest | 
 | **8** (or maybe 9) Summary | *None* | Summarises outputs into a JSON file | [summary_pipeline](https://github.com/GlobalPathogenAnalysisService/summary_pipeline) | lhr.ocir.io/lrbvkel2wjot/oxfordmmm/summary_pipeline:latest |
@@ -80,7 +80,7 @@ On merging a Pull Request a [GitHub action will run](.github/workflows/bump.yaml
 
 If you want to use different samples then create a structure under `data/uploads` to put your two FASTQ files into. FASTQ files must adopt the pipeline standard file naming convention i.e. `*_{1,2}.fastq.gz`
 
-e.g. if you use sample_id 5 and run_id 1 then you would have the folder structure
+e.g. if you use sample_id 5 and run_id 1 then you would have the folder structure (for nanopore would require one file)
 
 ```
 uploads
@@ -89,12 +89,16 @@ uploads
         └── bob_2.fastq.gz
 ```
 
+You will also need to login to docker (`docker login lhr.ocir.io`) in order to be able to pull the containers.
+
 And would use the following command to run the NextFlow:
 
 ```bash
-sudo ./run_with_test_species.sh -profile local --sample_id 5 --run_id 1 --api_token $(cat ../NEXTFLOW_API_KEY)
+sudo ./run_with_test_species.sh -profile local --sample_id 5 --run_id 1 --api_token $(cat ../NEXTFLOW_API_KEY) --seq_platform illumina
 ```
 
 `NEXTFLOW_API_KEY` is a file containing the API needed for FN5 to communicate with the database it needs in order to function.
 
 `sudo` is recommended.
+
+Supported seq platforms are 'illumina' and 'ont'
