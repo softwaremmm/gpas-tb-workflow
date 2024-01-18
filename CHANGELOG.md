@@ -1,3 +1,15 @@
+## 1.3.0 (2024-01-18)
+
+### Feat
+
+- update to using ont repos
+
+### Fix
+
+- give default empty string value to test_container param
+- add seq platform for runner script
+- update steps pre sundial/clockwork
+
 ## 1.2.0 (2024-01-17)
 
 ### Feat
