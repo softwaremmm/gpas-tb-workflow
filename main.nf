@@ -407,7 +407,9 @@ workflow {
         //copy to bucket
         gatekeeper_ch.gatekeeper_report.concat(
             gatekeeper_ch.fastp_report,
+            gatekeeper_ch.fastp_fastqs,
             gatekeeper_ch.kraken2_outputs.map{it -> [it[1]]},
+            gatekeeper_ch.kraken2_outputs.map{it -> [it[2]]},
             competitive_mapping_ch.cm_report,
             lineagecalling_ch.json_report,
             summary.out.main_report,
