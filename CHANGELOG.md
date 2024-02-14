@@ -1,3 +1,9 @@
+## 1.3.3 (2024-02-14)
+
+### Fix
+
+- add extra gatekeeper files to bucket
+
 ## 1.3.2 (2024-02-09)
 
 ### Fix
