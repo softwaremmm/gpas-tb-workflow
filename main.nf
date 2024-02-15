@@ -419,7 +419,7 @@ workflow {
         write_samples_to_bucket(
             gatekeeper_ch.kraken2_filtered_samples.concat(
                 competitive_mapping_ch.cm_sample_paths,
-                gatekeeper_ch.fastp_fastqs.map{it -> [it[1]]}
+                gatekeeper_ch.fastp_fastqs
             ),
             params.seq_platform
         )
