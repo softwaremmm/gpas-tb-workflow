@@ -1,3 +1,10 @@
+## 1.3.4 (2024-02-15)
+
+### Fix
+
+- hopefully get right fastp tuple
+- hopefuly write fastp files properly
+
 ## 1.3.3 (2024-02-14)
 
 ### Fix
