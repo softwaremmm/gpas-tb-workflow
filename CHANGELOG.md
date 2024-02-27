@@ -1,3 +1,9 @@
+## 1.3.5 (2024-02-27)
+
+### Fix
+
+- add pod affinity to nf pods
+
 ## 1.3.4 (2024-02-15)
 
 ### Fix
