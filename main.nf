@@ -154,7 +154,6 @@ process write_clean_reads_to_input {
     pod label: "name", value: "gpas-tb-workflow:write_clean_reads_to_input"
     pod label: "sample_id", value: "${params.sample_id}"
     pod label: "run_id", value: "${params.run_id}"
-    time: '10m'
 
     input:
         tuple val(x), path(samples)
@@ -194,7 +193,6 @@ process write_to_bucket {
     pod label: "name", value: "gpas-tb-workflow:write_to_bucket"
     pod label: "sample_id", value: "${params.sample_id}"
     pod label: "run_id", value: "${params.run_id}"
-    time: '10m'
 
     input:
         path(output_file)
@@ -226,7 +224,6 @@ process write_species_to_bucket {
     pod label: "name", value: "gpas-tb-workflow:write_species_to_bucket"
     pod label: "sample_id", value: "${params.sample_id}"
     pod label: "run_id", value: "${params.run_id}"
-    time: '10m'
 
     input:
         path(output_file)
@@ -258,7 +255,6 @@ process write_samples_to_bucket {
     pod label: "name", value: "gpas-tb-workflow:write_samples_to_bucket"
     pod label: "sample_id", value: "${params.sample_id}"
     pod label: "run_id", value: "${params.run_id}"
-    time: '10m'
 
     input:
         tuple val(x), path(samples)
