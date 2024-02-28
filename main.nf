@@ -154,6 +154,7 @@ process write_clean_reads_to_input {
     pod label: "name", value: "gpas-tb-workflow:write_clean_reads_to_input"
     pod label: "sample_id", value: "${params.sample_id}"
     pod label: "run_id", value: "${params.run_id}"
+    time: '10m'
 
     input:
         tuple val(x), path(samples)
@@ -166,6 +167,13 @@ process write_clean_reads_to_input {
             echo "Running with kubernetes"
             /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKSPACE
             trap 'PROCESS_EXIT=\$?; /bin/bash ${projectDir}/lib/s3fs_teardown.sh; exit \$PROCESS_EXIT;' EXIT
+
+            # Ensure the bucket is mounted before writing
+            if [ ! -f $params.inputs_bucket/alive ]; then
+                #`alive` file is not present, so bucket must not be mounted - wait for it to be
+                echo $params.inputs_bucket not mounted!
+                sleep 5
+            fi
         fi
 
         mkdir -p ${indir}
@@ -186,6 +194,7 @@ process write_to_bucket {
     pod label: "name", value: "gpas-tb-workflow:write_to_bucket"
     pod label: "sample_id", value: "${params.sample_id}"
     pod label: "run_id", value: "${params.run_id}"
+    time: '10m'
 
     input:
         path(output_file)
@@ -197,6 +206,13 @@ process write_to_bucket {
             echo "Running with kubernetes"
             /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKSPACE
             trap 'PROCESS_EXIT=\$?; /bin/bash ${projectDir}/lib/s3fs_teardown.sh; exit \$PROCESS_EXIT;' EXIT
+
+            # Ensure the bucket is mounted before writing
+            if [ ! -f $params.outputs_bucket/alive ]; then
+                #`alive` file is not present, so bucket must not be mounted - wait for it to be
+                echo $params.outputs_bucket not mounted!
+                sleep 5
+            fi
         fi
 
         mkdir -p ${outdir}
@@ -210,6 +226,7 @@ process write_species_to_bucket {
     pod label: "name", value: "gpas-tb-workflow:write_species_to_bucket"
     pod label: "sample_id", value: "${params.sample_id}"
     pod label: "run_id", value: "${params.run_id}"
+    time: '10m'
 
     input:
         path(output_file)
@@ -221,6 +238,13 @@ process write_species_to_bucket {
             echo "Running with kubernetes"
             /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKSPACE
             trap 'PROCESS_EXIT=\$?; /bin/bash ${projectDir}/lib/s3fs_teardown.sh; exit \$PROCESS_EXIT;' EXIT
+
+            # Ensure the bucket is mounted before writing
+            if [ ! -f $params.outputs_bucket/alive ]; then
+                #`alive` file is not present, so bucket must not be mounted - wait for it to be
+                echo $params.outputs_bucket not mounted!
+                sleep 5
+            fi
         fi
 
         mkdir -p ${outdir}/tb
@@ -234,6 +258,7 @@ process write_samples_to_bucket {
     pod label: "name", value: "gpas-tb-workflow:write_samples_to_bucket"
     pod label: "sample_id", value: "${params.sample_id}"
     pod label: "run_id", value: "${params.run_id}"
+    time: '10m'
 
     input:
         tuple val(x), path(samples)
@@ -246,6 +271,13 @@ process write_samples_to_bucket {
             echo "Running with kubernetes"
             /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKSPACE
             trap 'PROCESS_EXIT=\$?; /bin/bash ${projectDir}/lib/s3fs_teardown.sh; exit \$PROCESS_EXIT;' EXIT
+
+            # Ensure the bucket is mounted before writing
+            if [ ! -f $params.outputs_bucket/alive ]; then
+                #`alive` file is not present, so bucket must not be mounted - wait for it to be
+                echo $params.outputs_bucket not mounted!
+                sleep 5
+            fi
         fi
 
         mkdir -p ${outdir}
