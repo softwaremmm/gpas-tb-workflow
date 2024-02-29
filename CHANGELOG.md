@@ -1,3 +1,9 @@
+## 1.3.8 (2024-02-29)
+
+### Fix
+
+- use while loop instead of if
+
 ## 1.3.7 (2024-02-28)
 
 ### Fix
