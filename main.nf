@@ -78,6 +78,9 @@ else if (params.seq_platform == 'ont') {
 
 process gather_knowledge {
 
+    cpus = 1
+    memory = "2GB"
+
     debug true
     pod label: "name", value: "gpas-tb-workflow:gather_knowledge"
     pod label: "sample_id", value: "${params.sample_id}"
@@ -126,6 +129,9 @@ process gather_knowledge {
 
 process rename_name_mapping {
 
+    cpus = 1
+    memory = "2GB"
+
     // Rename name_mapping reference data file
     // for consumption by summary pipeline
 
@@ -149,6 +155,9 @@ process rename_name_mapping {
 }
 
 process write_clean_reads_to_input {
+
+    cpus = 1
+    memory = "2GB"
 
     debug true
     pod label: "name", value: "gpas-tb-workflow:write_clean_reads_to_input"
@@ -189,6 +198,9 @@ process write_clean_reads_to_input {
 
 process write_to_bucket {
 
+    cpus = 1
+    memory = "2GB"
+
     debug true
     pod label: "name", value: "gpas-tb-workflow:write_to_bucket"
     pod label: "sample_id", value: "${params.sample_id}"
@@ -220,6 +232,9 @@ process write_to_bucket {
 
 process write_species_to_bucket {
 
+    cpus = 1
+    memory = "2GB"
+
     debug true
     pod label: "name", value: "gpas-tb-workflow:write_species_to_bucket"
     pod label: "sample_id", value: "${params.sample_id}"
@@ -250,6 +265,9 @@ process write_species_to_bucket {
 }
 
 process write_samples_to_bucket {
+
+    cpus = 1
+    memory = "2GB"
 
     debug true
     pod label: "name", value: "gpas-tb-workflow:write_samples_to_bucket"
