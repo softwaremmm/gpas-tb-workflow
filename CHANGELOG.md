@@ -1,3 +1,9 @@
+## 1.3.9 (2024-02-29)
+
+### Fix
+
+- Add CPU and RAM to all processes
+
 ## 1.3.8 (2024-02-29)
 
 ### Fix
