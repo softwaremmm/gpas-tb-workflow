@@ -168,11 +168,11 @@ process write_clean_reads_to_input {
             trap 'PROCESS_EXIT=\$?; /bin/bash ${projectDir}/lib/s3fs_teardown.sh; exit \$PROCESS_EXIT;' EXIT
 
             # Ensure the bucket is mounted before writing
-            if [ ! -f $params.inputs_bucket/alive ]; then
+            while [ ! -f $params.inputs_bucket/alive ]; do
                 #`alive` file is not present, so bucket must not be mounted - wait for it to be
                 echo $params.inputs_bucket not mounted!
                 sleep 5
-            fi
+            done
         fi
 
         mkdir -p ${indir}
@@ -206,11 +206,11 @@ process write_to_bucket {
             trap 'PROCESS_EXIT=\$?; /bin/bash ${projectDir}/lib/s3fs_teardown.sh; exit \$PROCESS_EXIT;' EXIT
 
             # Ensure the bucket is mounted before writing
-            if [ ! -f $params.outputs_bucket/alive ]; then
+            while [ ! -f $params.outputs_bucket/alive ]; do
                 #`alive` file is not present, so bucket must not be mounted - wait for it to be
                 echo $params.outputs_bucket not mounted!
                 sleep 5
-            fi
+            done
         fi
 
         mkdir -p ${outdir}
@@ -237,11 +237,11 @@ process write_species_to_bucket {
             trap 'PROCESS_EXIT=\$?; /bin/bash ${projectDir}/lib/s3fs_teardown.sh; exit \$PROCESS_EXIT;' EXIT
 
             # Ensure the bucket is mounted before writing
-            if [ ! -f $params.outputs_bucket/alive ]; then
+            while [ ! -f $params.outputs_bucket/alive ]; do
                 #`alive` file is not present, so bucket must not be mounted - wait for it to be
                 echo $params.outputs_bucket not mounted!
                 sleep 5
-            fi
+            done
         fi
 
         mkdir -p ${outdir}/tb
@@ -269,11 +269,11 @@ process write_samples_to_bucket {
             trap 'PROCESS_EXIT=\$?; /bin/bash ${projectDir}/lib/s3fs_teardown.sh; exit \$PROCESS_EXIT;' EXIT
 
             # Ensure the bucket is mounted before writing
-            if [ ! -f $params.outputs_bucket/alive ]; then
+            while [ ! -f $params.outputs_bucket/alive ]; do
                 #`alive` file is not present, so bucket must not be mounted - wait for it to be
                 echo $params.outputs_bucket not mounted!
                 sleep 5
-            fi
+            done
         fi
 
         mkdir -p ${outdir}
