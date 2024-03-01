@@ -155,6 +155,18 @@ process write_clean_reads_to_input {
     pod label: "sample_id", value: "${params.sample_id}"
     pod label: "run_id", value: "${params.run_id}"
 
+    // Keep this on the non-scaling node so the mounter doesn't cause issues
+    pod affinity: [
+                nodeAffinity: [
+                    requiredDuringSchedulingIgnoredDuringExecution: [
+                        nodeSelectorTerms: [
+                            [matchExpressions: [
+                                [key: 'oke.oraclecloud.com/cluster_autoscaler', operator: 'In', values: ['allowed']]
+                        ]]]
+                    ]
+                ]
+            ]
+
     input:
         tuple val(x), path(samples)
         val(seq_platform)
@@ -194,6 +206,18 @@ process write_to_bucket {
     pod label: "sample_id", value: "${params.sample_id}"
     pod label: "run_id", value: "${params.run_id}"
 
+    // Keep this on the non-scaling node so the mounter doesn't cause issues
+    pod affinity: [
+                nodeAffinity: [
+                    requiredDuringSchedulingIgnoredDuringExecution: [
+                        nodeSelectorTerms: [
+                            [matchExpressions: [
+                                [key: 'oke.oraclecloud.com/cluster_autoscaler', operator: 'In', values: ['allowed']]
+                        ]]]
+                    ]
+                ]
+            ]
+
     input:
         path(output_file)
 
@@ -225,6 +249,18 @@ process write_species_to_bucket {
     pod label: "sample_id", value: "${params.sample_id}"
     pod label: "run_id", value: "${params.run_id}"
 
+    // Keep this on the non-scaling node so the mounter doesn't cause issues
+    pod affinity: [
+                nodeAffinity: [
+                    requiredDuringSchedulingIgnoredDuringExecution: [
+                        nodeSelectorTerms: [
+                            [matchExpressions: [
+                                [key: 'oke.oraclecloud.com/cluster_autoscaler', operator: 'In', values: ['allowed']]
+                        ]]]
+                    ]
+                ]
+            ]
+
     input:
         path(output_file)
 
@@ -255,6 +291,18 @@ process write_samples_to_bucket {
     pod label: "name", value: "gpas-tb-workflow:write_samples_to_bucket"
     pod label: "sample_id", value: "${params.sample_id}"
     pod label: "run_id", value: "${params.run_id}"
+
+    // Keep this on the non-scaling node so the mounter doesn't cause issues
+    pod affinity: [
+                nodeAffinity: [
+                    requiredDuringSchedulingIgnoredDuringExecution: [
+                        nodeSelectorTerms: [
+                            [matchExpressions: [
+                                [key: 'oke.oraclecloud.com/cluster_autoscaler', operator: 'In', values: ['allowed']]
+                        ]]]
+                    ]
+                ]
+            ]
 
     input:
         tuple val(x), path(samples)
