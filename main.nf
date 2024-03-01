@@ -182,12 +182,12 @@ process write_clean_reads_to_input {
         [annotation: 'cluster-autoscaler.kubernetes.io/safe-to-evict', value: 'false'],
         [affinity: [
                 nodeAffinity: [
-                    requiredDuringSchedulingIgnoredDuringExecution: [[
-                        nodeSelectorTerms: 
+                    requiredDuringSchedulingIgnoredDuringExecution: [
+                        nodeSelectorTerms: [
                             [matchExpressions: [
                                 [key: 'oke.oraclecloud.com/cluster_autoscaler', operator: 'In', values: ['allowed']]
-                        ]]
-                    ]]
+                        ]]]
+                    ]
                 ]
             ]
         ]
@@ -247,12 +247,12 @@ process write_to_bucket {
         [annotation: 'cluster-autoscaler.kubernetes.io/safe-to-evict', value: 'false'],
         [affinity: [
                 nodeAffinity: [
-                    requiredDuringSchedulingIgnoredDuringExecution: [[
-                        nodeSelectorTerms: 
+                    requiredDuringSchedulingIgnoredDuringExecution: [
+                        nodeSelectorTerms: [
                             [matchExpressions: [
                                 [key: 'oke.oraclecloud.com/cluster_autoscaler', operator: 'In', values: ['allowed']]
-                        ]]
-                    ]]
+                        ]]]
+                    ]
                 ]
             ]
         ]
@@ -304,12 +304,12 @@ process write_species_to_bucket {
         [annotation: 'cluster-autoscaler.kubernetes.io/safe-to-evict', value: 'false'],
         [affinity: [
                 nodeAffinity: [
-                    requiredDuringSchedulingIgnoredDuringExecution: [[
-                        nodeSelectorTerms: 
+                    requiredDuringSchedulingIgnoredDuringExecution: [
+                        nodeSelectorTerms: [
                             [matchExpressions: [
                                 [key: 'oke.oraclecloud.com/cluster_autoscaler', operator: 'In', values: ['allowed']]
-                        ]]
-                    ]]
+                        ]]]
+                    ]
                 ]
             ]
         ]
@@ -361,12 +361,12 @@ process write_samples_to_bucket {
         [annotation: 'cluster-autoscaler.kubernetes.io/safe-to-evict', value: 'false'],
         [affinity: [
                 nodeAffinity: [
-                    requiredDuringSchedulingIgnoredDuringExecution: [[
-                        nodeSelectorTerms: 
+                    requiredDuringSchedulingIgnoredDuringExecution: [
+                        nodeSelectorTerms: [
                             [matchExpressions: [
                                 [key: 'oke.oraclecloud.com/cluster_autoscaler', operator: 'In', values: ['allowed']]
-                        ]]
-                    ]]
+                        ]]]
+                    ]
                 ]
             ]
         ]
