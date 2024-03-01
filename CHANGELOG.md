@@ -1,3 +1,11 @@
+## 1.3.13 (2024-03-01)
+
+### Fix
+
+- don't duplicate entire pod spec
+- use right nf syntax
+- add node affinity for writing processes
+
 ## 1.3.12 (2024-03-01)
 
 ## 1.3.11 (2024-03-01)
