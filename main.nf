@@ -174,13 +174,7 @@ process write_clean_reads_to_input {
     pod label: "run_id", value: "${params.run_id}"
 
     // Keep this on the non-scaling node so the mounter doesn't cause issues
-    pod = [
-        [privileged: true],
-        [secret: 'nextflow-api-key-secret', mountPath: '/etc/nextflow-api-key'],
-        [imagePullSecret: 'ocir-pull-image-secret'],
-        [hostPath: '/buckets', mountPath: '/workspace/buckets'],
-        [annotation: 'cluster-autoscaler.kubernetes.io/safe-to-evict', value: 'false'],
-        [affinity: [
+    pod affinity: [
                 nodeAffinity: [
                     requiredDuringSchedulingIgnoredDuringExecution: [
                         nodeSelectorTerms: [
@@ -190,8 +184,6 @@ process write_clean_reads_to_input {
                     ]
                 ]
             ]
-        ]
-    ]
 
     input:
         tuple val(x), path(samples)
@@ -239,13 +231,7 @@ process write_to_bucket {
     pod label: "run_id", value: "${params.run_id}"
 
     // Keep this on the non-scaling node so the mounter doesn't cause issues
-    pod = [
-        [privileged: true],
-        [secret: 'nextflow-api-key-secret', mountPath: '/etc/nextflow-api-key'],
-        [imagePullSecret: 'ocir-pull-image-secret'],
-        [hostPath: '/buckets', mountPath: '/workspace/buckets'],
-        [annotation: 'cluster-autoscaler.kubernetes.io/safe-to-evict', value: 'false'],
-        [affinity: [
+    pod affinity: [
                 nodeAffinity: [
                     requiredDuringSchedulingIgnoredDuringExecution: [
                         nodeSelectorTerms: [
@@ -255,8 +241,6 @@ process write_to_bucket {
                     ]
                 ]
             ]
-        ]
-    ]
 
     input:
         path(output_file)
@@ -296,13 +280,7 @@ process write_species_to_bucket {
     pod label: "run_id", value: "${params.run_id}"
 
     // Keep this on the non-scaling node so the mounter doesn't cause issues
-    pod = [
-        [privileged: true],
-        [secret: 'nextflow-api-key-secret', mountPath: '/etc/nextflow-api-key'],
-        [imagePullSecret: 'ocir-pull-image-secret'],
-        [hostPath: '/buckets', mountPath: '/workspace/buckets'],
-        [annotation: 'cluster-autoscaler.kubernetes.io/safe-to-evict', value: 'false'],
-        [affinity: [
+    pod affinity: [
                 nodeAffinity: [
                     requiredDuringSchedulingIgnoredDuringExecution: [
                         nodeSelectorTerms: [
@@ -312,8 +290,6 @@ process write_species_to_bucket {
                     ]
                 ]
             ]
-        ]
-    ]
 
     input:
         path(output_file)
@@ -353,13 +329,7 @@ process write_samples_to_bucket {
     pod label: "run_id", value: "${params.run_id}"
 
     // Keep this on the non-scaling node so the mounter doesn't cause issues
-    pod = [
-        [privileged: true],
-        [secret: 'nextflow-api-key-secret', mountPath: '/etc/nextflow-api-key'],
-        [imagePullSecret: 'ocir-pull-image-secret'],
-        [hostPath: '/buckets', mountPath: '/workspace/buckets'],
-        [annotation: 'cluster-autoscaler.kubernetes.io/safe-to-evict', value: 'false'],
-        [affinity: [
+    pod affinity: [
                 nodeAffinity: [
                     requiredDuringSchedulingIgnoredDuringExecution: [
                         nodeSelectorTerms: [
@@ -369,8 +339,6 @@ process write_samples_to_bucket {
                     ]
                 ]
             ]
-        ]
-    ]
 
     input:
         tuple val(x), path(samples)
