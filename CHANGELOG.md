@@ -1,3 +1,9 @@
+## 1.3.11 (2024-03-01)
+
+### Fix
+
+- add annotation to mark nf pods as not safe to evict
+
 ## 1.3.10 (2024-02-29)
 
 ### Fix
