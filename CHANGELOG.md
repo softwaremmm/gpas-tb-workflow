@@ -1,3 +1,9 @@
+## 1.3.15 (2024-03-04)
+
+### Fix
+
+- remove superfluous nodeAffinity annotations
+
 ## 1.3.14 (2024-03-04)
 
 ### Fix
