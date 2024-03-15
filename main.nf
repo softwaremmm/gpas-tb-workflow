@@ -58,7 +58,7 @@ include { lineagecalling } from "${subwork_folder}/lineagecalling_pipeline/main.
 include { gnomonicus_workflow } from "${subwork_folder}/tb-predict-pipeline/main.nf"
 include { summary } from "${subwork_folder}/summary_pipeline/main.nf"
 include { human_read_removal } from "${subwork_folder}/human-read-removal_pipeline/src/workflow/human_read_removal.nf"
-include { run_sundial_snps } from "${subwork_folder}/sundial/main.nf"
+include { run_sundial } from "${subwork_folder}/sundial/main.nf"
 
 // metadata
 pipeline_versions_file = Channel.fromPath( "${projectDir}/PIPELINE_BUILD" )
