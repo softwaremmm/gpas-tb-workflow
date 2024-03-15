@@ -1,3 +1,9 @@
+## 1.3.16 (2024-03-15)
+
+### Fix
+
+- update sundial workflow name
+
 ## 1.3.15 (2024-03-04)
 
 ### Fix
