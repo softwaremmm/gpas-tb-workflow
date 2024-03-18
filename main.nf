@@ -395,7 +395,7 @@ workflow {
             )
         } else if (params.seq_platform == 'ont') {
             println "Running sundial"
-            sundial_ch = run_sundial_snps(cm_enough_reads_ch, params.sundial_ref, params.sundial_mask)
+            sundial_ch = run_sundial(cm_enough_reads_ch, params.sundial_ref, params.sundial_mask)
             final_vcf_ch = sundial_ch.final_vcf.map(it -> it[1])
             final_fasta_ch = sundial_ch.final_fasta.map(it -> it[1])
             assemble_report = sundial_ch.sundial_report_json.map(it -> it[1])
