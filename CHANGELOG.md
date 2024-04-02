@@ -1,3 +1,9 @@
+## 1.3.18 (2024-04-02)
+
+### Fix
+
+- add relatedness bucket to FN5 call
+
 ## 1.3.17 (2024-03-18)
 
 ### Fix
