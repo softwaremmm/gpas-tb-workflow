@@ -1,16 +1,6 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-
-// Run Configurations
-params.sample_id = 1
-params.run_id = 1
-params.help = ''
-params.api_url = 'https://dev.portal.gpas.world'
-params.species = 'tb'
-params.api_token = ''
-// Currently only illumina supported for whole pipeline
-params.seq_platform = ''
 supported_seq_platforms = ['illumina', 'ont']
 
 // the location in the buckets for the current run
