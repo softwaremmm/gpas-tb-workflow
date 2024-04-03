@@ -1,23 +1,6 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-// Kubernetes Related Buckets
-if ("${workflow.profile}" != 'kubernetes') {
-    params.uploads_bucket = "$projectDir/data/uploads"
-    params.inputs_bucket = "$projectDir/data/inputs"
-    params.outputs_bucket = "$projectDir/data/outputs"
-    params.relatedness_bucket = "$projectDir/data/relatedness"
-    params.knowledge_bucket = "$projectDir/data/relatedness/knowledge"
-    params.kraken2_db_path = "${params.knowledge_bucket}/kraken2_db"
-} else {
-    params.uploads_bucket = "/workspace/buckets/upload_bucket"
-    params.inputs_bucket = "/workspace/buckets/input_bucket"
-    params.outputs_bucket = "/workspace/buckets/output_bucket"
-    params.relatedness_bucket = "/workspace/buckets/relatedness_bucket"
-    params.knowledge_bucket = "/workspace/buckets/relatedness_bucket/knowledge"
-    params.kraken2_db_path = "$projectDir/kraken2_db"
-}
-
 
 // Run Configurations
 params.sample_id = 1
