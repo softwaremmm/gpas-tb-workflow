@@ -9,17 +9,17 @@ indir = "$params.inputs_bucket/$params.sample_id/$params.run_id"
 updir = "$params.uploads_bucket/$params.sample_id"
 reldir = "$params.relatedness_bucket/$params.sample_id/$params.run_id"
 
-// knowledge parameters
-params.manifest = "${params.knowledge_bucket}/manifest/manifest_20231001"
-params.species_list = "${params.knowledge_bucket}/manifest/species_list_manifest_20231001.csv"
-params.name_mapping = "${params.knowledge_bucket}/manifest/competitive_mapping_mykrobe_names_20231109.csv"
-params.ref_files = "${params.knowledge_bucket}/clockwork/tb/Ref_prepare"
-params.tb_ref_genome = "${params.knowledge_bucket}/tuberculosis_amr_catalogues/catalogues/NC_000962.3/NC_000962.3.gbk"
-params.tb_amr_cat = "${params.knowledge_bucket}/tuberculosis_amr_catalogues/catalogues/NC_000962.3/NC_000962.3_WHO-UCN-TB-2023.5_v2.0_GARC1_RFUS.csv"
-params.tb_minor_alleles = "${params.knowledge_bucket}/minor_alleles.txt"
-params.human_genome_dir = "${params.knowledge_bucket}/human-genome"
-params.sundial_ref = "${params.knowledge_bucket}/sundial"
-params.sundial_mask = "${params.knowledge_bucket}/sundial/compass-mask_20231215.bed"
+// knowledge variables
+manifest = "$params.knowledge_bucket/$params.manifest"
+species_list = "$params.knowledge_bucket/$params.species_list"
+name_mapping = "$params.knowledge_bucket/$params.name_mapping"
+ref_files = "$params.knowledge_bucket/$params.ref_files"
+tb_ref_genome = "$params.knowledge_bucket/$params.tb_ref_genome"
+tb_amr_cat = "$params.knowledge_bucket/$params.tb_amr_cat"
+tb_minor_alleles = "$params.knowledge_bucket/$params.tb_minor_alleles"
+human_genome_dir = "$params.knowledge_bucket/$params.human_genome_dir"
+sundial_ref = "$params.knowledge_bucket/$params.sundial_ref"
+sundial_mask = "$params.knowledge_bucket/$params.sundial_mask"
 
 // sub workflows import
 subwork_folder = "${projectDir}/sub_workflows"
@@ -293,22 +293,22 @@ workflow {
     main:
 
         // This step is for provenance tracking only
-        knowledge_ch = gather_knowledge(params.manifest,
-                                        params.species_list,
-                                        params.name_mapping,
-                                        params.ref_files,
-                                        params.tb_ref_genome,
-                                        params.tb_amr_cat,
-                                        params.tb_minor_alleles,
-                                        params.human_genome_dir,
-                                        params.sundial_ref,
-                                        params.sundial_mask)
+        knowledge_ch = gather_knowledge(manifest,
+                                        species_list,
+                                        name_mapping,
+                                        ref_files,
+                                        tb_ref_genome,
+                                        tb_amr_cat,
+                                        tb_minor_alleles,
+                                        human_genome_dir,
+                                        sundial_ref,
+                                        sundial_mask)
 
         // wp2
 
         check_valid_input(dirty_reads_ch, params.seq_platform)
 
-        human_read_removal_ch = human_read_removal(dirty_reads_ch, Channel.fromPath(params.human_genome_dir), params.seq_platform)
+        human_read_removal_ch = human_read_removal(dirty_reads_ch, Channel.fromPath(human_genome_dir), params.seq_platform)
         clean_fastq_ch = human_read_removal_ch.clean_fastq
         
         write_clean_reads_to_input(clean_fastq_ch, params.seq_platform)
@@ -332,7 +332,7 @@ workflow {
         //Pipeline proceeds only if gk_enough_reads_ch exists.
 
         // Speciation
-        competitive_mapping_ch = competitive_mapping(gk_enough_reads_ch, params.manifest, params.species_list, params.seq_platform)
+        competitive_mapping_ch = competitive_mapping(gk_enough_reads_ch, manifest, species_list, params.seq_platform)
         lineagecalling_ch = lineagecalling(gk_enough_reads_ch, params.seq_platform)
 
         //Create a new channel if the condition to test (enough h37r-v reads) and the channel to use to proceed the execution (paths)
@@ -352,7 +352,7 @@ workflow {
         // WP5 -> Clockwork/Sundial_ch is called only if cm_enough_reads_ch exists.
         if (params.seq_platform == 'illumina') {
             println "Running clockwork"
-            clockwork_ch = clockwork(cm_enough_reads_ch.map(it -> [it[0], it[1][0], it[1][1]]), params.ref_files)
+            clockwork_ch = clockwork(cm_enough_reads_ch.map(it -> [it[0], it[1][0], it[1][1]]), ref_files)
             final_vcf_ch = clockwork_ch.final_vcf
             final_fasta_ch = clockwork_ch.final_fasta
             assemble_report = clockwork_ch.tb_clockwork_report_json
@@ -368,7 +368,7 @@ workflow {
             )
         } else if (params.seq_platform == 'ont') {
             println "Running sundial"
-            sundial_ch = run_sundial(cm_enough_reads_ch, params.sundial_ref, params.sundial_mask)
+            sundial_ch = run_sundial(cm_enough_reads_ch, sundial_ref, sundial_mask)
             final_vcf_ch = sundial_ch.final_vcf.map(it -> it[1])
             final_fasta_ch = sundial_ch.final_fasta.map(it -> it[1])
             assemble_report = sundial_ch.sundial_report_json.map(it -> it[1])
@@ -383,7 +383,7 @@ workflow {
         }
 
         // WP6
-        gnomonicus_ch = gnomonicus_workflow(final_vcf_ch, params.tb_ref_genome, params.tb_amr_cat, params.tb_minor_alleles, final_fasta_ch)
+        gnomonicus_ch = gnomonicus_workflow(final_vcf_ch, tb_ref_genome, tb_amr_cat, tb_minor_alleles, final_fasta_ch)
         gnomonicus_json = gnomonicus_ch.gnomonicus_json
 
         //WP7
@@ -394,7 +394,7 @@ workflow {
          | write_species_to_bucket
 
         // Make summary
-        name_mapping_ch = rename_name_mapping(params.name_mapping)
+        name_mapping_ch = rename_name_mapping(name_mapping)
         pipeline_versions_file.concat(
             knowledge_ch.knowledge,            
             gatekeeper_ch.gatekeeper_report,
