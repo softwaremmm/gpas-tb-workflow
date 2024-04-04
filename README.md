@@ -89,6 +89,11 @@ uploads
         └── bob_2.fastq.gz
 ```
 
+You should also create `data/inputs` and `data/outputs` directories, as well as a `data/relatedness/knowledge` directory. This must be populated with the reference data needed
+to run the sub-workflows. Check the OCI bucket in the `dev` environment for this.
+
+Assuming you have cloned the sub-workflows, execute `./sub_workflows/fn5_pipeline/local_setup.sh` to create the directory structure needed for the "Find Neighbor 5" sub-workflow.
+
 You will also need to login to docker (`docker login lhr.ocir.io`) in order to be able to pull the containers.
 
 And would use the following command to run the NextFlow:
@@ -101,4 +106,4 @@ sudo ./run_with_test_species.sh -profile local --sample_id 5 --run_id 1 --api_to
 
 `sudo` is recommended.
 
-Supported seq platforms are 'illumina' and 'ont'
+Supported seq platforms are 'illumina' and 'ont'.
