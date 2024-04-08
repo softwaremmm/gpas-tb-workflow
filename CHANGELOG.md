@@ -1,3 +1,9 @@
+## 1.3.21 (2024-04-08)
+
+### Fix
+
+- Don't use cached kraken2 hash table
+
 ## 1.3.20 (2024-04-08)
 
 ### Fix
