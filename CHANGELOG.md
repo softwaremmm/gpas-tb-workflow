@@ -1,3 +1,10 @@
+## 1.3.20 (2024-04-08)
+
+### Fix
+
+- Parameter needed for Sundial
+- Reintroduce testing param
+
 ## 1.3.19 (2024-04-08)
 
 ### Fix
