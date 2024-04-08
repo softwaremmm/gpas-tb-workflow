@@ -1,33 +1,6 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-// Kubernetes Related Buckets
-if ("${workflow.profile}" != 'kubernetes') {
-    params.uploads_bucket = "$projectDir/data/uploads"
-    params.inputs_bucket = "$projectDir/data/inputs"
-    params.outputs_bucket = "$projectDir/data/outputs"
-    params.relatedness_bucket = "$projectDir/data/relatedness"
-    params.knowledge_bucket = "$projectDir/data/relatedness/knowledge"
-    params.kraken2_db_path = "${params.knowledge_bucket}/kraken2_db"
-} else {
-    params.uploads_bucket = "/workspace/buckets/upload_bucket"
-    params.inputs_bucket = "/workspace/buckets/input_bucket"
-    params.outputs_bucket = "/workspace/buckets/output_bucket"
-    params.relatedness_bucket = "/workspace/buckets/relatedness_bucket"
-    params.knowledge_bucket = "/workspace/buckets/relatedness_bucket/knowledge"
-    params.kraken2_db_path = "$projectDir/kraken2_db"
-}
-
-
-// Run Configurations
-params.sample_id = 1
-params.run_id = 1
-params.help = ''
-params.api_url = 'https://dev.portal.gpas.world'
-params.species = 'tb'
-params.api_token = ''
-// Currently only illumina supported for whole pipeline
-params.seq_platform = ''
 supported_seq_platforms = ['illumina', 'ont']
 
 // the location in the buckets for the current run
@@ -35,18 +8,6 @@ outdir = "$params.outputs_bucket/$params.sample_id/$params.run_id"
 indir = "$params.inputs_bucket/$params.sample_id/$params.run_id"
 updir = "$params.uploads_bucket/$params.sample_id"
 reldir = "$params.relatedness_bucket/$params.sample_id/$params.run_id"
-
-// knowledge parameters
-params.manifest = "${params.knowledge_bucket}/manifest/manifest_20231001"
-params.species_list = "${params.knowledge_bucket}/manifest/species_list_manifest_20231001.csv"
-params.name_mapping = "${params.knowledge_bucket}/manifest/competitive_mapping_mykrobe_names_20231109.csv"
-params.ref_files = "${params.knowledge_bucket}/clockwork/tb/Ref_prepare"
-params.tb_ref_genome = "${params.knowledge_bucket}/tuberculosis_amr_catalogues/catalogues/NC_000962.3/NC_000962.3.gbk"
-params.tb_amr_cat = "${params.knowledge_bucket}/tuberculosis_amr_catalogues/catalogues/NC_000962.3/NC_000962.3_WHO-UCN-TB-2023.5_v2.0_GARC1_RFUS.csv"
-params.tb_minor_alleles = "${params.knowledge_bucket}/minor_alleles.txt"
-params.human_genome_dir = "${params.knowledge_bucket}/human-genome"
-params.sundial_ref = "${params.knowledge_bucket}/sundial"
-params.sundial_mask = "${params.knowledge_bucket}/sundial/compass-mask_20231215.bed"
 
 // sub workflows import
 subwork_folder = "${projectDir}/sub_workflows"
