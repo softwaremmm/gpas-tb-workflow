@@ -1,3 +1,16 @@
+## 1.3.19 (2024-04-08)
+
+### Fix
+
+- Remove params prefix
+
+### Refactor
+
+- Move more paramters to config
+- Move ref data paths to config
+- Move default params to config
+- Move bucket config to `nextflow.config`
+
 ## 1.3.18 (2024-04-02)
 
 ### Fix
