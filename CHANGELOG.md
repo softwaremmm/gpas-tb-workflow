@@ -1,3 +1,9 @@
+## 1.3.23 (2024-04-09)
+
+### Fix
+
+- pass ref file instead of dir
+
 ## 1.3.22 (2024-04-08)
 
 ### Fix
