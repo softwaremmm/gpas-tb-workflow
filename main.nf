@@ -13,7 +13,7 @@ reldir = "$params.relatedness_bucket/$params.sample_id/$params.run_id"
 subwork_folder = "${projectDir}/sub_workflows"
 include { find_neighbour_5 } from "${subwork_folder}/fn5_pipeline/main.nf"
 include { clockwork } from "${subwork_folder}/clockwork_pipeline/main.nf"
-include { gatekeeper } from "${subwork_folder}/gatekeeper_pipeline/main.nf"
+include { gatekeeper_myco } from "${subwork_folder}/gatekeeper_pipeline/main.nf"
 include { competitive_mapping } from "${subwork_folder}/competitivemapping_pipeline/main.nf"
 include { lineagecalling } from "${subwork_folder}/lineagecalling_pipeline/main.nf"
 include { gnomonicus_workflow } from "${subwork_folder}/tb-predict-pipeline/main.nf"
@@ -302,7 +302,7 @@ workflow {
         write_clean_reads_to_input(clean_fastq_ch, params.seq_platform)
 
         // Gatekeeper: Trimming and positive filtering of Kraken2 Unclassified and Mycobacteriaceae reads
-        gatekeeper_ch = gatekeeper(clean_fastq_ch, params.kraken2_db_path, params.seq_platform)
+        gatekeeper_ch = gatekeeper_myco(clean_fastq_ch, params.kraken2_db_path, params.seq_platform)
 
         //Create a new channel if the condition to test (enough Unclassifidies and Mycrobacteriae reads) and the channel to use to proceed the execution (paths)
         gatekeeper_ch_output = gatekeeper_ch.kraken2_filtered_samples.merge(gatekeeper_ch.kraken2_enough_reads)
