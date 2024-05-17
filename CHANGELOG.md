@@ -1,3 +1,9 @@
+## 1.3.25 (2024-05-17)
+
+### Fix
+
+- update gatekeeper workflow
+
 ## 1.3.24 (2024-04-09)
 
 ### Fix
