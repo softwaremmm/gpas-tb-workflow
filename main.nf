@@ -375,7 +375,7 @@ workflow {
         gnomonicus_json = gnomonicus_ch.gnomonicus_json
 
         //WP7
-        fn5_ch = find_neighbour_5(final_fasta_ch, params.species, params.api_url, params.api_token, params.relatedness_bucket)
+        fn5_ch = find_neighbour_5(final_fasta_ch, params.species, params.api_url, params.api_token, params.relatedness_bucket, params.tb_ref, params.tb_mask, 20)
 
         // copy species specific files to bucket
         assembler_files.concat(gnomonicus_ch.gnomonicus_json)
