@@ -5,7 +5,7 @@ supported_seq_platforms = ['illumina', 'ont']
 
 // the location in the buckets for the current run
 outdir = "$params.outputs_bucket/$params.sample_id/$params.run_id"
-indir_for_sample = "$params.inputs_bucket/$params.sample_id"
+indir_for_sample = "$params.inputs_bucket/$params.sample_id/$params.run_id"
 updir = "$params.uploads_bucket/$params.sample_id"
 reldir = "$params.relatedness_bucket/$params.sample_id/$params.run_id"
 
