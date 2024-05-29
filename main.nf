@@ -5,7 +5,7 @@ supported_seq_platforms = ['illumina', 'ont']
 
 // the location in the buckets for the current run
 outdir = "$params.outputs_bucket/$params.sample_id/$params.run_id"
-indir = "$params.inputs_bucket/$params.sample_id/$params.run_id"
+indir_for_sample = "$params.inputs_bucket/$params.sample_id/$params.run_id"
 updir = "$params.uploads_bucket/$params.sample_id"
 reldir = "$params.relatedness_bucket/$params.sample_id/$params.run_id"
 
@@ -18,7 +18,6 @@ include { competitive_mapping } from "${subwork_folder}/competitivemapping_pipel
 include { lineagecalling } from "${subwork_folder}/lineagecalling_pipeline/main.nf"
 include { gnomonicus_workflow } from "${subwork_folder}/tb-predict-pipeline/main.nf"
 include { summary } from "${subwork_folder}/summary_pipeline/main.nf"
-include { human_read_removal } from "${subwork_folder}/human-read-removal_pipeline/src/workflow/human_read_removal.nf"
 include { run_sundial } from "${subwork_folder}/sundial/main.nf"
 
 // metadata
@@ -26,10 +25,10 @@ pipeline_versions_file = Channel.fromPath( "${projectDir}/PIPELINE_BUILD" )
                                 .filter{ file(it).exists() == true }
 
 if (params.seq_platform == 'illumina') {
-    dirty_reads_ch = Channel.fromFilePairs("${updir}/*_{1,2}.fastq.gz", checkIfExists:true, flat:false).view()
+    clean_fastq_ch = Channel.fromFilePairs("${indir_for_sample}/*_{1,2}.fastq.gz", checkIfExists:true, flat:false).view()
 }
 else if (params.seq_platform == 'ont') {
-    dirty_reads_ch = Channel.fromPath("${updir}/*.fastq.gz", checkIfExists:true).map(it -> [it.simpleName, it]).first()
+    clean_fastq_ch = Channel.fromPath("${indir_for_sample}/*.fastq.gz", checkIfExists:true).map(it -> [it.simpleName, it]).first()
 }
 
 // sample_id_ch = Channel.from(params.sample_id)
@@ -106,45 +105,6 @@ process rename_name_mapping {
         fi
 
         cp "${name_mapping}" name_mapping.csv
-        """
-}
-
-process write_clean_reads_to_input {
-
-    debug true
-    pod label: "name", value: "gpas-tb-workflow:write_clean_reads_to_input"
-    pod label: "sample_id", value: "${params.sample_id}"
-    pod label: "run_id", value: "${params.run_id}"
-
-    input:
-        tuple val(x), path(samples)
-        val(seq_platform)
-
-    script:
-        """
-        if [ ${workflow.profile} == 'kubernetes' ]
-        then
-            echo "Running with kubernetes"
-            /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKSPACE
-            trap 'PROCESS_EXIT=\$?; /bin/bash ${projectDir}/lib/s3fs_teardown.sh; exit \$PROCESS_EXIT;' EXIT
-
-            # Ensure the bucket is mounted before writing
-            while [ ! -f $params.inputs_bucket/alive ]; do
-                #`alive` file is not present, so bucket must not be mounted - wait for it to be
-                echo $params.inputs_bucket not mounted!
-                sleep 5
-            done
-        fi
-
-        mkdir -p ${indir}
-        if [ $seq_platform == 'ont' ]
-        then
-            cp ${samples} ${indir}
-        elif [ $seq_platform == 'illumina' ]
-        then
-            cp ${samples[0]} ${indir}
-            cp ${samples[1]} ${indir}
-        fi
         """
 }
 
@@ -292,14 +252,7 @@ workflow {
                                         params.sundial_ref,
                                         params.sundial_mask)
 
-        // wp2
-
-        check_valid_input(dirty_reads_ch, params.seq_platform)
-
-        human_read_removal_ch = human_read_removal(dirty_reads_ch, Channel.fromPath(params.human_genome_dir), params.seq_platform)
-        clean_fastq_ch = human_read_removal_ch.clean_fastq
-        
-        write_clean_reads_to_input(clean_fastq_ch, params.seq_platform)
+        check_valid_input(clean_fastq_ch, params.seq_platform)
 
         // Gatekeeper: Trimming and positive filtering of Kraken2 Unclassified and Mycobacteriaceae reads
         gatekeeper_ch = gatekeeper_myco(clean_fastq_ch, params.kraken2_db_path, params.seq_platform)
@@ -384,7 +337,7 @@ workflow {
         // Make summary
         name_mapping_ch = rename_name_mapping(params.name_mapping)
         pipeline_versions_file.concat(
-            knowledge_ch.knowledge,            
+            knowledge_ch.knowledge,
             gatekeeper_ch.gatekeeper_report,
             competitive_mapping_ch.cm_report,
             lineagecalling_ch.json_report,
@@ -401,7 +354,6 @@ workflow {
             competitive_mapping_ch.cm_report,
             lineagecalling_ch.json_report,
             summary.out.main_report,
-            human_read_removal_ch.hostile_report,
         ) | write_to_bucket
 
         // copy fastq files to bucket
