@@ -1,3 +1,9 @@
+## 1.3.28 (2024-06-03)
+
+### Fix
+
+- write bracken report to bucket
+
 ## 1.3.27 (2024-05-29)
 
 ### Fix
