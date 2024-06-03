@@ -53,7 +53,6 @@ process gather_knowledge {
         path(tb_ref_genome)
         path(tb_amr_cat)
         path(tb_minor_alleles)
-        path(human_genome_dir)
         path(sundial_ref)
         path(sundial_mask)
 
@@ -77,7 +76,6 @@ process gather_knowledge {
         echo '"tb_ref_genome": "${tb_ref_genome}",' >> knowledge.json
         echo '"tb_amr_cat": "${tb_amr_cat}",' >> knowledge.json
         echo '"tb_minor_alleles": "${tb_minor_alleles}",' >> knowledge.json
-        echo '"human_genome_dir": "${human_genome_dir}",' >> knowledge.json
         echo '"sundial_ref": "${sundial_ref}",' >> knowledge.json
         echo '"sundial_mask": "${sundial_mask}"' >> knowledge.json
         echo '}' >> knowledge.json
@@ -248,7 +246,6 @@ workflow {
                                         params.tb_ref_genome,
                                         params.tb_amr_cat,
                                         params.tb_minor_alleles,
-                                        params.human_genome_dir,
                                         params.sundial_ref,
                                         params.sundial_mask)
 
@@ -351,6 +348,7 @@ workflow {
             gatekeeper_ch.fastp_report,
             gatekeeper_ch.kraken2_outputs.map{it -> [it[1]]},
             gatekeeper_ch.kraken2_outputs.map{it -> [it[2]]},
+            gatekeeper_ch.taxa_summary.map{it -> [it[1]]},
             competitive_mapping_ch.cm_report,
             lineagecalling_ch.json_report,
             summary.out.main_report,
