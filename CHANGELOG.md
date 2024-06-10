@@ -1,3 +1,10 @@
+## 1.3.29 (2024-06-10)
+
+### Fix
+
+- clean up extra krakendb param
+- use kraken mmap when on k8s
+
 ## 1.3.28 (2024-06-03)
 
 ### Fix
