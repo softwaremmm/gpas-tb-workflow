@@ -304,6 +304,7 @@ workflow {
                 clockwork_ch.tb_clockwork_report_json,
                 clockwork_ch.tb_clockwork_error_json,
             )
+            decompressed_gvcf = clockwork_ch.final_gvcf_decompressed
         } else if (params.seq_platform == 'ont') {
             println "Running sundial"
             sundial_ch = run_sundial(cm_enough_reads_ch, params.sundial_ref, params.sundial_mask)
@@ -318,10 +319,15 @@ workflow {
                 sundial_ch.variants_vcf,
                 sundial_ch.sundial_report_json,
             ).map(it -> it[1])
+
+            // This isn't actually used for ont data (as the sundial final.vcf contains the required data anyway)
+            // however, it is required to pass to tb-predict-pipeline as an argument, so it doesn't matter
+            // this this is actually compressed
+            decompressed_gvcf = sundial_ch.gvcf
         }
 
         // WP6
-        gnomonicus_ch = gnomonicus_workflow(final_vcf_ch, params.tb_ref_genome, params.tb_amr_cat, params.tb_minor_alleles, final_fasta_ch)
+        gnomonicus_ch = gnomonicus_workflow(final_vcf_ch, params.tb_ref_genome, params.tb_amr_cat, params.tb_minor_alleles, decompressed_gvcf, params.null_positions)
         gnomonicus_json = gnomonicus_ch.gnomonicus_json
 
         //WP7
