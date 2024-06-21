@@ -1,3 +1,9 @@
+## 1.3.30 (2024-06-21)
+
+### Fix
+
+- add paths gvcf and null_positions paths to tb-predict
+
 ## 1.3.29 (2024-06-10)
 
 ### Fix
