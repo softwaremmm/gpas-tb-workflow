@@ -1,3 +1,10 @@
+## 1.3.33 (2024-06-24)
+
+### Fix
+
+- Remove sub repos
+- Omit taxa summary json from user outputs
+
 ## 1.3.32 (2024-06-24)
 
 ### Fix
