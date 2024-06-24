@@ -354,7 +354,6 @@ workflow {
             gatekeeper_ch.fastp_report,
             gatekeeper_ch.kraken2_outputs.map{it -> [it[1]]},
             gatekeeper_ch.kraken2_outputs.map{it -> [it[2]]},
-            gatekeeper_ch.taxa_summary.map{it -> [it[1]]},
             competitive_mapping_ch.cm_report,
             lineagecalling_ch.json_report,
             summary.out.main_report,
