@@ -323,7 +323,7 @@ workflow {
             // This isn't actually used for ont data (as the sundial final.vcf contains the required data anyway)
             // however, it is required to pass to tb-predict-pipeline as an argument, so it doesn't matter
             // this this is actually compressed
-            decompressed_gvcf = sundial_ch.gvcf
+            decompressed_gvcf = sundial_ch.gvcf.map{it -> [it[1]]}
         }
 
         // WP6
