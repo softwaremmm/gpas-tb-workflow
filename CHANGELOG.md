@@ -1,3 +1,10 @@
+## 1.3.34 (2024-06-27)
+
+### Fix
+
+- Unlink sub workflows
+- Use knowledge bucket for reference data
+
 ## 1.3.33 (2024-06-24)
 
 ### Fix
