@@ -1,3 +1,9 @@
+## 1.3.36 (2024-07-03)
+
+### Fix
+
+- Update species name mapping ref data
+
 ## 1.3.35 (2024-07-03)
 
 ### Fix
