@@ -316,14 +316,11 @@ workflow {
                 sundial_ch.final_fasta,
                 sundial_ch.final_vcf,
                 sundial_ch.full_consensus,
-                sundial_ch.variants_vcf,
+                sundial_ch.full_vcf,
                 sundial_ch.sundial_report_json,
             ).map(it -> it[1])
 
-            // This isn't actually used for ont data (as the sundial final.vcf contains the required data anyway)
-            // however, it is required to pass to tb-predict-pipeline as an argument, so it doesn't matter
-            // this this is actually compressed
-            decompressed_gvcf = sundial_ch.gvcf.map{it -> [it[1]]}
+            decompressed_gvcf = sundial_ch.full_vcf.map{it -> [it[1]]}
         }
 
         // WP6
