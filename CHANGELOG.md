@@ -1,3 +1,10 @@
+## 1.3.38 (2024-07-04)
+
+### Fix
+
+- set version to 1.3.37
+- remove mask from knowledge
+
 ## 1.3.36 (2024-07-03)
 
 ### Fix
