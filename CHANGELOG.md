@@ -1,3 +1,9 @@
+## 1.3.39 (2024-07-04)
+
+### Fix
+
+- remove comma to make json valid
+
 ## 1.3.38 (2024-07-04)
 
 ### Fix
