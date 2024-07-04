@@ -75,7 +75,7 @@ process gather_knowledge {
         echo '"tb_ref_genome": "${tb_ref_genome}",' >> knowledge.json
         echo '"tb_amr_cat": "${tb_amr_cat}",' >> knowledge.json
         echo '"tb_minor_alleles": "${tb_minor_alleles}",' >> knowledge.json
-        echo '"sundial_ref": "${sundial_ref}",' >> knowledge.json
+        echo '"sundial_ref": "${sundial_ref}"' >> knowledge.json
         echo '}' >> knowledge.json
         """
 }
@@ -288,8 +288,8 @@ workflow {
         if (params.seq_platform == 'illumina') {
             println "Running clockwork"
             clockwork_ch = clockwork(cm_enough_reads_ch.map(it -> [it[0], it[1][0], it[1][1]]), params.ref_files)
-            final_fasta_ch = clockwork_ch.final_fasta
-            assemble_report = clockwork_ch.tb_clockwork_report_json
+            final_fasta_ch = clockwork_ch.final_fasta.map(it -> it[1])
+            assemble_report = clockwork_ch.tb_clockwork_report_json.map(it -> it[1])
             assembler_files = clockwork_ch.final_fasta.concat(
                 clockwork_ch.final_vcf,
                 clockwork_ch.cortex_vcf,
@@ -340,7 +340,7 @@ workflow {
             lineagecalling_ch.json_report,
             name_mapping_ch.name_mapping,
             assemble_report, // Want to update summarise, as current sundial just mimicks clockwork
-            gnomonicus_ch.gnomonicus_json
+            gnomonicus_ch.gnomonicus_json.map(it -> it[1])
         ).toList() | summary // WP8
 
         //copy to bucket
