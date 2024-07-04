@@ -54,7 +54,6 @@ process gather_knowledge {
         path(tb_amr_cat)
         path(tb_minor_alleles)
         path(sundial_ref)
-        path(sundial_mask)
 
     output:
         path("knowledge.json"), emit: knowledge
@@ -77,7 +76,6 @@ process gather_knowledge {
         echo '"tb_amr_cat": "${tb_amr_cat}",' >> knowledge.json
         echo '"tb_minor_alleles": "${tb_minor_alleles}",' >> knowledge.json
         echo '"sundial_ref": "${sundial_ref}",' >> knowledge.json
-        echo '"sundial_mask": "${sundial_mask}"' >> knowledge.json
         echo '}' >> knowledge.json
         """
 }
@@ -246,8 +244,7 @@ workflow {
                                         params.tb_ref_genome,
                                         params.tb_amr_cat,
                                         params.tb_minor_alleles,
-                                        params.sundial_ref,
-                                        params.sundial_mask)
+                                        params.sundial_ref)
 
         check_valid_input(clean_fastq_ch, params.seq_platform)
 
