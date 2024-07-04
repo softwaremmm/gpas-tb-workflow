@@ -75,7 +75,7 @@ process gather_knowledge {
         echo '"tb_ref_genome": "${tb_ref_genome}",' >> knowledge.json
         echo '"tb_amr_cat": "${tb_amr_cat}",' >> knowledge.json
         echo '"tb_minor_alleles": "${tb_minor_alleles}",' >> knowledge.json
-        echo '"sundial_ref": "${sundial_ref}",' >> knowledge.json
+        echo '"sundial_ref": "${sundial_ref}"' >> knowledge.json
         echo '}' >> knowledge.json
         """
 }
