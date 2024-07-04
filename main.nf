@@ -288,7 +288,6 @@ workflow {
         if (params.seq_platform == 'illumina') {
             println "Running clockwork"
             clockwork_ch = clockwork(cm_enough_reads_ch.map(it -> [it[0], it[1][0], it[1][1]]), params.ref_files)
-            final_vcf_ch = clockwork_ch.final_vcf
             final_fasta_ch = clockwork_ch.final_fasta
             assemble_report = clockwork_ch.tb_clockwork_report_json
             assembler_files = clockwork_ch.final_fasta.concat(
@@ -301,11 +300,11 @@ workflow {
                 clockwork_ch.tb_clockwork_report_json,
                 clockwork_ch.tb_clockwork_error_json,
             )
-            decompressed_gvcf = clockwork_ch.final_gvcf_decompressed
+            gnomonicus_input = clockwork_ch.final_vcf.join(clockwork_ch.final_gvcf_decompressed)
+
         } else if (params.seq_platform == 'ont') {
             println "Running sundial"
             sundial_ch = run_sundial(cm_enough_reads_ch, params.sundial_ref, params.sundial_mask)
-            final_vcf_ch = sundial_ch.final_vcf.map(it -> it[1])
             final_fasta_ch = sundial_ch.final_fasta.map(it -> it[1])
             assemble_report = sundial_ch.sundial_report_json.map(it -> it[1])
             assembler_files = sundial_ch.alignment.concat(
@@ -315,13 +314,13 @@ workflow {
                 sundial_ch.full_consensus,
                 sundial_ch.full_vcf,
                 sundial_ch.sundial_report_json,
-            ).map(it -> it[1])
+            )
 
-            decompressed_gvcf = sundial_ch.full_vcf.map{it -> [it[1]]}
+            gnomonicus_input = sundial_ch.final_vcf.join(sundial_ch.full_vcf)
         }
 
         // WP6
-        gnomonicus_ch = gnomonicus_workflow(final_vcf_ch, params.tb_ref_genome, params.tb_amr_cat, params.tb_minor_alleles, decompressed_gvcf, params.null_positions)
+        gnomonicus_ch = gnomonicus_workflow(gnomonicus_input, params.tb_ref_genome, params.tb_amr_cat, params.tb_minor_alleles, params.null_positions)
         gnomonicus_json = gnomonicus_ch.gnomonicus_json
 
         //WP7
@@ -329,6 +328,7 @@ workflow {
 
         // copy species specific files to bucket
         assembler_files.concat(gnomonicus_ch.gnomonicus_json)
+            .map(it -> it[1])
          | write_species_to_bucket
 
         // Make summary
