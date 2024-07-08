@@ -1,3 +1,10 @@
+## 1.3.40 (2024-07-08)
+
+### Fix
+
+- De-referene sub-workflows
+- Update cm mykorbe name mapping
+
 ## 1.3.39 (2024-07-04)
 
 ### Fix
