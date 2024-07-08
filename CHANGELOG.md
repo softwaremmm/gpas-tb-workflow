@@ -1,3 +1,9 @@
+## 1.3.41 (2024-07-08)
+
+### Fix
+
+- add nf-test for knowledge json output
+
 ## 1.3.40 (2024-07-08)
 
 ### Fix
