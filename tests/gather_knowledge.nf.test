@@ -1,0 +1,28 @@
+nextflow_process {
+    name "Test Process gather_knowledge"
+    script "main.nf"
+    process "gather_knowledge"
+
+    test("Process run successfully and produce valid json") {
+        when {
+            // files don't exist but that doesn't matter as nextflow still makes symlinks
+            process{
+                """
+                input[0] = file("$projectDir/tests/files/manifest")
+                input[1] = file("$projectDir/tests/files/species_list")
+                input[2] = file("$projectDir/tests/files/name_mapping")
+                input[3] = file("$projectDir/tests/files/ref_files")
+                input[4] = file("$projectDir/tests/files/tb_ref_genome")
+                input[5] = file("$projectDir/tests/files/tb_amr_cat")
+                input[6] = file("$projectDir/tests/files/tb_minor_alleles")
+                input[7] = file("$projectDir/tests/files/sunial_ref")
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assert path(process.out.knowledge[0]).json == path("$projectDir/tests/files/knowledge.json").json
+        }
+    }
+}
