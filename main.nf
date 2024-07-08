@@ -10,7 +10,7 @@ updir = "$params.uploads_bucket/$params.sample_id"
 reldir = "$params.relatedness_bucket/$params.sample_id/$params.run_id"
 
 // sub workflows import
-subwork_folder = "${projectDir}/sub_workflows"
+subwork_folder = "./sub_workflows"
 include { find_neighbour_5 } from "${subwork_folder}/fn5_pipeline/main.nf"
 include { clockwork } from "${subwork_folder}/clockwork_pipeline/main.nf"
 include { gatekeeper_myco } from "${subwork_folder}/gatekeeper_pipeline/main.nf"
@@ -60,13 +60,6 @@ process gather_knowledge {
 
     script:
         """
-        if [ ${workflow.profile} == 'kubernetes' ]
-        then
-            echo "Running with kubernetes"
-            /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKSPACE
-            trap 'PROCESS_EXIT=\$?; /bin/bash ${projectDir}/lib/s3fs_teardown.sh; exit \$PROCESS_EXIT;' EXIT
-        fi
-
         echo '{' > knowledge.json
         echo '"manifest": "${manifest}",' >> knowledge.json
         echo '"species_list": "${species_list}",' >> knowledge.json
@@ -93,13 +86,6 @@ process rename_name_mapping {
 
     script:
         """
-        if [ ${workflow.profile} == 'kubernetes' ]
-        then
-            echo "Running with kubernetes"
-            /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKSPACE
-            trap 'PROCESS_EXIT=\$?; /bin/bash ${projectDir}/lib/s3fs_teardown.sh; exit \$PROCESS_EXIT;' EXIT
-        fi
-
         cp "${name_mapping}" name_mapping.csv
         """
 }
@@ -116,20 +102,6 @@ process write_to_bucket {
 
     script:
         """
-        if [ ${workflow.profile} == 'kubernetes' ]
-        then
-            echo "Running with kubernetes"
-            /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKSPACE
-            trap 'PROCESS_EXIT=\$?; /bin/bash ${projectDir}/lib/s3fs_teardown.sh; exit \$PROCESS_EXIT;' EXIT
-
-            # Ensure the bucket is mounted before writing
-            while [ ! -f $params.outputs_bucket/alive ]; do
-                #`alive` file is not present, so bucket must not be mounted - wait for it to be
-                echo $params.outputs_bucket not mounted!
-                sleep 5
-            done
-        fi
-
         mkdir -p ${outdir}
         cp ${output_file} ${outdir}/${params.sample_id}_\$(basename ${output_file})
         """
@@ -147,20 +119,6 @@ process write_species_to_bucket {
 
     script:
         """
-        if [ ${workflow.profile} == 'kubernetes' ]
-        then
-            echo "Running with kubernetes"
-            /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKSPACE
-            trap 'PROCESS_EXIT=\$?; /bin/bash ${projectDir}/lib/s3fs_teardown.sh; exit \$PROCESS_EXIT;' EXIT
-
-            # Ensure the bucket is mounted before writing
-            while [ ! -f $params.outputs_bucket/alive ]; do
-                #`alive` file is not present, so bucket must not be mounted - wait for it to be
-                echo $params.outputs_bucket not mounted!
-                sleep 5
-            done
-        fi
-
         mkdir -p ${outdir}/tb
         cp ${output_file} ${outdir}/tb/${params.sample_id}_\$(basename ${output_file})
         """
@@ -179,20 +137,6 @@ process write_samples_to_bucket {
 
     script:
         """
-        if [ ${workflow.profile} == 'kubernetes' ]
-        then
-            echo "Running with kubernetes"
-            /bin/bash ${projectDir}/lib/s3fs_setup.sh $WORKSPACE
-            trap 'PROCESS_EXIT=\$?; /bin/bash ${projectDir}/lib/s3fs_teardown.sh; exit \$PROCESS_EXIT;' EXIT
-
-            # Ensure the bucket is mounted before writing
-            while [ ! -f $params.outputs_bucket/alive ]; do
-                #`alive` file is not present, so bucket must not be mounted - wait for it to be
-                echo $params.outputs_bucket not mounted!
-                sleep 5
-            done
-        fi
-
         mkdir -p ${outdir}
         if [ $seq_platform == 'ont' ]
         then
