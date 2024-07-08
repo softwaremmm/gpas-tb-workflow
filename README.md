@@ -89,8 +89,10 @@ uploads
         └── bob_2.fastq.gz
 ```
 
-You should also create `data/inputs` and `data/outputs` directories, as well as a `data/relatedness/knowledge` directory. This must be populated with the reference data needed
+You should also create `data/inputs` and `data/outputs` directories, as well as a `data/knowledge` directory. This must be populated with the reference data needed
 to run the sub-workflows. Check the OCI bucket in the `dev` environment for this.
+
+You will need to clone the subworkflows using `clone_sub_workflows.sh`.
 
 Assuming you have cloned the sub-workflows, execute `./sub_workflows/fn5_pipeline/local_setup.sh` to create the directory structure needed for the "Find Neighbor 5" sub-workflow.
 
@@ -107,3 +109,14 @@ sudo ./run_with_test_species.sh -profile local --sample_id 5 --run_id 1 --api_to
 `sudo` is recommended.
 
 Supported seq platforms are 'illumina' and 'ont'.
+
+## testing
+For testing you need nf-test installed.
+You'll need the reference data and subworkflows set up as described for running locally.
+
+Currently there is only a single unit test.
+```
+nf-test test tests/gather_knowledge.nf.test
+```
+
+`pipeline.nf.test` is outdated
