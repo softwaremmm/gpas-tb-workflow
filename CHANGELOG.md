@@ -1,3 +1,10 @@
+## 1.3.42 (2024-07-09)
+
+### Fix
+
+- map tuples to files
+- use tuples in channels
+
 ## 1.3.41 (2024-07-08)
 
 ### Fix
