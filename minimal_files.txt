@@ -1,4 +1,2 @@
 main.nf
 nextflow.config
-lib/s3fs_setup.sh
-lib/s3fs_teardown.sh
