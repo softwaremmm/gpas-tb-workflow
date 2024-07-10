@@ -1,3 +1,9 @@
+## 1.3.44 (2024-07-10)
+
+### Fix
+
+- Remove s3fs mounting code (not used)
+
 ## 1.3.43 (2024-07-10)
 
 ### Fix

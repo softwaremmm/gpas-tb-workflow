@@ -1,5 +1,5 @@
 [tool.commitizen]
-version = "1.3.43"
+version = "1.3.44"
 name = "cz_conventional_commits"
 update_changelog_on_bump = true
 changelog_incremental = true
