@@ -31,11 +31,6 @@ else if (params.seq_platform == 'ont') {
     clean_fastq_ch = Channel.fromPath("${indir_for_sample}/*.fastq.gz", checkIfExists:true).map(it -> [it.simpleName, it]).first()
 }
 
-// sample_id_ch = Channel.from(params.sample_id)
-// fq1_ch = Channel.fromPath("/${updir}/*_1.fastq.gz")
-// fq2_ch = Channel.fromPath("/${updir}/*_2.fastq.gz")
-// dirty_reads_ch = sample_id_ch.merge(fq1_ch).merge(fq2_ch).map(it -> [it[0], [it[1], it[2]]])
-
 process gather_knowledge {
 
     debug true
@@ -74,7 +69,6 @@ process gather_knowledge {
 }
 
 process rename_name_mapping {
-
     // Rename name_mapping reference data file
     // for consumption by summary pipeline
 
@@ -91,7 +85,6 @@ process rename_name_mapping {
 }
 
 process write_to_bucket {
-
     debug true
     pod label: "name", value: "gpas-tb-workflow:write_to_bucket"
     pod label: "sample_id", value: "${params.sample_id}"
@@ -108,7 +101,6 @@ process write_to_bucket {
 }
 
 process write_species_to_bucket {
-
     debug true
     pod label: "name", value: "gpas-tb-workflow:write_species_to_bucket"
     pod label: "sample_id", value: "${params.sample_id}"
@@ -125,7 +117,6 @@ process write_species_to_bucket {
 }
 
 process write_samples_to_bucket {
-
     debug true
     pod label: "name", value: "gpas-tb-workflow:write_samples_to_bucket"
     pod label: "sample_id", value: "${params.sample_id}"
@@ -268,7 +259,9 @@ workflow {
         gnomonicus_json = gnomonicus_ch.gnomonicus_json
 
         //WP7
-        fn5_ch = find_neighbour_5(final_fasta_ch, params.species, params.api_url, params.api_token, params.relatedness_bucket, params.tb_ref, params.tb_mask, 20)
+        if (params.run_fn5 != "false") {
+            fn5_ch = find_neighbour_5(final_fasta_ch, params.species, params.api_url, params.api_token, params.relatedness_bucket, params.tb_ref, params.tb_mask, 20)
+        }
 
         // copy species specific files to bucket
         assembler_files.concat(gnomonicus_ch.gnomonicus_json)

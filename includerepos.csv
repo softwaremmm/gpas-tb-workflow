@@ -1,0 +1,8 @@
+GlobalPathogenAnalysisService/gatekeeper_pipeline,main
+GlobalPathogenAnalysisService/lineagecalling_pipeline,main
+GlobalPathogenAnalysisService/competitivemapping_pipeline,main
+GlobalPathogenAnalysisService/clockwork_pipeline,main
+GlobalPathogenAnalysisService/tb-predict-pipeline,main
+GlobalPathogenAnalysisService/fn5_pipeline,main
+GlobalPathogenAnalysisService/summary_pipeline,main
+GlobalPathogenAnalysisService/sundial,main
