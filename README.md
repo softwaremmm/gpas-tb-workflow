@@ -42,7 +42,9 @@ git checkout -b <branch name>
 ```
 
 If required, clone subworkflows: `bash clone_sub_workflows.sh`. However, sub_workflows should not be committed due to size and version ambiguity!
-By default this script fetches the `main` branch of all defined subworkflows. To fetch the latest releases instead, use `bash clone_sub_workflows.sh latest` 
+By default this script fetches the `main` branch of all defined subworkflows.
+To fetch the latest releases instead, use `bash clone_sub_workflows.sh latest`.
+To fetch different branches, change the values from `main` in `includerepos.csv`.
 
 ## Conventional Commits
 Use conventional commits when developing for this repo. 
@@ -78,25 +80,26 @@ On merging a Pull Request a [GitHub action will run](.github/workflows/bump.yaml
 
 ## Running the Pipeline Locally
 
-If you want to use different samples then create a structure under `data/uploads` to put your two FASTQ files into. FASTQ files must adopt the pipeline standard file naming convention i.e. `*_{1,2}.fastq.gz`
+If you want to use different samples then create a structure under `data/inputs` to put your two FASTQ files into.
+FASTQ files must adopt the pipeline standard file naming convention i.e. `*_{1,2}.fastq.gz`
 
 e.g. if you use sample_id 5 and run_id 1 then you would have the folder structure (for nanopore would require one file)
 
 ```
-uploads
+inputs
     └── 5
         ├── bob_1.fastq.gz
         └── bob_2.fastq.gz
 ```
 
-You should also create `data/inputs` and `data/outputs` directories, as well as a `data/knowledge` directory. This must be populated with the reference data needed
+You should also create `data/outputs` directories, as well as a `data/knowledge` directory. This must be populated with the reference data needed
 to run the sub-workflows. Check the OCI bucket in the `dev` environment for this.
 
 You will need to clone the subworkflows using `clone_sub_workflows.sh`.
 
 Assuming you have cloned the sub-workflows, execute `./sub_workflows/fn5_pipeline/local_setup.sh` to create the directory structure needed for the "Find Neighbor 5" sub-workflow.
 
-You will also need to login to docker (`docker login lhr.ocir.io`) in order to be able to pull the containers.
+You will also need to login to docker (`docker login lhr.ocir.io` and/or `sudo docker login lhr.ocir.io`) in order to be able to pull the containers.
 
 And would use the following command to run the NextFlow:
 
@@ -120,3 +123,15 @@ nf-test test tests/gather_knowledge.nf.test
 ```
 
 `pipeline.nf.test` is outdated
+
+### full pipeline test
+For a full pipeline test you'll need some input data. An ONT and Illumina example can be found in the dev knowledge bucket under `example_sample`.
+The `run_local.sh` will run the pipeline except for FN5 which requires more set up.
+The script assumes you have the following files in inputs directory:
+```
+inputs/1/1/<illumina>_1.fastq.gz
+inputs/1/1/<illumina>_2.fastq.gz
+inputs/2/1/<ont>.fastq.gz
+```
+
+After the nextflow completes the `outputs` directory should be populated.
