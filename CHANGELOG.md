@@ -1,3 +1,12 @@
+## 1.3.46 (2024-07-12)
+
+### Fix
+
+- keep updir
+- instructions for running locally
+- use param to stop running fn5
+- set desired branches for subworkflows
+
 ## 1.3.45 (2024-07-12)
 
 ### Fix
