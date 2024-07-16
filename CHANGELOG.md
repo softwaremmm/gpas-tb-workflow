@@ -1,3 +1,9 @@
+## 1.3.48 (2024-07-16)
+
+### Fix
+
+- **myco**: Correct mapping file name
+
 ## 1.3.47 (2024-07-15)
 
 ### Fix
