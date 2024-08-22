@@ -1,3 +1,10 @@
+## 1.3.49 (2024-08-22)
+
+### Fix
+
+- use right syntax
+- node affinity to keep nf pods in autoscaler pool
+
 ## 1.3.48 (2024-07-16)
 
 ### Fix
