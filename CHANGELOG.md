@@ -1,3 +1,10 @@
+## 1.3.50 (2024-08-29)
+
+### Fix
+
+- clean up minor alleles from config
+- remove minor alleles input to gnomonicus
+
 ## 1.3.49 (2024-08-22)
 
 ### Fix
