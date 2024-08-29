@@ -255,7 +255,7 @@ workflow {
         }
 
         // WP6
-        gnomonicus_ch = gnomonicus_workflow(gnomonicus_input, params.tb_ref_genome, params.tb_amr_cat, params.tb_minor_alleles, params.null_positions)
+        gnomonicus_ch = gnomonicus_workflow(gnomonicus_input, params.tb_ref_genome, params.tb_amr_cat, params.null_positions)
         gnomonicus_json = gnomonicus_ch.gnomonicus_json
 
         //WP7
