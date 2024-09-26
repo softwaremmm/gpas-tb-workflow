@@ -1,3 +1,10 @@
+## 1.3.53 (2024-09-26)
+
+### Fix
+
+- enable k8s debug yaml
+- update trace settings
+
 ## 1.3.52 (2024-09-16)
 
 ### Fix
