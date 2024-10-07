@@ -1,3 +1,9 @@
+## 1.3.55 (2024-10-07)
+
+### Fix
+
+- revert pipeline changes for grumpy
+
 ## 1.3.54 (2024-09-27)
 
 ### Fix
