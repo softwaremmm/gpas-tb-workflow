@@ -1,3 +1,10 @@
+## 1.3.56 (2024-10-17)
+
+### Fix
+
+- remove minor alleles from config too
+- remove minor alleles from tb-predict input
+
 ## 1.3.55 (2024-10-07)
 
 ### Fix
