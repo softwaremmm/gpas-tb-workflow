@@ -1,3 +1,9 @@
+## 1.3.58 (2024-11-05)
+
+### Fix
+
+- use competitive_mapping_mykrobe_names_20241105
+
 ## 1.3.57 (2024-11-01)
 
 ### Fix
