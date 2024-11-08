@@ -203,7 +203,7 @@ workflow {
         lineagecalling_ch = lineagecalling(gk_enough_reads_ch, params.seq_platform)
 
         //Create a new channel if the condition to test (enough h37r-v reads) and the channel to use to proceed the execution (paths)
-        competitive_mapping_ch_output = competitive_mapping_ch.cm_sample_paths.merge(competitive_mapping_ch.cm_enough_reads)
+        competitive_mapping_ch_output = competitive_mapping_ch.cm_tb_reads.join(competitive_mapping_ch.cm_enough_reads)
 
 
         cm_enough_reads_ch = competitive_mapping_ch_output
@@ -270,7 +270,7 @@ workflow {
         pipeline_versions_file.concat(
             knowledge_ch.knowledge,
             gatekeeper_ch.gatekeeper_report,
-            competitive_mapping_ch.cm_report,
+            competitive_mapping_ch.cm_report.map{it -> it[1]},
             lineagecalling_ch.json_report,
             name_mapping_ch.name_mapping,
             assemble_report, // Want to update summarise, as current sundial just mimicks clockwork
@@ -282,7 +282,7 @@ workflow {
             gatekeeper_ch.fastp_report,
             gatekeeper_ch.kraken2_outputs.map{it -> [it[1]]},
             gatekeeper_ch.kraken2_outputs.map{it -> [it[2]]},
-            competitive_mapping_ch.cm_report,
+            competitive_mapping_ch.cm_report.map{it -> it[1]},
             lineagecalling_ch.json_report,
             summary.out.main_report,
         ) | write_to_bucket
@@ -290,7 +290,7 @@ workflow {
         // copy fastq files to bucket
         write_samples_to_bucket(
             gatekeeper_ch.kraken2_filtered_samples.concat(
-                competitive_mapping_ch.cm_sample_paths,
+                competitive_mapping_ch.cm_tb_reads,
                 gatekeeper_ch.fastp_fastqs
             ),
             params.seq_platform
