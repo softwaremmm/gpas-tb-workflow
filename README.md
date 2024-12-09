@@ -5,12 +5,12 @@ The workflow consist of multiple steps (sometimes referred to as "Work Packages"
 
 | Work Package | Main Software | Notes | Repository(ies) | Docker Image(s) |
 | --- | --- | --- | --- | --- |
-| **2** Decontamination / Human Read Removal | [hostile](https://github.com/bede/hostile) | Double check on removal of human reads from input data | [human-read-removal_pipeline](https://github.com/GlobalPathogenAnalysisService/human-read-removal_pipeline) | quay.io/biocontainers/hostile:0.1.0--pyhdfd78af_0 | 
+| **2** Decontamination / Human Read Removal | [hostile](https://github.com/bede/hostile) | Double check on removal of human reads from input data | [human-read-removal_pipeline](https://github.com/GlobalPathogenAnalysisService/human-read-removal_pipeline) | quay.io/biocontainers/hostile:0.1.0--pyhdfd78af_0 |
 | **3** Gatekeeper | kraken2 | Quality checking and read filtering | [gatekeeper_pipeline](https://github.com/GlobalPathogenAnalysisService/gatekeeper_pipeline) | lhr.ocir.io/lrbvkel2wjot/gpas/gatekeeper_pipeline:latest |
 | **4** Speciation | minimap2, samtools, mykrobe | Competitive Mapping and Lineage Calling (mykrobe) | [lineagecalling_pipeline](https://github.com/GlobalPathogenAnalysisService/lineagecalling_pipeline) [competitivemapping_pipeline](https://github.com/GlobalPathogenAnalysisService/competitivemapping_pipeline) | lhr.ocir.io/lrbvkel2wjot/gpas/lineagecalling_pipeline:latest lhr.ocir.io/lrbvkel2wjot/gpas/competitivemapping_pipeline:latest |
 | **5** Assembly | clockwork, minos, sundial | Variant calling | [clockwork_pipeline](https://github.com/GlobalPathogenAnalysisService/clockwork_pipeline) [sundial](https://github.com/GlobalPathogenAnalysisService/sundial) | lhr.ocir.io/lrbvkel2wjot/oxfordmmm/clockwork:latest lhr.ocir.io/lrbvkel2wjot/oxfordmmm/sundial:latest |
 | **6** Resistance Prediction | gnomonicus | Variants, mutations and effects of a specified (minos) VCF file | [tb-predict-pipeline](https://github.com/GlobalPathogenAnalysisService/tb-predict-pipeline) | oxfordmmm/gnomonicus:latest |
-| **7** Relatedness | Find Neighbour 5 | SNP distance calculation | [fn5_pipeline](https://github.com/GlobalPathogenAnalysisService/fn5_pipeline) | lhr.ocir.io/lrbvkel2wjot/oxfordmmm/fn5:latest | 
+| **7** Relatedness | Find Neighbour 5 | SNP distance calculation | [fn5_pipeline](https://github.com/GlobalPathogenAnalysisService/fn5_pipeline) | lhr.ocir.io/lrbvkel2wjot/oxfordmmm/fn5:latest |
 | **8** (or maybe 9) Summary | *None* | Summarises outputs into a JSON file | [summary_pipeline](https://github.com/GlobalPathogenAnalysisService/summary_pipeline) | lhr.ocir.io/lrbvkel2wjot/oxfordmmm/summary_pipeline:latest |
 
 A machine readable list of the repositories required to run the full pipeline (not including Work Package 2 Decontamination / Human Read Removal) is [included in this repository](./includerepos.txt).
@@ -46,37 +46,17 @@ By default this script fetches the `main` branch of all defined subworkflows.
 To fetch the latest releases instead, use `bash clone_sub_workflows.sh latest`.
 To fetch different branches, change the values from `main` in `includerepos.csv`.
 
-## Conventional Commits
-Use conventional commits when developing for this repo. 
-You should install the pre-commit hooks to check your commit messages. A tool `pre-commit` can be used for this.
-You can also install `commitizen` to help with writing conventional commits.
-You can install both through pip/conda. Or see [wiki for other options](https://github.com/GlobalPathogenAnalysisService/Wiki/blob/main/Commitizen.md#installing-commitizenpre-commit)
-
-To install hooks run
+## Tags, Releases, and Committing
+Use conventional commits. This is enforced with commitizen validate action and pre-commit hooks:
 ```bash
-pre-commit install --hook-type commit-msg
+pre-commit install
 ```
 
-To make commit with commitizen run
-```bash
-cz c
-```
+This repo uses a standard gitflow approach, so changes should be first merged into develop and then released to main.
+- In the develop branch semantic versioning is not used. Instead you can reference the commit hash to use it in a workflow.
+- In a release branch you can create a release candidate with `cz bump a.b.c-rcX`. This also creates a tag.
+- When release branch is ready for main run `cz bump a.b.c --files-only`. Manually write a human descriptive changelog. Then push these changes to main and make a release/tag there.
 
-## Tags and Releases
-
-[Commitizen](https://commitizen-tools.github.io/commitizen/) is used to manage versioning of releases. This tool
-can be used to make commits to this repository. Regardless, [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) 
-are required to ensure correct version numbering and changelog population.
-
-**Do not add tags by hand.**
-
-On merging a Pull Request a [GitHub action will run](.github/workflows/bump.yaml), causing Commitizen to:
-* Determine the new [semver](https://semver.org/) based on conventional commits.
-* Replace the previous semver in [.cz.toml](.cz.toml) and other files as specified therein.
-* Update the [CHANGELOG](CHANGELOG.md) based on commit messages.
-* Commit these changes to the `main` branch.
-* Create a tag for this commit with the tag name of the newly determined semver.
-* Create a new release from this tag.
 
 ## Running the Pipeline Locally
 
