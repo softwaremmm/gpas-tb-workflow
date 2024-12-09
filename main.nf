@@ -262,7 +262,7 @@ workflow {
 
         // copy species specific files to bucket
         assembler_files.concat(gnomonicus_ch.gnomonicus_json)
-            .map(it -> it[1]),concat(
+            .map(it -> it[1]).concat(
                 gnomonicus_ch.variants_csv,
                 gnomonicus_ch.mutations_csv,
                 gnomonicus_ch.effects_csv,
