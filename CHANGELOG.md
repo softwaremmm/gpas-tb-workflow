@@ -1,3 +1,16 @@
+## 2.1.0 (2025-02-07)
+
+### Chore
+
+[MMM-1059] Build pipelines individually
+
+Pipelines are built using https://github.com/GlobalPathogenAnalysisService/pipeline-builder (details in readme).
+In summary, this means that pipelines are built using this action when commits or tags are created and copied to
+buckets. Pipeline versions specified in https://github.com/GlobalPathogenAnalysisService/pathogena-releases are
+pulled from those buckets at run time. This confers several benefits listed in the Jira ticket.
+
+Scientifically unchanged from the version in poller `2.0.3`.
+
 ## 1.3.58 (2024-11-05)
 
 ### Fix
