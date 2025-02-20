@@ -15,6 +15,10 @@ include { run_sundial } from "./sub_workflows/sundial/main.nf"
 params.outdir = "${params.outputs_bucket}/${params.sample_id}/${params.run_id}"
 params.indir_for_sample = "${params.inputs_bucket}/${params.sample_id}/${params.run_id}"
 
+// Default file suffixes
+params.input_paired_suffix = "*_{1,2}.fastq.gz"
+params.input_single_suffix = "*.fastq.gz"
+
 workflow {
 
     // metadata
@@ -34,20 +38,25 @@ workflow {
     )
 
     if (params.seq_platform == 'illumina') {
-        clean_fastq_ch = Channel.fromFilePairs("${params.indir_for_sample}/*_{1,2}.fastq.gz", checkIfExists: true, flat: false).view()
+        clean_fastq_ch = Channel.fromFilePairs("${params.indir_for_sample}/${params.input_paired_suffix}", checkIfExists: true, flat: false)
     }
     else if (params.seq_platform == 'ont') {
-        clean_fastq_ch = Channel.fromPath("${params.indir_for_sample}/*.fastq.gz", checkIfExists: true).map { it -> [it.simpleName, it] }.first()
+        clean_fastq_ch = Channel
+            .fromPath("${params.indir_for_sample}/${params.input_single_suffix}", checkIfExists: true)
+            .map { it -> [it.simpleName, it] }
     }
 
     check_valid_input(clean_fastq_ch, params.seq_platform)
+
+    // View first 3 so users can check if correct
+    clean_fastq_ch.take(3).view()
 
 
     // Gatekeeper: Trimming and positive filtering of Kraken2 Unclassified and Mycobacteriaceae reads
     gatekeeper_ch = gatekeeper_myco(clean_fastq_ch, params.kraken2_db_path, params.seq_platform)
 
     //Create a new channel if the condition to test (enough Unclassifidies and Mycrobacteriae reads) and the channel to use to proceed the execution (paths)
-    gatekeeper_ch_output = gatekeeper_ch.kraken2_filtered_samples.merge(gatekeeper_ch.kraken2_enough_reads)
+    gatekeeper_ch_output = gatekeeper_ch.kraken2_filtered_samples.join(gatekeeper_ch.kraken2_enough_reads)
 
     gk_enough_reads_ch = gatekeeper_ch_output
         .filter { it[2] == "true" }
@@ -55,9 +64,8 @@ workflow {
         .view { "Gatekeeper output sample has enough reads" }
 
     gk_not_enough_reads_ch = gatekeeper_ch_output
-        .filter { it[2] == "false" }
+        .filter { it[2] != "true" }
         .view { "Gatekeeper output sample does not have enough reads. END OF THE PIPELINE" }
-
 
     //Pipeline proceeds only if gk_enough_reads_ch exists.
 
@@ -75,16 +83,16 @@ workflow {
         .view { "Competitive Mapping output sample has enough reads" }
 
     cm_not_enough_reads = competitive_mapping_ch_output
-        .filter { it[2] == "false" }
+        .filter { it[2] != "true" }
         .view { "Competitive Mapping output sample does not have enough reads. END OF THE PIPELINE" }
 
 
     // WP5 -> Clockwork/Sundial_ch is called only if cm_enough_reads_ch exists.
     if (params.seq_platform == 'illumina') {
-        println("Running clockwork")
-        clockwork_ch = clockwork(cm_enough_reads_ch.map { it -> [it[0], it[1][0], it[1][1]] }, params.ref_files)
-        final_fasta_ch = clockwork_ch.final_fasta.map { it -> it[1] }
-        assemble_report = clockwork_ch.tb_clockwork_report_json.map { it -> it[1] }
+        println("Will run clockwork")
+        clockwork_ch = clockwork(cm_enough_reads_ch, params.ref_files)
+        final_fasta_ch = clockwork_ch.final_fasta
+        assemble_report = clockwork_ch.tb_clockwork_report_json
         assembler_files = clockwork_ch.final_fasta.concat(
             clockwork_ch.final_vcf,
             clockwork_ch.cortex_vcf,
@@ -98,10 +106,10 @@ workflow {
         gnomonicus_input = clockwork_ch.final_vcf.join(clockwork_ch.final_gvcf_decompressed)
     }
     else if (params.seq_platform == 'ont') {
-        println("Running sundial")
+        println("Will run sundial")
         sundial_ch = run_sundial(cm_enough_reads_ch, params.sundial_ref, params.sundial_mask)
-        final_fasta_ch = sundial_ch.final_fasta.map { it -> it[1] }
-        assemble_report = sundial_ch.sundial_report_json.map { it -> it[1] }
+        final_fasta_ch = sundial_ch.final_fasta
+        assemble_report = sundial_ch.sundial_report_json
         assembler_files = sundial_ch.alignment.concat(
             sundial_ch.gvcf,
             sundial_ch.final_fasta,
@@ -115,37 +123,54 @@ workflow {
     }
 
     // WP6
-    gnomonicus_ch = gnomonicus_workflow(gnomonicus_input, params.tb_ref_genome, params.tb_amr_cat, params.null_positions)
+    gnomonicus_ch = gnomonicus_workflow(gnomonicus_input, params.seq_platform, params.tb_ref_genome, params.tb_amr_cat, params.null_positions)
 
     //WP7
     if (params.run_fn5 != "false") {
-        fn5_ch = find_neighbour_5(final_fasta_ch, params.species, params.api_url, params.api_token, params.relatedness_bucket, params.tb_ref, params.tb_mask, 20)
+        find_neighbour_5(final_fasta_ch, params.species, params.api_url, params.api_token, params.relatedness_bucket, params.tb_ref, params.tb_mask, 20)
     }
 
+
+
+    // WP8 Make summary
+    // Rename mapping file so that summary python picks it up
+    name_mapping_ch = rename_name_mapping(params.name_mapping)
+    sample_reports = gatekeeper_ch.gatekeeper_report
+        .mix(
+            competitive_mapping_ch.cm_report,
+            lineagecalling_ch.json_report,
+            gnomonicus_ch.gnomonicus_json,
+            assemble_report,
+        )
+        .groupTuple()
+
+    // force this channel to have a single item which is a tuple
+    shared_reports = pipeline_versions_file
+        .mix(
+            knowledge_ch.knowledge,
+            name_mapping_ch.name_mapping,
+        )
+        .toList()
+        .map { it -> [it] }
+
+    // Take cross product and combine lists
+    // Should now have channel with elements like [sample_id, [report1, report2, ...]]
+    all_reports_ch = sample_reports.combine(shared_reports).map { it -> [it[0], it[1] + it[2]] }
+    summary(all_reports_ch)
+
+
+    // Copy to buckets
+
     // copy species specific files to bucket
-    assembler_files.concat(gnomonicus_ch.gnomonicus_json).map { it -> it[1] }
+    assembler_files.mix(gnomonicus_ch.gnomonicus_json)
         | write_species_to_bucket
 
-    // Make summary
-    name_mapping_ch = rename_name_mapping(params.name_mapping)
-    pipeline_versions_file.concat(
-        knowledge_ch.knowledge,
-        gatekeeper_ch.gatekeeper_report,
-        competitive_mapping_ch.cm_report.map { { it -> it[1] } },
-        lineagecalling_ch.json_report,
-        name_mapping_ch.name_mapping,
-        assemble_report,
-        gnomonicus_ch.gnomonicus_json.map { it -> it[1] },
-    ).toList()
-        | summary
-    // WP8
-
     //copy to bucket
-    gatekeeper_ch.gatekeeper_report.concat(
+    gatekeeper_ch.gatekeeper_report.mix(
         gatekeeper_ch.fastp_report,
-        gatekeeper_ch.kraken2_outputs.map { it -> [it[1]] },
-        gatekeeper_ch.kraken2_outputs.map { it -> [it[2]] },
-        competitive_mapping_ch.cm_report.map { { it -> it[1] } },
+        gatekeeper_ch.kraken2_outputs.map { it -> [it[0], it[1]] },
+        gatekeeper_ch.kraken2_outputs.map { it -> [it[0], it[2]] },
+        competitive_mapping_ch.cm_report,
         lineagecalling_ch.json_report,
         summary.out.main_report,
     )
@@ -153,7 +178,7 @@ workflow {
 
     // copy fastq files to bucket
     write_samples_to_bucket(
-        gatekeeper_ch.kraken2_filtered_samples.concat(
+        gatekeeper_ch.kraken2_filtered_samples.mix(
             competitive_mapping_ch.cm_tb_reads,
             gatekeeper_ch.fastp_fastqs,
         ),
@@ -258,14 +283,21 @@ process write_to_bucket {
     pod label: "run_id", value: "${params.run_id}"
 
     input:
-    path output_file
+    tuple val(sample_name), path(output_file)
 
     script:
     """
     mkdir -p ${params.outdir}
-    cp ${output_file} ${params.outdir}/${params.sample_id}_\$(basename ${output_file})
+    if [ "${params.sample_id}" == "LOCAL" ]
+    then
+        cp ${output_file} ${params.outdir}/${sample_name}_\$(basename ${output_file})
+    else
+        cp ${output_file} ${params.outdir}/${params.sample_id}_\$(basename ${output_file})
+    fi
     """
 }
+
+
 
 process write_species_to_bucket {
     pod label: "name", value: "gpas-tb-workflow:write_species_to_bucket"
@@ -273,12 +305,18 @@ process write_species_to_bucket {
     pod label: "run_id", value: "${params.run_id}"
 
     input:
-    path output_file
+    tuple val(sample_name), path(output_file)
 
     script:
     """
-    mkdir -p ${params.outdir}/tb
-    cp ${output_file} ${params.outdir}/tb/${params.sample_id}_\$(basename ${output_file})
+    outdir=${params.outdir}/${params.species}
+    mkdir -p \${outdir}
+    if [ "${params.sample_id}" == "LOCAL" ]
+    then
+        cp ${output_file} \${outdir}/${sample_name}_\$(basename ${output_file})
+    else
+        cp ${output_file} \${outdir}/${params.sample_id}_\$(basename ${output_file})
+    fi
     """
 }
 
@@ -288,19 +326,25 @@ process write_samples_to_bucket {
     pod label: "run_id", value: "${params.run_id}"
 
     input:
-    tuple val(x), path(samples)
+    tuple val(sample_name), path(samples)
     val seq_platform
 
     script:
     """
     mkdir -p ${params.outdir}
+    root_name=${params.sample_id}
+    if [ "${params.sample_id}" == "LOCAL" ]
+    then
+        root_name=${sample_name}
+    fi
+
     if [ ${seq_platform} == 'ont' ]
     then
-        cp ${samples} ${params.outdir}/${params.sample_id}_\$(basename ${samples})
+        cp ${samples} ${params.outdir}/\${root_name}_\$(basename ${samples})
     elif [ ${seq_platform} == 'illumina' ]
     then
-        cp ${samples[0]} ${params.outdir}/${params.sample_id}_\$(basename ${samples[0]})
-        cp ${samples[1]} ${params.outdir}/${params.sample_id}_\$(basename ${samples[1]})
+        cp ${samples[0]} ${params.outdir}/\${root_name}_\$(basename ${samples[0]})
+        cp ${samples[1]} ${params.outdir}/\${root_name}_\$(basename ${samples[1]})
     fi
     """
 }
