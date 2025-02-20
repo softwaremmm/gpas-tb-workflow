@@ -91,15 +91,11 @@ You may need to reduce memory requirements for kraken2 if using smaller index:
 
 ## testing
 For testing you need nf-test installed.
-You'll need the reference data and subworkflows set up as described for running locally.
 
 Currently there is only a single unit test.
 ```
 nf-test test tests/gather_knowledge.nf.test
 ```
-
-`pipeline.nf.test` is outdated
-
 
 
 ## Tags, Releases, and Committing
