@@ -5,6 +5,5 @@
     "ref_files": "ref_files",
     "tb_ref_genome": "tb_ref_genome",
     "tb_amr_cat": "tb_amr_cat",
-    "tb_minor_alleles": "tb_minor_alleles",
     "sundial_ref": "sunial_ref"
 }
