@@ -33,7 +33,7 @@ To fetch different branches, change the values from `main` in `includerepos.csv`
 
 
 ## Running the Pipeline Locally
-To download an example illumina and ont sample to `data/inputs/2` and `data/inputs/1` run
+To download an example illumina and ont sample to `data/inputs/1` and `data/inputs/2` run
 ```bash
 bash setup_local_example.sh
 ```
@@ -50,6 +50,7 @@ This should mirror the knowledge bucket on OCI.
 
 ### FN5
 In general FN5 is difficult to run locally, and so is not recommended.
+By default the `-profile local` disables fn5.
 Check with Jeremy Westhead if needed.
 
 ### Running nextflow
@@ -74,6 +75,7 @@ but these can be overriden. e.g.
 nextflow run ... --input_paired_suffix "tb_sample*_{1,2}.fna.gz"
 ```
 
+You can also use `--publish_dir <directory>` to save all process outputs to provided directory. This is rarely needed.
 
 ---
 
