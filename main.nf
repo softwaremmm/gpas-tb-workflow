@@ -87,7 +87,7 @@ workflow {
         .view { "Competitive Mapping output sample does not have enough reads. END OF THE PIPELINE" }
 
 
-    // WP5 -> Clockwork/Sundial_ch is called only if cm_enough_reads_ch exists.
+    // Clockwork/Sundial_ch is called only if cm_enough_reads_ch exists.
     if (params.seq_platform == 'illumina') {
         println("Will run clockwork")
         clockwork_ch = clockwork(cm_enough_reads_ch, params.ref_files)
@@ -122,10 +122,8 @@ workflow {
         gnomonicus_input = sundial_ch.final_vcf.join(sundial_ch.full_vcf)
     }
 
-    // WP6
     gnomonicus_ch = gnomonicus_workflow(gnomonicus_input, params.seq_platform, params.tb_ref_genome, params.tb_amr_cat, params.null_positions)
 
-    //WP7
     if (params.run_fn5 != "false") {
         // FN5 doesn't use tuple channels as not run locally
         find_neighbour_5(final_fasta_ch.map {it[1]}, params.species, params.api_url, params.api_token, params.relatedness_bucket, params.tb_ref, params.tb_mask, 20)
@@ -133,7 +131,7 @@ workflow {
 
 
 
-    // WP8 Make summary
+    // Make summary
     // Rename mapping file so that summary python picks it up
     name_mapping_ch = rename_name_mapping(params.name_mapping)
     sample_reports = gatekeeper_ch.gatekeeper_report
