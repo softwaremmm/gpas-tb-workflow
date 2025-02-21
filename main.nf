@@ -13,7 +13,7 @@ include { run_sundial } from "./sub_workflows/sundial/main.nf"
 // the location in the buckets for the current run
 // params can be overriden for local running
 params.outdir = "${params.outputs_bucket}/${params.sample_id}/${params.run_id}"
-params.indir_for_sample = "${params.inputs_bucket}/${params.sample_id}/${params.run_id}"
+params.sample_input_dir = "${params.inputs_bucket}/${params.sample_id}/${params.run_id}"
 
 // Default file suffixes
 params.input_paired_suffix = "*_{1,2}.fastq.gz"
@@ -38,11 +38,11 @@ workflow {
     )
 
     if (params.seq_platform == 'illumina') {
-        clean_fastq_ch = Channel.fromFilePairs("${params.indir_for_sample}/${params.input_paired_suffix}", checkIfExists: true, flat: false)
+        clean_fastq_ch = Channel.fromFilePairs("${params.sample_input_dir}/${params.input_paired_suffix}", checkIfExists: true, flat: false)
     }
     else if (params.seq_platform == 'ont') {
         clean_fastq_ch = Channel
-            .fromPath("${params.indir_for_sample}/${params.input_single_suffix}", checkIfExists: true)
+            .fromPath("${params.sample_input_dir}/${params.input_single_suffix}", checkIfExists: true)
             .map { it -> [it.simpleName, it] }
     }
 
