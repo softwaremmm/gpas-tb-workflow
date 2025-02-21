@@ -127,7 +127,8 @@ workflow {
 
     //WP7
     if (params.run_fn5 != "false") {
-        find_neighbour_5(final_fasta_ch, params.species, params.api_url, params.api_token, params.relatedness_bucket, params.tb_ref, params.tb_mask, 20)
+        // FN5 doesn't use tuple channels as not run locally
+        find_neighbour_5(final_fasta_ch.map {it[1]}, params.species, params.api_url, params.api_token, params.relatedness_bucket, params.tb_ref, params.tb_mask, 20)
     }
 
 
