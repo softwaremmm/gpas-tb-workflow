@@ -11,6 +11,10 @@ pulled from those buckets at run time. This confers several benefits listed in t
 
 Scientifically unchanged from the version in poller `2.0.3`.
 
+### Fix
+
+- fix bug when reading ont fastq files with fullstops in file name.
+
 ## 1.3.58 (2024-11-05)
 
 ### Fix

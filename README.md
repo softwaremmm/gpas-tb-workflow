@@ -6,11 +6,11 @@ The workflow consist of multiple steps:
 | Step | Main Software | Notes | Repository(ies) |
 | --- | --- | --- | --- |
 | Gatekeeper | kraken2 | Quality checking and read filtering | [gatekeeper_pipeline](https://github.com/GlobalPathogenAnalysisService/gatekeeper_pipeline) |
-| Speciation | minimap2, samtools, mykrobe | Competitive Mapping and Lineage Calling (mykrobe) | [lineagecalling_pipeline](https://github.com/GlobalPathogenAnalysisService/lineagecalling_pipeline) [competitivemapping_pipeline](https://github.com/GlobalPathogenAnalysisService/competitivemapping_pipeline) | 
-| Assembly | clockwork, minos, sundial | Variant calling | [clockwork_pipeline](https://github.com/GlobalPathogenAnalysisService/clockwork_pipeline) [sundial](https://github.com/GlobalPathogenAnalysisService/sundial) | 
+| Speciation | minimap2, samtools, mykrobe | Competitive Mapping and Lineage Calling (mykrobe) | [lineagecalling_pipeline](https://github.com/GlobalPathogenAnalysisService/lineagecalling_pipeline) [competitivemapping_pipeline](https://github.com/GlobalPathogenAnalysisService/competitivemapping_pipeline) |
+| Assembly | clockwork, minos, sundial | Variant calling | [clockwork_pipeline](https://github.com/GlobalPathogenAnalysisService/clockwork_pipeline) [sundial](https://github.com/GlobalPathogenAnalysisService/sundial) |
 | Resistance Prediction | gnomonicus | Variants, mutations and effects of a specified (minos) VCF file | [tb-predict-pipeline](https://github.com/GlobalPathogenAnalysisService/tb-predict-pipeline) |
-| Relatedness | Find Neighbour 5 | SNP distance calculation | [fn5_pipeline](https://github.com/GlobalPathogenAnalysisService/fn5_pipeline) | 
-| Summary | *None* | Summarises outputs into a JSON file | [summary_pipeline](https://github.com/GlobalPathogenAnalysisService/summary_pipeline) | 
+| Relatedness | Find Neighbour 5 | SNP distance calculation | [fn5_pipeline](https://github.com/GlobalPathogenAnalysisService/fn5_pipeline) |
+| Summary | *None* | Summarises outputs into a JSON file | [summary_pipeline](https://github.com/GlobalPathogenAnalysisService/summary_pipeline) |
 
 A machine readable list of the repositories required to run the full pipeline is [included in this repository](./includerepos.txt).
 
@@ -67,9 +67,9 @@ By default it will look for files in the input directory based on the following 
 - `params.input_paired_suffix = "*_{1,2}.fastq.gz"`
 - `params.input_single_suffix = "*.fastq.gz"`
 
-but these can be overriden. e.g.
+but these can be overriden. Note that file ending must be `.fastq.gz` or `.fq.gz`.
 ```
-nextflow run ... --input_paired_suffix "tb_sample*_{1,2}.fna.gz"
+nextflow run ... --input_paired_suffix "tb_sample*_{1,2}.fq.gz"
 ```
 
 You can also use `--publish_dir <directory>` to save all process outputs to provided directory. This is rarely needed.

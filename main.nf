@@ -43,7 +43,7 @@ workflow {
     else if (params.seq_platform == 'ont') {
         clean_fastq_ch = Channel
             .fromPath("${params.sample_input_dir}/${params.input_single_suffix}", checkIfExists: true)
-            .map { it -> [it.simpleName, it] }
+            .map { it -> [it.getName().replaceFirst(/(?i)\.(fastq|fq)\.gz$/, ""), it] }
     }
 
     check_valid_input(clean_fastq_ch, params.seq_platform)
