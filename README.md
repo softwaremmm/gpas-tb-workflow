@@ -27,8 +27,6 @@ By default this script fetches the `main` branch of all defined subworkflows.
 To fetch the latest releases instead, use `bash clone_sub_workflows.sh latest`.
 To fetch different branches, change the values from `main` in `includerepos.csv`.
 
-
-
 ## Running the Pipeline Locally
 To download an example illumina and ont sample to `data/inputs/1` and `data/inputs/2` run
 ```bash
@@ -43,7 +41,6 @@ make run-ont
 ### Reference data
 To run the pipeline requires reference data to be put in `data/knowledge`.
 This should mirror the knowledge bucket on OCI.
-
 
 ### FN5
 In general FN5 is difficult to run locally, and so is not recommended.
@@ -61,7 +58,6 @@ But input and output directories can be used instead like below, which supports 
 sudo nextflow run . -profile local --sample_input_dir path/to/input_dir --outdir /abs/path/to/output_dir --seq_platform illumina
 ```
 When running locally `-profile local` should be used.
-
 
 By default it will look for files in the input directory based on the following params:
 - `params.input_paired_suffix = "*_{1,2}.fastq.gz"`
@@ -86,8 +82,6 @@ You may need to reduce memory requirements for kraken2 if using smaller index:
 --kraken2_mem 5GB
 ```
 
-
-
 ## testing
 For testing you need nf-test installed.
 
@@ -95,7 +89,6 @@ Currently there is only a single unit test.
 ```
 nf-test test tests/gather_knowledge.nf.test
 ```
-
 
 ## Tags, Releases, and Committing
 Use conventional commits. This is enforced with commitizen validate action and pre-commit hooks:
