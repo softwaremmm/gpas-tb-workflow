@@ -72,7 +72,7 @@ You can also use `--publish_dir <directory>` to save all process outputs to prov
 
 ---
 
-You need to have a kraken2 index downloaded, and either placed in `data/knowledge/kraken2_db` or set
+You need to have a kraken2 index downloaded, and either placed in `data/knowledge/kraken2_db` or set:
 ```
 --kraken2_db_path <path/to/your/index>
 ```
