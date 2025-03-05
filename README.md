@@ -100,3 +100,4 @@ This repo uses a standard gitflow approach, so changes should be first merged in
 - In the develop branch semantic versioning is not used. Instead you can reference the commit hash to use it in a workflow.
 - In a release branch you can create a release candidate with `cz bump a.b.c-rcX`. This also creates a tag.
 - When release branch is ready for main run `cz bump a.b.c --files-only`. Manually write a human descriptive changelog. Then push these changes to main and make a release/tag there.
+
