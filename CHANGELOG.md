@@ -11,6 +11,8 @@
 
 Refer to individual sub workflow change logs for more details.
 
+- **Competitive Mapping** has been refactored from bash into Python
+
 ### Features
 
 - **Competitive Mapping**:
