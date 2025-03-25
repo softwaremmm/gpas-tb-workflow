@@ -23,6 +23,9 @@ Refer to individual sub workflow change logs for more details.
 
 - **Sundial** use a consistent number of "chunks" in bcftools step, rather than matching this to number of available CPUs, to remain deterministic.
 - **Summary** consistently correctly report depth and coverage in mykrobe section of the main JSON report for all known mykrobe output structures.
+- **Competitive Mapping**:
+  - Correctly report species names for M. basiliense and M. saopaulense
+  - Remove unused species
 
 ## 2.1.0 (2025-02-07)
 
