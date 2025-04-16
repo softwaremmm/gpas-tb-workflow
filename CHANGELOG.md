@@ -21,7 +21,9 @@ Refer to individual sub workflow change logs for more details.
 
 ### Fixes
 
-- **Gatekeeper** retry _fastp_ process if it fails. Increase RAM request for each retry.
+- **Gatekeeper** 
+  - retry _fastp_ process if it fails. Increase RAM request for each retry.
+  - run kraken2 with a single thread to avoid occasional errors.
 - **Sundial** use a consistent number of "chunks" in bcftools step, rather than matching this to number of available CPUs, to remain deterministic.
 - **Summary** consistently correctly report depth and coverage in mykrobe section of the main JSON report for all known mykrobe output structures.
 - **Competitive Mapping**:
