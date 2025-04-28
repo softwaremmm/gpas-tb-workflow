@@ -1,16 +1,15 @@
-run-nextflow-with-stub:
-	nextflow run . -profile local -stub
-
-run-nextflow:
-	nextflow run . -profile local
-
 clean:
 	find . -type d -name .nextflow | xargs rm -rf
 	find . -type d -name work | xargs rm -rf
 	find . -type f -regex '.*\.nextflow\.log.*' | xargs rm -f
+	find . -type f -name 'trace*.txt' | xargs rm -f
+	find . -type d -name .nf-test | xargs rm -rf
 
-debug:
-	docker run --rm -it -v /mnt/volume_data:/mnt/volume_data --network host --name debug-container lhr.ocir.io/lrbvkel2wjot/gpas/gatekeeper_pipeline:latest /bin/bash 
+run-illumina:
+	nextflow run . -profile local --sample_id 1 --run_id 1 \
+	--seq_platform illumina -resume
 
-test-main-workflow:
-	sudo nextflow run . --sample_id WTCHG_885333_73205296_1 -profile local
+run-ont:
+	nextflow run . -profile local --sample_id 2 --run_id 1 \
+	--seq_platform ont -resume
+

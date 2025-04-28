@@ -1,3 +1,33 @@
+## 2.2.0
+
+### Chores
+
+- This, and all sub workflows adopt Nextflow language server for consistency in coding style.
+- Variable naming is more consistent and comprehensible.
+- This, and all sub workflows modified so they can be run locally using:
+  - A directory of input files
+  - Without pseudonymisation of sample names
+  - Without FN5 being run (and thus without the need for an API token)
+
+Refer to individual sub workflow change logs for more details.
+
+- **Competitive Mapping** has been refactored from bash into Python
+
+### Features
+
+- **Competitive Mapping**:
+  - `species_comparison_report.json` is produced in `csv` format as well as `json` - this is easier to work with in a spreadsheet.
+  - Every read mapped to is included in the report, even if no reads were mapped - this makes comparisons between samples easier.
+
+### Fixes
+
+- **Gatekeeper** retry _fastp_ process if it fails. Increase RAM request for each retry.
+- **Sundial** use a consistent number of "chunks" in bcftools step, rather than matching this to number of available CPUs, to remain deterministic.
+- **Summary** consistently correctly report depth and coverage in mykrobe section of the main JSON report for all known mykrobe output structures.
+- **Competitive Mapping**:
+  - Correctly report species names for M. basiliense and M. saopaulense
+  - Remove unused species
+
 ## 2.1.0 (2025-02-07)
 
 ### Chore
@@ -10,6 +40,10 @@ buckets. Pipeline versions specified in https://github.com/GlobalPathogenAnalysi
 pulled from those buckets at run time. This confers several benefits listed in the Jira ticket.
 
 Scientifically unchanged from the version in poller `2.0.3`.
+
+### Fix
+
+- fix bug when reading ont fastq files with fullstops in file name.
 
 ## 1.3.58 (2024-11-05)
 
