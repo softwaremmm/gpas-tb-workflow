@@ -170,6 +170,7 @@ workflow {
         gatekeeper_ch.kraken2_outputs.map { it -> [it[0], it[1]] },
         gatekeeper_ch.kraken2_outputs.map { it -> [it[0], it[2]] },
         competitive_mapping_ch.cm_report,
+        competitive_mapping_ch.cm_csv,
         lineagecalling_ch.json_report,
         summary.out.main_report,
     )
