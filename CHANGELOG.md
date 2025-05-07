@@ -1,3 +1,7 @@
+## New
+
+- Add the comp mapping csv version of the report as a downloadable file
+
 ## 2.2.0
 
 ### Chores
