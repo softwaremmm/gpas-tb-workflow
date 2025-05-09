@@ -1,3 +1,9 @@
+## 2.2.1
+
+### Fixes
+
+- Retry fastp when out of memory (ONT)
+
 ## 2.2.0
 
 ### Chores
