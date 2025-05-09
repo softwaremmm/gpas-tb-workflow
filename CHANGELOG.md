@@ -2,7 +2,7 @@
 
 ### Fixes
 
-- Retry fastp when out of memory (ONT)
+- Retry fastp without adapter trimming when out of memory (ONT)
 
 ## 2.2.0
 
