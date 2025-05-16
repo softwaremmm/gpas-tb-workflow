@@ -1,8 +1,12 @@
-## 2.2.1
+## 2.2.2
 
 ### Fixes
 
 - Retry fastp without adapter trimming when out of memory (ONT)
+
+## 2.2.1
+
+Used the wrong version of gatekeeper so fix not introduced until 2.2.2
 
 ## 2.2.0
 
