@@ -178,7 +178,7 @@ workflow {
     // copy fastq files to bucket
     write_samples_to_bucket(
         gatekeeper_ch.kraken2_filtered_samples.mix(
-            competitive_mapping_ch.cm_tb_reads,
+            cm_enough_reads_ch,
             gatekeeper_ch.fastp_fastqs,
         ),
         params.seq_platform,
