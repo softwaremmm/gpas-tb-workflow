@@ -1,4 +1,6 @@
-## New
+## 2.2.3
+
+### Fixes
 
 - If not enough reads for assembly, then do not produce "reads_for_assembly.fastq.gz" as output
 
