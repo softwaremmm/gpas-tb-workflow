@@ -1,3 +1,6 @@
+## 2.2.4
+- Fixes for complex VCF rows + various other AMR prediction edge cases. See tb-predict-pipeline for breakdown of all edge cases
+
 ## 2.2.3
 
 ### Fixes
