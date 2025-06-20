@@ -1,3 +1,7 @@
+## New
+
+- Add new competitive mapping param as a consequence of making comeptitive mapping work for influenza virus
+
 ## 2.2.4
 - Fixes for complex VCF rows + various other AMR prediction edge cases. See tb-predict-pipeline for breakdown of all edge cases
 
