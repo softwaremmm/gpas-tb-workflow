@@ -70,7 +70,7 @@ workflow {
     //Pipeline proceeds only if gk_enough_reads_ch exists.
 
     // Speciation
-    competitive_mapping_ch = competitive_mapping(gk_enough_reads_ch, params.manifest, params.species_list, params.seq_platform)
+    competitive_mapping_ch = competitive_mapping(gk_enough_reads_ch, params.manifest, params.species_list, params.seq_platform, params.reference_name)
     lineagecalling_ch = lineagecalling(gk_enough_reads_ch, params.seq_platform)
 
     //Create a new channel if the condition to test (enough h37r-v reads) and the channel to use to proceed the execution (paths)
