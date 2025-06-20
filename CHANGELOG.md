@@ -1,6 +1,7 @@
-## New
+## 2.3.0
 
 - Add new competitive mapping param as a consequence of making comeptitive mapping work for influenza virus
+- Refactoring to split minimap2 and analysis step into seperate Python tasks
 
 ## 2.2.4
 - Fixes for complex VCF rows + various other AMR prediction edge cases. See tb-predict-pipeline for breakdown of all edge cases
