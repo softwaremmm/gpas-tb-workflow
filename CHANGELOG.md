@@ -1,7 +1,17 @@
 ## 2.3.0
 
-- Add new competitive mapping param as a consequence of making comeptitive mapping work for influenza virus
+- fix: ensure CFZ is properly passed into the resistance prediction summary
+- Add new competitive mapping param as a consequence of making competitive mapping work for influenza virus
 - Refactoring to split minimap2 and analysis step into seperate Python tasks
+- chore: Parameterise container prefix
+
+### Gatekeeper
+- Silent changes to gatekeepr that don't affect this pipeline
+
+### Competitive mapping
+- Remove duplicate mappings (only affects "intermediary file" output, not used in UI)
+- Change to support influenza (do not affect this pipeline)
+
 
 ## 2.2.4
 - Fixes for complex VCF rows + various other AMR prediction edge cases. See tb-predict-pipeline for breakdown of all edge cases
