@@ -1,5 +1,10 @@
+## 2.4.1
+
+- Amend 2.4.0 changelog for CFZ
+
 ## 2.4.0
 
+- fix: ensure CFZ is properly passed into the resistance prediction summary
 - Add new competitive mapping param as a consequence of making comeptitive mapping work for influenza virus
 - Refactoring to split minimap2 and analysis step into seperate Python tasks
 - chore: Parameterise container prefix
