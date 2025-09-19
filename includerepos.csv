@@ -5,4 +5,4 @@ GlobalPathogenAnalysisService/clockwork_pipeline,main
 GlobalPathogenAnalysisService/tb-predict-pipeline,main
 GlobalPathogenAnalysisService/fn5_pipeline,main
 GlobalPathogenAnalysisService/summary_pipeline,main
-GlobalPathogenAnalysisService/sundial,main
+GlobalPathogenAnalysisService/rundial,main

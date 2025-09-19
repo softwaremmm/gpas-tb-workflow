@@ -1,3 +1,7 @@
+## New
+
+- Swap from sundial to rundial, but without providing base calling model yet (only effects ONT)
+
 ## 2.4.1
 
 - Amend 2.4.0 changelog for CFZ

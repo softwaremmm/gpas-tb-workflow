@@ -7,7 +7,7 @@ The workflow consist of multiple steps:
 | --- | --- | --- | --- |
 | Gatekeeper | kraken2 | Quality checking and read filtering | [gatekeeper_pipeline](https://github.com/GlobalPathogenAnalysisService/gatekeeper_pipeline) |
 | Speciation | minimap2, samtools, mykrobe | Competitive Mapping and Lineage Calling (mykrobe) | [lineagecalling_pipeline](https://github.com/GlobalPathogenAnalysisService/lineagecalling_pipeline) [competitivemapping_pipeline](https://github.com/GlobalPathogenAnalysisService/competitivemapping_pipeline) |
-| Assembly | clockwork, minos, sundial | Variant calling | [clockwork_pipeline](https://github.com/GlobalPathogenAnalysisService/clockwork_pipeline) [sundial](https://github.com/GlobalPathogenAnalysisService/sundial) |
+| Assembly | clockwork, minos, rundial | Variant calling | [clockwork_pipeline](https://github.com/GlobalPathogenAnalysisService/clockwork_pipeline) [rundial](https://github.com/GlobalPathogenAnalysisService/rundial) |
 | Resistance Prediction | gnomonicus | Variants, mutations and effects of a specified (minos) VCF file | [tb-predict-pipeline](https://github.com/GlobalPathogenAnalysisService/tb-predict-pipeline) |
 | Relatedness | Find Neighbour 5 | SNP distance calculation | [fn5_pipeline](https://github.com/GlobalPathogenAnalysisService/fn5_pipeline) |
 | Summary | *None* | Summarises outputs into a JSON file | [summary_pipeline](https://github.com/GlobalPathogenAnalysisService/summary_pipeline) |
@@ -100,4 +100,3 @@ This repo uses a standard gitflow approach, so changes should be first merged in
 - In the develop branch semantic versioning is not used. Instead you can reference the commit hash to use it in a workflow.
 - In a release branch you can create a release candidate with `cz bump a.b.c-rcX`. This also creates a tag.
 - When release branch is ready for main run `cz bump a.b.c --files-only`. Manually write a human descriptive changelog. Then push these changes to main and make a release/tag there.
-
