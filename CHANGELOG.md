@@ -1,6 +1,6 @@
 ## New
 
-- Swap from sundial to rundial, but without providing base calling model yet
+- Swap from sundial to rundial, but without providing base calling model yet (only effects ONT)
 
 ## 2.4.1
 
