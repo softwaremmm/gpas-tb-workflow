@@ -160,8 +160,10 @@ workflow {
     // Copy to buckets
 
     // copy species specific files to bucket
-    assembler_files.mix(gnomonicus_ch.gnomonicus_json)
-        | write_species_to_bucket
+    assembler_files.mix(
+        gnomonicus_ch.gnomonicus_json,
+        gnomonicus_ch.gnomonicus_vcf,
+        ) | write_species_to_bucket
 
     //copy to bucket
     gatekeeper_ch.gatekeeper_report.mix(
