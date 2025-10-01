@@ -1,6 +1,12 @@
 ## New
 
+### ONT Variant Calling and Assembly
+
 - Swap from sundial to rundial, but without providing base calling model yet (only effects ONT)
+
+### TB Predict
+
+- Update VCF merging to resolve issues with minor alleles
 
 ## 2.4.1
 
