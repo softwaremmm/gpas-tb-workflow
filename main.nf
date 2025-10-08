@@ -92,7 +92,7 @@ workflow {
     // Clockwork/Rundial_ch is called only if cm_enough_reads_ch exists.
     if (params.seq_platform == 'illumina') {
         println("Will run clockwork")
-        clockwork_ch = clockwork(cm_enough_reads_ch, params.ref_files)
+        clockwork_ch = clockwork(cm_enough_reads_ch, params.rundial_ref)
         final_fasta_ch = clockwork_ch.final_fasta
         assemble_report = clockwork_ch.tb_clockwork_report_json
         assembler_files = clockwork_ch.final_fasta.concat(
