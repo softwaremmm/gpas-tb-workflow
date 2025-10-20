@@ -161,6 +161,9 @@ workflow {
 
     // Copy to buckets
 
+    // copy mycobacterial species specific files to bucket
+    write_myco_species_to_bucket(tie_break_ch.mapped_reads)
+
     // copy species specific files to bucket
     assembler_files.mix(
         gnomonicus_ch.gnomonicus_json,
@@ -318,6 +321,36 @@ process write_species_to_bucket {
         cp ${output_file} \${outdir}/${sample_name}_\$(basename ${output_file})
     else
         cp ${output_file} \${outdir}/${params.sample_id}_\$(basename ${output_file})
+    fi
+    """
+}
+
+process write_myco_species_to_bucket {
+    pod label: "name", value: "gpas-tb-workflow:write_myco_species_to_bucket"
+    pod label: "sample_id", value: "${params.sample_id}"
+    pod label: "run_id", value: "${params.run_id}"
+
+    input:
+    // upstream emits 4-tuple: sample_name, path(list), species, assembly_accession
+    tuple val(sample_name), path(output_file), val(species), val(assembly_accession)
+
+    script:
+    // sanitize species in Groovy so interpolation produces a single safe token
+    sanitised_species = species.replaceAll(' ', '_')
+    """
+    outdir="${params.outdir}/${sanitised_species}"
+    mkdir -p \${outdir}
+    if [ "${params.sample_id}" == "LOCAL" ]
+    then
+        for f in ${output_file}
+        do
+            cp \${f} "\${outdir}/${sample_name}_\$(basename "\${f}")"
+        done
+    else
+        for f in ${output_file}
+        do
+            cp \${f} "\${outdir}/${params.sample_id}_\$(basename "\${f}")"
+        done
     fi
     """
 }
