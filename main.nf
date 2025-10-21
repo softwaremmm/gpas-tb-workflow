@@ -31,7 +31,6 @@ workflow {
         params.manifest,
         params.species_list,
         params.name_mapping,
-        params.ref_files,
         params.tb_ref_genome,
         params.tb_amr_cat,
         params.rundial_ref,
@@ -45,7 +44,7 @@ workflow {
             .map { it -> [it.getName().replaceFirst(/(?i)\.(fastq|fq)\.gz$/, ""), it] }
     }
 
-    check_valid_input(clean_fastq_ch, params.seq_platform)
+    //check_valid_input(clean_fastq_ch, params.seq_platform)
 
     // View first 3 so users can check if correct
     clean_fastq_ch.take(3).view()
@@ -73,7 +72,13 @@ workflow {
     tie_break_ch = tie_break_workflow(gk_enough_reads_ch, params.manifest, params.species_list, params.seq_platform, params.reference_name)
     lineagecalling_ch = lineagecalling(gk_enough_reads_ch, params.seq_platform)
 
-    tie_break_ch.mapped_reads.view{ "Competitive mapping output: ${it}" }
+    mapped_reads_ch = tie_break_ch.mapped_reads.map { it -> [it[0], 
+                                                            it[1], 
+                                                            it[2], 
+                                                            it[3], 
+                                                            file(params.reference_genomes_dir+it[3]+params.reference_genome_suffix)] }
+
+    mapped_reads_ch.view { "Tie break output: ${it}" }
 
     //Create a new channel if the condition to test (enough h37r-v reads) and the channel to use to proceed the execution (paths)
     competitive_mapping_ch_output = competitive_mapping_ch.cm_enough_reads.join(competitive_mapping_ch.cm_enough_reads)
@@ -92,7 +97,7 @@ workflow {
     // Clockwork/Rundial_ch is called only if cm_enough_reads_ch exists.
     if (params.seq_platform == 'illumina') {
         println("Will run clockwork")
-        clockwork_ch = clockwork(cm_enough_reads_ch, params.rundial_ref)
+        clockwork_ch = clockwork(mapped_reads_ch)
         final_fasta_ch = clockwork_ch.final_fasta
         assemble_report = clockwork_ch.tb_clockwork_report_json
         assembler_files = clockwork_ch.final_fasta.concat(
@@ -123,7 +128,7 @@ workflow {
         gnomonicus_input = rundial_ch.final_vcf.join(rundial_ch.full_vcf)
     }
 
-    gnomonicus_ch = gnomonicus_workflow(gnomonicus_input, params.seq_platform, params.tb_ref_genome, params.tb_amr_cat, params.null_positions)
+    //gnomonicus_ch = gnomonicus_workflow(gnomonicus_input, params.seq_platform, params.tb_ref_genome, params.tb_amr_cat, params.null_positions)
 
     if (params.run_fn5 != "false") {
         // FN5 doesn't use tuple channels as not run locally
@@ -139,7 +144,7 @@ workflow {
         .mix(
             competitive_mapping_ch.report_json,
             lineagecalling_ch.json_report,
-            gnomonicus_ch.gnomonicus_json,
+            //gnomonicus_ch.gnomonicus_json,
             assemble_report,
         )
         .groupTuple()
@@ -165,9 +170,10 @@ workflow {
     write_myco_species_to_bucket(tie_break_ch.mapped_reads)
 
     // copy species specific files to bucket
-    assembler_files.mix(
-        gnomonicus_ch.gnomonicus_json,
-    )
+    assembler_files.take(3).view { "Assembler files to be written to bucket: ${it}" }
+    //assembler_files.mix(
+    //    gnomonicus_ch.gnomonicus_json
+    //)
         | write_species_to_bucket
 
     //copy to bucket
@@ -177,6 +183,8 @@ workflow {
         gatekeeper_ch.kraken2_outputs.map { it -> [it[0], it[2]] },
         competitive_mapping_ch.report_json,
         lineagecalling_ch.json_report,
+        tie_break_ch.stats,
+        tie_break_ch.report_csv,
         summary.out.main_report,
     )
         | write_to_bucket
@@ -241,7 +249,6 @@ process gather_knowledge {
     path manifest
     path species_list
     path name_mapping
-    path ref_files
     path tb_ref_genome
     path tb_amr_cat
     path rundial_ref
@@ -255,7 +262,6 @@ process gather_knowledge {
     echo '"manifest": "${manifest}",' >> knowledge.json
     echo '"species_list": "${species_list}",' >> knowledge.json
     echo '"name_mapping": "${name_mapping}",' >> knowledge.json
-    echo '"ref_files": "${ref_files}",' >> knowledge.json
     echo '"tb_ref_genome": "${tb_ref_genome}",' >> knowledge.json
     echo '"tb_amr_cat": "${tb_amr_cat}",' >> knowledge.json
     echo '"rundial_ref": "${rundial_ref}"' >> knowledge.json
@@ -344,7 +350,7 @@ process write_myco_species_to_bucket {
     then
         for f in ${output_file}
         do
-            cp \${f} "\${outdir}/${sample_name}_\$(basename "\${f}")"
+            cp \${f} "\${outdir}/${sample_name}_${sanitised_species}_\$(basename "\${f}")"
         done
     else
         for f in ${output_file}
