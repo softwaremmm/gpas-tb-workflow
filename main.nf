@@ -72,11 +72,15 @@ workflow {
     tie_break_ch = tie_break_workflow(gk_enough_reads_ch, params.manifest, params.species_list, params.seq_platform, params.reference_name)
     lineagecalling_ch = lineagecalling(gk_enough_reads_ch, params.seq_platform)
 
-    mapped_reads_ch = tie_break_ch.mapped_reads.map { it -> [it[0], 
-                                                            it[1], 
-                                                            it[2], 
-                                                            it[3], 
-                                                            file(params.reference_genomes_dir+it[3]+params.reference_genome_suffix)] }
+    mapped_reads_ch = tie_break_ch.mapped_reads.map { it ->
+        [
+            it[0],
+            it[1],
+            it[2],
+            it[3],
+            file(params.reference_genomes_dir + it[3] + params.reference_genome_suffix),
+        ]
+    }
 
     mapped_reads_ch.view { "Tie break output: ${it}" }
 
@@ -94,12 +98,12 @@ workflow {
         .view { "Competitive Mapping output sample does not have enough reads. END OF THE PIPELINE" }
 
 
-    // Clockwork/Rundial_ch is called only if cm_enough_reads_ch exists.
+    // Clockwork/Rundial
     if (params.seq_platform == 'illumina') {
         println("Will run clockwork")
         clockwork_ch = clockwork(mapped_reads_ch)
         final_fasta_ch = clockwork_ch.final_fasta
-        assemble_report = clockwork_ch.tb_clockwork_report_json
+        assemble_report = clockwork_ch.tb_clockwork_report_json.filter { it[2] == 'Mycobacterium tuberculosis' }.map { it -> [it[0], it[1]] }
         assembler_files = clockwork_ch.final_fasta.concat(
             clockwork_ch.final_vcf,
             clockwork_ch.cortex_vcf,
@@ -129,14 +133,15 @@ workflow {
         gnomonicus_input = rundial_ch.final_vcf.join(rundial_ch.full_vcf)
     }
 
-    //gnomonicus_ch = gnomonicus_workflow(gnomonicus_input, params.seq_platform, params.tb_ref_genome, params.tb_amr_cat, params.null_positions)
+    gnomonicus_tb_input = gnomonicus_input.filter { it[2] == 'Mycobacterium tuberculosis' }.map { it -> [it[0], it[1], it[3]] }
+    gnomonicus_tb_input.view { "Gnomonicus input for Mycobacterium tuberculosis: ${it}" }
+
+    gnomonicus_ch = gnomonicus_workflow(gnomonicus_tb_input, params.seq_platform, params.tb_ref_genome, params.tb_amr_cat, params.null_positions)
 
     if (params.run_fn5 != "false") {
         // FN5 doesn't use tuple channels as not run locally
         find_neighbour_5(final_fasta_ch.map { it[1] }, params.species, params.api_url, params.api_token, params.relatedness_bucket, params.tb_ref, params.tb_mask, 20)
     }
-
-
 
     // Make summary
     // Rename mapping file so that summary python picks it up
@@ -145,7 +150,7 @@ workflow {
         .mix(
             competitive_mapping_ch.report_json,
             lineagecalling_ch.json_report,
-            //gnomonicus_ch.gnomonicus_json,
+            gnomonicus_ch.gnomonicus_json,
             assemble_report,
         )
         .groupTuple()
@@ -168,15 +173,11 @@ workflow {
     // Copy to buckets
 
     // copy mycobacterial species specific files to bucket
-    tie_break_ch.mapped_reads.mix(assembler_files) 
+    tie_break_ch.mapped_reads.mix(assembler_files)
         | write_myco_species_to_bucket
 
     // copy species specific files to bucket
-    assembler_files.take(3).view { "Assembler files to be written to bucket: ${it}" }
-    //assembler_files.mix(
-    //    gnomonicus_ch.gnomonicus_json
-    //)
-    //    | write_species_to_bucket
+    write_species_to_bucket(gnomonicus_ch.gnomonicus_json)
 
     //copy to bucket
     gatekeeper_ch.gatekeeper_report.mix(
@@ -339,8 +340,9 @@ process write_myco_species_to_bucket {
     pod label: "run_id", value: "${params.run_id}"
 
     input:
-    // upstream emits 4-tuple: sample_name, path(list), species, assembly_accession
-    tuple val(sample_name), path(output_file), val(species), val(assembly_accession)
+    // upstream emits at least 3-tuple: sample_name, path(list), species
+    // maybe 4- with accession
+    tuple val(sample_name), path(output_file), val(species)
 
     script:
     // sanitize species in Groovy so interpolation produces a single safe token
