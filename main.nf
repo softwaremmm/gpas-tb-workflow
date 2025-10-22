@@ -110,6 +110,7 @@ workflow {
             clockwork_ch.tb_clockwork_report_json,
             clockwork_ch.tb_clockwork_error_json,
         )
+        assembler_files.view { "Assembler files: ${it}" }
         gnomonicus_input = clockwork_ch.final_vcf.join(clockwork_ch.final_gvcf_decompressed)
     }
     else if (params.seq_platform == 'ont') {
@@ -167,14 +168,15 @@ workflow {
     // Copy to buckets
 
     // copy mycobacterial species specific files to bucket
-    write_myco_species_to_bucket(tie_break_ch.mapped_reads)
+    tie_break_ch.mapped_reads.mix(assembler_files) 
+        | write_myco_species_to_bucket
 
     // copy species specific files to bucket
     assembler_files.take(3).view { "Assembler files to be written to bucket: ${it}" }
     //assembler_files.mix(
     //    gnomonicus_ch.gnomonicus_json
     //)
-        | write_species_to_bucket
+    //    | write_species_to_bucket
 
     //copy to bucket
     gatekeeper_ch.gatekeeper_report.mix(
