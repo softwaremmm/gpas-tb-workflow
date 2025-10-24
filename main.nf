@@ -5,7 +5,7 @@ include { find_neighbour_5 } from "./sub_workflows/fn5_pipeline/main.nf"
 include { clockwork } from "./sub_workflows/clockwork_pipeline/main.nf"
 include { gatekeeper_myco } from "./sub_workflows/gatekeeper_pipeline/main.nf"
 include { competitive_mapping } from "./sub_workflows/competitivemapping_pipeline/main.nf"
-include { tie_break_workflow } from "./sub_workflows/competitivemapping_pipeline/main.nf"
+include { tie_break_multi_workflow } from "./sub_workflows/competitivemapping_pipeline/main.nf"
 include { lineagecalling } from "./sub_workflows/lineagecalling_pipeline/main.nf"
 include { gnomonicus_workflow } from "./sub_workflows/tb-predict-pipeline/main.nf"
 include { summary } from "./sub_workflows/summary_pipeline/main.nf"
@@ -69,7 +69,7 @@ workflow {
 
     // Speciation
     competitive_mapping_ch = competitive_mapping(gk_enough_reads_ch, params.manifest, params.species_list, params.seq_platform, params.reference_name)
-    tie_break_ch = tie_break_workflow(gk_enough_reads_ch, params.manifest, params.species_list, params.seq_platform, params.reference_name)
+    tie_break_ch = tie_break_multi_workflow(gk_enough_reads_ch, params.manifest, params.species_list, params.seq_platform, params.reference_name)
     lineagecalling_ch = lineagecalling(gk_enough_reads_ch, params.seq_platform)
 
     mapped_reads_ch = tie_break_ch.mapped_reads.map { it ->
