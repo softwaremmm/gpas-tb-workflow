@@ -359,7 +359,7 @@ process write_myco_species_to_bucket {
     else
         for f in ${output_file}
         do
-            cp \${f} "\${outdir}/${params.sample_id}_\$(basename "\${f}")"
+            cp \${f} "\${outdir}/${params.sample_id}_${sanitised_species}_\$(basename "\${f}")"
         done
     fi
     """
