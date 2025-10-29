@@ -138,9 +138,11 @@ workflow {
 
     gnomonicus_ch = gnomonicus_workflow(gnomonicus_tb_input, params.seq_platform, params.tb_ref_genome, params.tb_amr_cat, params.null_positions)
 
+    fn5_tb_input_ch = clockwork_ch.final_fasta.filter { it[2] == 'Mycobacterium tuberculosis' }.map { it -> [it[0], it[1]] }
+
     if (params.run_fn5 != "false") {
         // FN5 doesn't use tuple channels as not run locally
-        find_neighbour_5(final_fasta_ch.map { it[1] }, params.species, params.api_url, params.api_token, params.relatedness_bucket, params.tb_ref, params.tb_mask, 20)
+        find_neighbour_5(fn5_tb_input_ch.map { it[1] }, params.species, params.api_url, params.api_token, params.relatedness_bucket, params.tb_ref, params.tb_mask, 20)
     }
 
     // Make summary
