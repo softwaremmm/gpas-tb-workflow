@@ -78,7 +78,7 @@ workflow {
             it[1],
             it[2],
             it[3],
-            file(params.reference_genomes_dir + it[3] + params.reference_genome_suffix),
+            file(params.reference_genomes_dir + it[4] + params.reference_genome_suffix),
         ]
     }
 
@@ -344,6 +344,7 @@ process write_myco_species_to_bucket {
     input:
     // upstream emits at least 3-tuple: sample_name, path(list), species
     // maybe 4- with accession
+    // or 5 with ref for assembly
     tuple val(sample_name), path(output_file), val(species)
 
     script:
