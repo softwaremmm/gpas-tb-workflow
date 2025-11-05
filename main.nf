@@ -23,7 +23,8 @@ params.input_single_suffix = "*.fastq.gz"
 workflow {
 
     // metadata
-    pipeline_versions_file = Channel.fromPath("${projectDir}/PIPELINE_BUILD")
+    pipeline_versions_file = Channel
+        .fromPath("${projectDir}/PIPELINE_BUILD")
         .filter { file(it).exists() == true }
 
     // This step is for provenance tracking only
@@ -40,7 +41,8 @@ workflow {
         clean_fastq_ch = Channel.fromFilePairs("${params.sample_input_dir}/${params.input_paired_suffix}", checkIfExists: true, flat: false)
     }
     else if (params.seq_platform == 'ont') {
-        clean_fastq_ch = Channel.fromPath("${params.sample_input_dir}/${params.input_single_suffix}", checkIfExists: true)
+        clean_fastq_ch = Channel
+            .fromPath("${params.sample_input_dir}/${params.input_single_suffix}", checkIfExists: true)
             .map { it -> [it.getName().replaceFirst(/(?i)\.(fastq|fq)\.gz$/, ""), it] }
     }
 
@@ -83,6 +85,9 @@ workflow {
     }
 
     mapped_reads_ch.view { "Tie break output: ${it}" }
+
+    //Filter out data without a reference to map against
+    mapped_reads_ch = mapped_reads_ch.filter { !it[4].name.endsWith("null.fasta.gz") }
 
     //Create a new channel if the condition to test (enough h37r-v reads) and the channel to use to proceed the execution (paths)
     competitive_mapping_ch_output = competitive_mapping_ch.cm_enough_reads.join(competitive_mapping_ch.cm_enough_reads)
