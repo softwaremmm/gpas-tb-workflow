@@ -1,7 +1,7 @@
 {
     "gatekeeper_pipeline": "2.2.3",
     "lineagecalling_pipeline": "1.1.1",
-    "competitivemapping_pipeline": "ntm-variant-calling-prototype-0.0.2",
+    "competitivemapping_pipeline": "ntm-variant-calling-prototype-0.0.4",
     "clockwork_pipeline": "83e56b8",
     "rundial": "0.5.0",
     "tb-predict-pipeline": "1.5.2",
