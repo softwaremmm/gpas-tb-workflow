@@ -124,9 +124,9 @@ workflow {
     }
     else if (params.seq_platform == 'ont') {
         println("Will run rundial")
-        rundial_ch = rundial(cm_enough_reads_ch, params.rundial_ref, params.clair3_model_dir, params.basecalling_model)
+        rundial_ch = rundial(mapped_reads_ch, params.clair3_model_dir, params.basecalling_model)
         final_fasta_ch = rundial_ch.final_fasta
-        assemble_report = rundial_ch.creation_report_json
+        assemble_report = rundial_ch.creation_report_json.filter { it[2] == 'Mycobacterium tuberculosis' }.map { it -> [it[0], it[1]] }
         assembler_files = rundial_ch.alignment.concat(
             rundial_ch.gvcf,
             rundial_ch.final_fasta,
@@ -134,7 +134,7 @@ workflow {
             rundial_ch.full_vcf,
             rundial_ch.creation_report_json,
         )
-
+        assembler_files.view { "Assembler files: ${it}" }
         gnomonicus_input = rundial_ch.final_vcf.join(rundial_ch.full_vcf)
     }
 
@@ -143,7 +143,15 @@ workflow {
 
     gnomonicus_ch = gnomonicus_workflow(gnomonicus_tb_input, params.seq_platform, params.tb_ref_genome, params.tb_amr_cat, params.null_positions)
 
-    fn5_tb_input_ch = clockwork_ch.final_fasta.filter { it[2] == 'Mycobacterium tuberculosis' }.map { it -> [it[0], it[1]] }
+    if (params.seq_platform == "illumina") {
+        fn5_tb_input_ch = clockwork_ch.final_fasta.filter { it[2] == 'Mycobacterium tuberculosis' }.map { it -> [it[0], it[1]] }
+    }
+    else if (params.seq_platform == "ont") {
+        fn5_tb_input_ch = rundial_ch.final_fasta.filter { it[2] == 'Mycobacterium tuberculosis' }.map { it -> [it[0], it[1]] }
+    }
+    else {
+        fn5_tb_input_ch = Channel.empty()
+    }
 
     if (params.run_fn5 != "false") {
         // FN5 doesn't use tuple channels as not run locally
@@ -180,6 +188,7 @@ workflow {
     // Copy to buckets
 
     // copy mycobacterial species specific files to bucket
+    assembler_files.view { "Assembler files to write to bucket: ${it}" }
     tie_break_ch.mapped_reads.mix(assembler_files)
         | write_myco_species_to_bucket
 
@@ -354,8 +363,9 @@ process write_myco_species_to_bucket {
 
     script:
     // sanitize species in Groovy so interpolation produces a single safe token
-    sanitised_species = species.replaceAll(' ', '_')
+    sanitised_species = species.toString().replaceAll(' ', '_')
     """
+    echo "Writing Mycobacterial species specific files sample name ${sample_name}, path: ${output_file}, species: ${species} (sanitised: ${sanitised_species})"
     outdir="${params.outdir}/${sanitised_species}"
     mkdir -p \${outdir}
     if [ "${params.sample_id}" == "LOCAL" ]
