@@ -71,7 +71,7 @@ workflow {
 
     // Speciation
     competitive_mapping_ch = competitive_mapping(gk_enough_reads_ch, params.manifest, params.species_list, params.seq_platform, params.reference_name)
-    tie_break_ch = tie_break_multi_workflow(gk_enough_reads_ch, params.manifest, params.species_list, params.seq_platform, params.reference_name)
+    tie_break_ch = tie_break_multi_workflow(gk_enough_reads_ch, params.manifest, params.species_list, params.seq_platform, params.reference_name, params.assembly_refs)
     lineagecalling_ch = lineagecalling(gk_enough_reads_ch, params.seq_platform)
 
     mapped_reads_ch = tie_break_ch.mapped_reads.map { it ->
