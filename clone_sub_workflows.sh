@@ -9,7 +9,7 @@ cd sub_workflows
 while IFS=, read -r repo branch
 do
   echo $repo 
-  git clone git@github.com:"$repo" --depth 1 -b $branch
+  git clone git@github.com:"$repo" --depth 1 -t $branch
 
   if [ -n "${LATEST}" ]; then
     #If requested, use the latest release rather than main
