@@ -61,6 +61,7 @@ a build is made available for deployment to a GPAS environment.
 - Mycobacterial read data
 
 You will also need to login to docker (`docker login lhr.ocir.io` and/or `sudo docker login lhr.ocir.io`) in order to be able to pull the containers.
+A "container prefix" param is used to specify which registry container images are pulled from. This can be overriden using: `--container_prefix = "lhr.ocir.io/<namespace>"`.
 
 ### Reference data
 
@@ -96,7 +97,9 @@ development the conventional approach is usually more useful.**
 #### Normal Local Running
 
 Input and output directories are specified as shown below, which supports running batches of samples. Note that 
-the `--outdir` must be absolute. When running locally `-profile local` should be used.
+the `--outdir` must be absolute. When running locally `-profile local` should be used. By default this will pull
+container images from the `lrbvkel2wjot` namespace which is SP3 / MMM. Use `--container_prefix = "lhr.ocir.io/lr3yhdniv6gu"`
+for the GPASLTD namespace.
 
 ```bash
 sudo nextflow run . -profile local --sample_input_dir <path/to/input_dir> --outdir </abs/path/to/output_dir> --seq_platform <illumina/ont>
