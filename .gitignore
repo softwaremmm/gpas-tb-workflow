@@ -184,3 +184,5 @@ tests/.nf-test/
 data
 
 .idea/
+
+outputs/
