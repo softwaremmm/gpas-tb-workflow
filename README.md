@@ -61,8 +61,7 @@ a build is made available for deployment to a GPAS environment.
 - Mycobacterial read data
 
 You will also need to login to docker (`docker login lhr.ocir.io` and/or `sudo docker login lhr.ocir.io`) in order to be able to pull the containers.
-A "container prefix" param is used to specify which registry container images are pulled from. This can be overriden using: 
-`--container_prefix = "lhr.ocir.io/<namespace>"` (more detailed instructions below).
+A "container prefix" param is used to specify which registry container images are pulled from. This can be overriden using: `--container_prefix = "lhr.ocir.io/<namespace>"`.
 
 ### Reference data
 
