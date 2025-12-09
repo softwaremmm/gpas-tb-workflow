@@ -68,7 +68,11 @@ A "container prefix" param is used to specify which registry container images ar
 
 The pipeline need substantial amounts of reference data in order to run. The most reliable way to ensure that all
 reference data required is present is to copy the contents of the `knowledge` bucket from a GPAS development or
-test environment into a a dir `data/knowledge` relative to the directory containing `main.nf`. If access to the bucket is problematic,
+test environment into a a dir `data/knowledge` relative to the directory containing `main.nf`. The bucket is located 
+in the compartment `Pathogena/<env>/Portal`, and named `portal-<env>-knowledge`, when `<env>` is the environment name
+e.g. `sp3dev`.
+
+If access to the bucket is problematic,
 files could be obtained from a colleague. The provenance of the data is described on Confluence
 [Reference Data Provenance](https://eit-oxford.atlassian.net/wiki/spaces/Science/pages/65863752/Reference+Data+Provenance).
 
