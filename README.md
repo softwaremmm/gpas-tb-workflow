@@ -144,6 +144,12 @@ make run-illumina
 make run-ont
 ```
 
+#### Specifying clair3 Model (ONT Only)
+
+To specify a clair3 model for ONT variant calling, set the param `basecalling_model` to a value from
+this list https://github.com/GlobalPathogenAnalysisService/rundial/blob/develop/src/dorado_to_clair3_model.rs
+(left side). If this parameter is not specified, `bcftools`, the default, is used for variant calling.
+
 ### FN5
 
 FN5 is impossible to fully run locally as it relies on server-side components to compare accross all 
