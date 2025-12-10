@@ -121,7 +121,7 @@ nextflow run ... --input_paired_suffix "tb_sample*_{1,2}.fq.gz"
 
 You can also use `--publish_dir <directory>` to save all process outputs to provided directory. This is rarely needed.
 
-### Platform-like Input and Output
+#### Platform-like Input and Output
 
 On Kubernetes, or for running with a Kubernees-like input pattern, sample fastqs need to be 
 in `data/input/<sample_id>/<run_id>` and outputs go to `data/outputs/<sample_id>/<run_id>`. Then run:
