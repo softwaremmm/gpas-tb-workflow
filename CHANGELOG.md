@@ -1,4 +1,4 @@
-## New
+## 2.5.0
 
 ### Update and Make Consistent VCF file naming
 
