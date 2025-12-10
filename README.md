@@ -121,7 +121,7 @@ nextflow run ... --input_paired_suffix "tb_sample*_{1,2}.fq.gz"
 
 You can also use `--publish_dir <directory>` to save all process outputs to provided directory. This is rarely needed.
 
-### Platform-like Input and Output
+#### Platform-like Input and Output
 
 On Kubernetes, or for running with a Kubernees-like input pattern, sample fastqs need to be 
 in `data/input/<sample_id>/<run_id>` and outputs go to `data/outputs/<sample_id>/<run_id>`. Then run:
@@ -143,6 +143,12 @@ and then check pipeline works with the following. `data/outputs` should then be 
 make run-illumina
 make run-ont
 ```
+
+#### Specifying clair3 Model (ONT Only)
+
+To specify a clair3 model for ONT variant calling, set the param `basecalling_model` to a value from
+this list https://github.com/GlobalPathogenAnalysisService/rundial/blob/develop/src/dorado_to_clair3_model.rs
+(left side). If this parameter is not specified, `bcftools`, the default, is used for variant calling.
 
 ### FN5
 

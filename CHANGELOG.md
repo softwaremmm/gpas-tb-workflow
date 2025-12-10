@@ -2,11 +2,12 @@
 
 ### ONT Variant Calling and Assembly
 
-- Swap from sundial to rundial, but without providing base calling model yet (only effects ONT)
+- ONT Only: Swap from sundial to rundial. clair3 model can be specified for variant calling.
 
 ### TB Predict
 
 - Update VCF merging to resolve issues with minor alleles
+- Update gnomonicus to fix bugs encountered when analysing NTM data (no effect on TB)
 
 ## 2.4.1
 
