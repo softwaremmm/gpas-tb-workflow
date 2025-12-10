@@ -1,4 +1,4 @@
-## New
+## 2.5.0
 
 ### ONT Variant Calling and Assembly
 
