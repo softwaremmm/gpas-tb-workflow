@@ -1,5 +1,11 @@
 ## 2.5.0
 
+### Reference Data
+
+- Update resistance prediction catalogue from `NC_000962.3_WHO-UCN-TB-2023.5_v2.0_GARC1_RFUS.cs` to
+`NC_000962.3_WHO-UCN-TB-2023.5_v2.1_GARC1_RFUS.csv` - affects Illumina minor alleles. Note `2.1` is an
+internal version number, not WHO version.
+
 ### ONT Variant Calling and Assembly
 
 - ONT Only: Swap from sundial to rundial. clair3 model can be specified for variant calling.
