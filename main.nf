@@ -32,7 +32,6 @@ workflow {
         params.manifest,
         params.species_list,
         params.name_mapping,
-        params.tb_ref_genome,
         params.tb_amr_cat,
         params.rundial_ref,
     )
@@ -45,6 +44,8 @@ workflow {
             .fromPath("${params.sample_input_dir}/${params.input_single_suffix}", checkIfExists: true)
             .map { it -> [it.getName().replaceFirst(/(?i)\.(fastq|fq)\.gz$/, ""), it] }
     }
+
+    genbank_reference_dir = Channel.fromPath(params.genbank_reference_dir, checkIfExists: true).first()
 
     //check_valid_input(clean_fastq_ch, params.seq_platform)
 
@@ -138,10 +139,9 @@ workflow {
         gnomonicus_input = rundial_ch.final_vcf.join(rundial_ch.full_vcf)
     }
 
-    gnomonicus_tb_input = gnomonicus_input.filter { it[2] == 'Mycobacterium tuberculosis' }.map { it -> [it[0], it[1], it[3]] }
-    gnomonicus_tb_input.view { "Gnomonicus input for Mycobacterium tuberculosis: ${it}" }
-
-    gnomonicus_ch = gnomonicus_workflow(gnomonicus_tb_input, params.seq_platform, params.tb_ref_genome, params.tb_amr_cat, params.null_positions)
+    // Gnomonicus workflow tracks which species to process internally, mapping species names to genbank references
+    // simply skips the actual resistance prediction process if a species is not on the list
+    gnomonicus_ch = gnomonicus_workflow(gnomonicus_input, params.seq_platform, genbank_reference_dir, params.tb_amr_cat, params.null_positions)
 
     if (params.seq_platform == "illumina") {
         fn5_tb_input_ch = clockwork_ch.final_fasta.filter { it[2] == 'Mycobacterium tuberculosis' }.map { it -> [it[0], it[1]] }
@@ -193,7 +193,11 @@ workflow {
         | write_myco_species_to_bucket
 
     // copy species specific files to bucket
-    write_species_to_bucket(gnomonicus_ch.gnomonicus_json)
+    gnomonicus_ch.gnomonicus_json.mix(
+        gnomonicus_ch.gnomonicus_variants_csv,
+        gnomonicus_ch.gnomonicus_mutations_csv,
+        gnomonicus_ch.gnomonicus_effects_csv,
+    ) | write_species_to_bucket
 
     //copy to bucket
     gatekeeper_ch.gatekeeper_report.mix(
@@ -268,7 +272,6 @@ process gather_knowledge {
     path manifest
     path species_list
     path name_mapping
-    path tb_ref_genome
     path tb_amr_cat
     path rundial_ref
 
@@ -281,7 +284,6 @@ process gather_knowledge {
     echo '"manifest": "${manifest}",' >> knowledge.json
     echo '"species_list": "${species_list}",' >> knowledge.json
     echo '"name_mapping": "${name_mapping}",' >> knowledge.json
-    echo '"tb_ref_genome": "${tb_ref_genome}",' >> knowledge.json
     echo '"tb_amr_cat": "${tb_amr_cat}",' >> knowledge.json
     echo '"rundial_ref": "${rundial_ref}"' >> knowledge.json
     echo '}' >> knowledge.json

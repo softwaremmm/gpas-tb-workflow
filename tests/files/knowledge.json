@@ -3,7 +3,6 @@
     "species_list": "species_list",
     "name_mapping": "name_mapping",
     "ref_files": "ref_files",
-    "tb_ref_genome": "tb_ref_genome",
     "tb_amr_cat": "tb_amr_cat",
     "rundial_ref": "rundial_ref"
 }
