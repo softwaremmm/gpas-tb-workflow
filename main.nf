@@ -113,12 +113,12 @@ workflow {
         assembler_files = rundial_ch.alignment.concat(
             rundial_ch.gvcf,
             rundial_ch.final_fasta,
-            rundial_ch.final_vcf,
-            rundial_ch.full_vcf,
+            rundial_ch.variants_vcf,
+            rundial_ch.all_calls_vcf,
             rundial_ch.creation_report_json,
         )
 
-        gnomonicus_input = rundial_ch.final_vcf.join(rundial_ch.full_vcf)
+        gnomonicus_input = rundial_ch.variants_vcf.join(rundial_ch.all_calls_vcf)
     }
 
     gnomonicus_ch = gnomonicus_workflow(gnomonicus_input, params.seq_platform, params.tb_ref_genome, params.tb_amr_cat, params.null_positions)
