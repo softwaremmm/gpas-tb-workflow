@@ -1,5 +1,13 @@
 ## New
 
+### Update and Make Consistent VCF file naming
+
+- VCF files and associated channels renamed such that:
+  - `final.vcf` becomes `variants.vcf`
+  - `final.full.vcf` becomes `all_calls.vcf`
+  - `alternate.gvcf` becomes `all_calls.vcf`
+  - `filtered.gvcf` becomes `alternate-bcftools.vcf`
+
 ### ONT Variant Calling and Assembly
 
 - ONT Only: Swap from sundial to rundial. clair3 model can be specified for variant calling.
