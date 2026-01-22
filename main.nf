@@ -111,7 +111,7 @@ workflow {
         final_fasta_ch = clockwork_ch.final_fasta
         assemble_report = clockwork_ch.tb_clockwork_report_json.filter { it[2] == 'Mycobacterium tuberculosis' }.map { it -> [it[0], it[1]] }
         assembler_files = clockwork_ch.final_fasta.concat(
-            clockwork_ch.variants_vcf,
+            clockwork_ch.final_vcf,
             clockwork_ch.cortex_vcf,
             clockwork_ch.all_calls_vcf,
             clockwork_ch.samtools_vcf,
@@ -121,7 +121,7 @@ workflow {
             clockwork_ch.tb_clockwork_error_json,
         )
         assembler_files.view { "Assembler files: ${it}" }
-        gnomonicus_input = clockwork_ch.final_vcf.join(clockwork_ch.final_gvcf_decompressed)
+        gnomonicus_input = clockwork_ch.final_vcf.join(clockwork_ch.all_calls_vcf_decompressed)
     }
     else if (params.seq_platform == 'ont') {
         println("Will run rundial")
@@ -131,12 +131,12 @@ workflow {
         assembler_files = rundial_ch.alignment.concat(
             rundial_ch.gvcf,
             rundial_ch.final_fasta,
-            rundial_ch.variants_vcf,
+            rundial_ch.final_vcf,
             rundial_ch.all_calls_vcf,
             rundial_ch.creation_report_json,
         )
-
-        gnomonicus_input = rundial_ch.variants_vcf.join(rundial_ch.all_calls_vcf)
+        assembler_files.view { "Assembler files: ${it}" }
+        gnomonicus_input = rundial_ch.final_vcf.join(rundial_ch.all_calls_vcf)
     }
 
     // Gnomonicus workflow tracks which species to process internally, mapping species names to genbank references
