@@ -23,6 +23,10 @@ internal version number, not WHO version.
 - Update VCF merging to resolve issues with minor alleles
 - Update gnomonicus to fix bugs encountered when analysing NTM data (no effect on TB)
 
+### Further notes
+
+This version was tested on sp3dev using https://github.com/GlobalPathogenAnalysisService/deployment-tests (branches with updated expectations for the modified code) and https://github.com/GlobalPathogenAnalysisService/myco_relatedness_test.
+
 ## 2.4.1
 
 - Amend 2.4.0 changelog for CFZ
