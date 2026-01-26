@@ -8,7 +8,7 @@ include { competitive_mapping } from "./sub_workflows/competitivemapping_pipelin
 include { lineagecalling } from "./sub_workflows/lineagecalling_pipeline/main.nf"
 include { gnomonicus_workflow } from "./sub_workflows/tb-predict-pipeline/main.nf"
 include { summary } from "./sub_workflows/summary_pipeline/main.nf"
-include { run_sundial } from "./sub_workflows/sundial/main.nf"
+include { rundial } from "./sub_workflows/rundial/main.nf"
 
 // the location in the buckets for the current run
 // params can be overriden for local running
@@ -34,7 +34,7 @@ workflow {
         params.ref_files,
         params.tb_ref_genome,
         params.tb_amr_cat,
-        params.sundial_ref,
+        params.rundial_ref,
     )
 
     if (params.seq_platform == 'illumina') {
@@ -87,39 +87,38 @@ workflow {
         .view { "Competitive Mapping output sample does not have enough reads. END OF THE PIPELINE" }
 
 
-    // Clockwork/Sundial_ch is called only if cm_enough_reads_ch exists.
+    // Clockwork/Rundial_ch is called only if cm_enough_reads_ch exists.
     if (params.seq_platform == 'illumina') {
         println("Will run clockwork")
         clockwork_ch = clockwork(cm_enough_reads_ch, params.ref_files)
         final_fasta_ch = clockwork_ch.final_fasta
         assemble_report = clockwork_ch.tb_clockwork_report_json
         assembler_files = clockwork_ch.final_fasta.concat(
-            clockwork_ch.final_vcf,
+            clockwork_ch.variants_vcf,
             clockwork_ch.cortex_vcf,
-            clockwork_ch.final_gvcf,
+            clockwork_ch.all_calls_vcf,
             clockwork_ch.samtools_vcf,
             clockwork_ch.map_bam,
             clockwork_ch.map_bam_bai,
             clockwork_ch.tb_clockwork_report_json,
             clockwork_ch.tb_clockwork_error_json,
         )
-        gnomonicus_input = clockwork_ch.final_vcf.join(clockwork_ch.final_gvcf_decompressed)
+        gnomonicus_input = clockwork_ch.variants_vcf.join(clockwork_ch.all_calls_vcf_decompressed)
     }
     else if (params.seq_platform == 'ont') {
-        println("Will run sundial")
-        sundial_ch = run_sundial(cm_enough_reads_ch, params.sundial_ref, params.sundial_mask)
-        final_fasta_ch = sundial_ch.final_fasta
-        assemble_report = sundial_ch.sundial_report_json
-        assembler_files = sundial_ch.alignment.concat(
-            sundial_ch.gvcf,
-            sundial_ch.final_fasta,
-            sundial_ch.final_vcf,
-            sundial_ch.full_consensus,
-            sundial_ch.full_vcf,
-            sundial_ch.sundial_report_json,
+        println("Will run rundial")
+        rundial_ch = rundial(cm_enough_reads_ch, params.rundial_ref, params.clair3_model_dir, params.basecalling_model)
+        final_fasta_ch = rundial_ch.final_fasta
+        assemble_report = rundial_ch.creation_report_json
+        assembler_files = rundial_ch.alignment.concat(
+            rundial_ch.gvcf,
+            rundial_ch.final_fasta,
+            rundial_ch.variants_vcf,
+            rundial_ch.all_calls_vcf,
+            rundial_ch.creation_report_json,
         )
 
-        gnomonicus_input = sundial_ch.final_vcf.join(sundial_ch.full_vcf)
+        gnomonicus_input = rundial_ch.variants_vcf.join(rundial_ch.all_calls_vcf)
     }
 
     gnomonicus_ch = gnomonicus_workflow(gnomonicus_input, params.seq_platform, params.tb_ref_genome, params.tb_amr_cat, params.null_positions)
@@ -161,8 +160,10 @@ workflow {
     // Copy to buckets
 
     // copy species specific files to bucket
-    assembler_files.mix(gnomonicus_ch.gnomonicus_json)
-        | write_species_to_bucket
+    assembler_files.mix(
+        gnomonicus_ch.gnomonicus_json,
+        gnomonicus_ch.gnomonicus_vcf,
+        ) | write_species_to_bucket
 
     //copy to bucket
     gatekeeper_ch.gatekeeper_report.mix(
@@ -238,7 +239,7 @@ process gather_knowledge {
     path ref_files
     path tb_ref_genome
     path tb_amr_cat
-    path sundial_ref
+    path rundial_ref
 
     output:
     path ("knowledge.json"), emit: knowledge
@@ -252,7 +253,7 @@ process gather_knowledge {
     echo '"ref_files": "${ref_files}",' >> knowledge.json
     echo '"tb_ref_genome": "${tb_ref_genome}",' >> knowledge.json
     echo '"tb_amr_cat": "${tb_amr_cat}",' >> knowledge.json
-    echo '"sundial_ref": "${sundial_ref}"' >> knowledge.json
+    echo '"rundial_ref": "${rundial_ref}"' >> knowledge.json
     echo '}' >> knowledge.json
     """
 }
