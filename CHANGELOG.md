@@ -1,3 +1,7 @@
+## 2.5.1
+
+- Correct gnomonicus container version in tb-predict pipeline due to error in cotainer syncing. Version `2.5.0` should not be used.
+
 ## 2.5.0
 
 ### Update and Make Consistent VCF file naming
