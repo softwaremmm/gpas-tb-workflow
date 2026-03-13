@@ -6,10 +6,16 @@ LATEST=$1
 
 cd sub_workflows
 
-while IFS=, read -r repo branch
-do
-  echo $repo 
-  git clone git@github.com:"$repo" --depth 1 -b $branch
+
+jq -r 'to_entries[] | "\(.key) \(.value)"' ../pipeline_versions.json |
+while read repo identififer; do
+  echo $repo $identififer
+  rm -rf $repo
+  git clone https://github.com/GlobalPathogenAnalysisService/"$repo"
+  cd $repo
+  git config advice.detachedHead false
+  git checkout $identififer
+  cd ..
 
   if [ -n "${LATEST}" ]; then
     #If requested, use the latest release rather than main
@@ -20,6 +26,6 @@ do
     cd ..
   fi
   echo 
-done < "../includerepos.csv"
+done
 
 cd ..
