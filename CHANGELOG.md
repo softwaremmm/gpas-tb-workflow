@@ -1,4 +1,8 @@
-## New
+## 2.5.1
+
+- Correct gnomonicus container version in tb-predict pipeline due to error in cotainer syncing. Version `2.5.0` should not be used.
+
+## 2.5.0
 
 ### Update and Make Consistent VCF file naming
 
@@ -8,6 +12,12 @@
   - `alternate.gvcf` becomes `all_calls.vcf`
   - `filtered.gvcf` becomes `alternate-bcftools.vcf`
 
+### Reference Data
+
+- Update resistance prediction catalogue from `NC_000962.3_WHO-UCN-TB-2023.5_v2.0_GARC1_RFUS.cs` to
+`NC_000962.3_WHO-UCN-TB-2023.5_v2.1_GARC1_RFUS.csv` - affects Illumina minor alleles. Note `2.1` is an
+internal version number, not WHO version.
+
 ### ONT Variant Calling and Assembly
 
 - ONT Only: Swap from sundial to rundial. clair3 model can be specified for variant calling.
@@ -16,6 +26,10 @@
 
 - Update VCF merging to resolve issues with minor alleles
 - Update gnomonicus to fix bugs encountered when analysing NTM data (no effect on TB)
+
+### Further notes
+
+This version was tested on sp3dev using https://github.com/GlobalPathogenAnalysisService/deployment-tests (branches with updated expectations for the modified code) and https://github.com/GlobalPathogenAnalysisService/myco_relatedness_test.
 
 ## 2.4.1
 
