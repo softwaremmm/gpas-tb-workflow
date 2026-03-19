@@ -158,6 +158,8 @@ workflow {
         find_neighbour_5(fn5_tb_input_ch.map { it[1] }, params.species, params.api_url, params.api_token, params.relatedness_bucket, params.tb_ref, params.tb_mask, 20)
     }
 
+    gnomonicus_tb_output_ch = gnomonicus_ch.gnomonicus_json.filter { it[2] == 'Mycobacterium tuberculosis' }.map { it -> [it[0], it[1]] }
+
     // Make summary
     // Rename mapping file so that summary python picks it up
     name_mapping_ch = rename_name_mapping(params.name_mapping)
@@ -165,7 +167,7 @@ workflow {
         .mix(
             competitive_mapping_ch.report_json,
             lineagecalling_ch.json_report,
-            gnomonicus_ch.gnomonicus_json,
+            gnomonicus_tb_output_ch,
             assemble_report,
         )
         .groupTuple()
@@ -189,15 +191,13 @@ workflow {
 
     // copy mycobacterial species specific files to bucket
     assembler_files.view { "Assembler files to write to bucket: ${it}" }
-    tie_break_ch.mapped_reads.mix(assembler_files)
-        | write_myco_species_to_bucket
-
-    // copy species specific files to bucket
-    gnomonicus_ch.gnomonicus_json.mix(
+    tie_break_ch.mapped_reads.mix(
+        assembler_files,
+        gnomonicus_ch.gnomonicus_json,
         gnomonicus_ch.gnomonicus_variants_csv,
         gnomonicus_ch.gnomonicus_mutations_csv,
         gnomonicus_ch.gnomonicus_effects_csv,
-    ) | write_species_to_bucket
+    ) | write_myco_species_to_bucket
 
     //copy to bucket
     gatekeeper_ch.gatekeeper_report.mix(
