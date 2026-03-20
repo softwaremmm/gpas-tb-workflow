@@ -110,6 +110,7 @@ workflow {
         clockwork_ch = clockwork(mapped_reads_ch)
         final_fasta_ch = clockwork_ch.final_fasta
         assemble_report = clockwork_ch.tb_clockwork_report_json.filter { it[2] == 'Mycobacterium tuberculosis' }.map { it -> [it[0], it[1]] }
+        assembled_species = clockwork_ch.final_fasta.map { it[2] }.distinct().toList()
         assembler_files = clockwork_ch.final_fasta.concat(
             clockwork_ch.final_vcf,
             clockwork_ch.cortex_vcf,
@@ -128,6 +129,7 @@ workflow {
         rundial_ch = rundial(mapped_reads_ch, params.clair3_model_dir, params.basecalling_model)
         final_fasta_ch = rundial_ch.final_fasta
         assemble_report = rundial_ch.creation_report_json.filter { it[2] == 'Mycobacterium tuberculosis' }.map { it -> [it[0], it[1]] }
+        assembled_species = rundial_ch.final_fasta.map { it[2] }.distinct().toList()
         assembler_files = rundial_ch.alignment.concat(
             rundial_ch.gvcf,
             rundial_ch.final_fasta,
@@ -138,6 +140,9 @@ workflow {
         assembler_files.view { "Assembler files: ${it}" }
         gnomonicus_input = rundial_ch.final_vcf.join(rundial_ch.full_vcf)
     }
+
+    println("Assembled species: ${assembled_species}")
+
 
     // Gnomonicus workflow tracks which species to process internally, mapping species names to genbank references
     // simply skips the actual resistance prediction process if a species is not on the list
