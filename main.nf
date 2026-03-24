@@ -110,7 +110,7 @@ workflow {
         clockwork_ch = clockwork(mapped_reads_ch)
         final_fasta_ch = clockwork_ch.final_fasta
         assemble_report = clockwork_ch.tb_clockwork_report_json.filter { it[2] == 'Mycobacterium tuberculosis' }.map { it -> [it[0], it[1]] }
-        assembled_species = clockwork_ch.final_fasta.map { it -> it[2] }.toList()
+        assembled_species = clockwork_ch.final_fasta.map { it -> it[2] }.toList().join(",")
         assembler_files = clockwork_ch.final_fasta.concat(
             clockwork_ch.final_vcf,
             clockwork_ch.cortex_vcf,
@@ -121,7 +121,7 @@ workflow {
             clockwork_ch.tb_clockwork_report_json,
             clockwork_ch.tb_clockwork_error_json,
         )
-        assembler_files.view { "Assembler files: ${it}" }
+        println("Assembler files: ${assembled_species}")
         gnomonicus_input = clockwork_ch.final_vcf.join(clockwork_ch.final_gvcf_decompressed)
     }
     else if (params.seq_platform == 'ont') {
@@ -129,7 +129,7 @@ workflow {
         rundial_ch = rundial(mapped_reads_ch, params.clair3_model_dir, params.basecalling_model)
         final_fasta_ch = rundial_ch.final_fasta
         assemble_report = rundial_ch.creation_report_json.filter { it[2] == 'Mycobacterium tuberculosis' }.map { it -> [it[0], it[1]] }
-        assembled_species = rundial_ch.final_fasta.map { it -> it[2] }.toList()
+        assembled_species = rundial_ch.final_fasta.map { it -> it[2] }.toList().join(",")
         assembler_files = rundial_ch.alignment.concat(
             rundial_ch.gvcf,
             rundial_ch.final_fasta,
@@ -137,11 +137,11 @@ workflow {
             rundial_ch.full_vcf,
             rundial_ch.creation_report_json,
         )
-        assembler_files.view { "Assembler files: ${it}" }
+        println("Assembler files: ${assembled_species}")
         gnomonicus_input = rundial_ch.final_vcf.join(rundial_ch.full_vcf)
     }
 
-    assembled_species.view { "Assembled species: ${it}" }
+    println("Assembler files: ${assembled_species}")
 
 
     // Gnomonicus workflow tracks which species to process internally, mapping species names to genbank references
