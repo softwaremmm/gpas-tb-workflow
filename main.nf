@@ -189,7 +189,7 @@ workflow {
     // Take cross product and combine lists
     // Should now have channel with elements like [sample_id, [report1, report2, ...]]
     all_reports_ch = sample_reports.combine(shared_reports).map { it -> [it[0], it[1] + it[2]] }
-    summary(all_reports_ch)
+    summary(all_reports_ch, assembled_species)
 
 
     // Copy to buckets
