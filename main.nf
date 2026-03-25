@@ -110,7 +110,7 @@ workflow {
         clockwork_ch = clockwork(mapped_reads_ch)
         final_fasta_ch = clockwork_ch.final_fasta
         assemble_report = clockwork_ch.tb_clockwork_report_json.filter { it[2] == 'Mycobacterium tuberculosis' }.map { it -> [it[0], it[1]] }
-        assembled_species = clockwork_ch.final_fasta.map { it -> it[2] }.toList().join(",")
+        assembled_species = clockwork_ch.final_fasta.map { it -> it[2].replace("Mycobacterium ", "M.") }.toList()
         assembler_files = clockwork_ch.final_fasta.concat(
             clockwork_ch.final_vcf,
             clockwork_ch.cortex_vcf,
@@ -129,7 +129,7 @@ workflow {
         rundial_ch = rundial(mapped_reads_ch, params.clair3_model_dir, params.basecalling_model)
         final_fasta_ch = rundial_ch.final_fasta
         assemble_report = rundial_ch.creation_report_json.filter { it[2] == 'Mycobacterium tuberculosis' }.map { it -> [it[0], it[1]] }
-        assembled_species = rundial_ch.final_fasta.map { it -> it[2] }.toList().join(",")
+        assembled_species = rundial_ch.final_fasta.map { it -> it[2].replace("Mycobacterium ", "M.") }.toList()
         assembler_files = rundial_ch.alignment.concat(
             rundial_ch.gvcf,
             rundial_ch.final_fasta,
