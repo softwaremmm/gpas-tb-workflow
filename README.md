@@ -64,16 +64,72 @@ You will also need to login to docker (`docker login lhr.ocir.io` and/or `sudo d
 A "container prefix" param is used to specify which registry container images are pulled from. This can be overriden using: 
 `--container_prefix = "lhr.ocir.io/<namespace>"` (more detailed instructions below).
 
+### Cloning Subworkflows for Development
+
+In order to run the pipeline, you will need to clone subworkflows: `bash clone_sub_workflows.sh`.
+However, **sub_workflows should not be committed due to size and version ambiguity**!
+By default this script fetches the branches, tags or commits in `pipeline_versions.json`.
+To fetch the latest releases instead, use `bash clone_sub_workflows.sh latest`.
+
 ### Reference data
 
-The pipeline need substantial amounts of reference data in order to run. The most reliable way to ensure that all
+The pipeline need substantial amounts of reference data in order to run. 
+
+#### Create directory structure
+
+```
+mkdir -p data/knowledge/clockwork
+mkdir -p data/knowledge/tb
+mkdir -p data/knowledge/manifest
+mkdir -p data/knowledge/kraken2_db
+mkdir -p data/knowledge/tuberculosis_amr_catalogues
+mkdir -p data/knowledge/rundial
+```
+
+#### Kraken 2
+
+Copy the kraken2 index from AWS.
+
+```
+# wget https://genome-idx.s3.amazonaws.com/kraken/k2_standard_20230605.tar.gz # full db
+wget https://genome-idx.s3.amazonaws.com/kraken/k2_standard_08gb_20230605.tar.gz # 8 gb version
+tar -xvzf k2_standard_08gb_20230605.tar.gz -C data/knowledge/kraken2_db
+```
+
+#### Rundial Clair3 models
+
+Copy the Clair3 models from `bio8.cs.hku.hk` and `oxfordnanoportal.com`.
+
+```
+cp ./sub_workflows/rundial/data/get_clair3_models.sh ./data/knowledge/rundial
+cd ./data/knowledge/rundial/
+./get_clair3_models.sh
+```
+
+#### Everything Else
+
+Source the `.tar.gz` files from a colleague (a more permanent location is being worked on)
+then unzip as below.
+
+```
+tar -xvzf clockwork.tar.gz -C data/knowledge/clockwork/
+tar -xvzf tb.tar.gz -C data/knowledge/tb/
+tar -xvzf manifest.tar.gz -C data/knowledge/manifest/
+tar -xvzf tuberculosis_amr_catalogues.tar.gz -C data/knowledge/tuberculosis_amr_catalogues
+tar -xvzf rundial.tar.gz -C data/knowledge/rundial
+```
+
+> When running the pipeline, lack of a complete reference data set is often the reason for errors.
+
+### Reference data (from bucket)
+
+An alternative way to ensure that all
 reference data required is present is to copy the contents of the `knowledge` bucket from a GPAS development or
 test environment into a a dir `data/knowledge` relative to the directory containing `main.nf`. The bucket is located 
 in the compartment `Pathogena/<env>/Portal`, and named `portal-<env>-knowledge`, when `<env>` is the environment name
 e.g. `sp3dev`.
 
-If access to the bucket is problematic,
-files could be obtained from a colleague. The provenance of the data is described on Confluence
+The provenance of the data is described on Confluence
 [Reference Data Provenance](https://eit-oxford.atlassian.net/wiki/spaces/Science/pages/65863752/Reference+Data+Provenance).
 
 You may need to reduce memory requirements for kraken2 if using smaller index e.g.
@@ -81,15 +137,6 @@ You may need to reduce memory requirements for kraken2 if using smaller index e.
 ```
 --kraken2_mem 5GB
 ```
-
-> When running the pipeline, lack of a complete reference data set is often the reason for errors.
-
-### Cloning Subworkflows for Development
-
-In order to run the pipeline, you will need to clone subworkflows: `bash clone_sub_workflows.sh`.
-However, **sub_workflows should not be committed due to size and version ambiguity**!
-By default this script fetches the branches, tags or commits in `pipeline_versions.json`.
-To fetch the latest releases instead, use `bash clone_sub_workflows.sh latest`.
 
 ### Running the Pipeline Locally
 
