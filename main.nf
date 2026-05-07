@@ -202,6 +202,7 @@ workflow {
         gnomonicus_ch.gnomonicus_variants_csv,
         gnomonicus_ch.gnomonicus_mutations_csv,
         gnomonicus_ch.gnomonicus_effects_csv,
+        gnomonicus_ch.gnomonicus_predictions_csv,
     ) | write_myco_species_to_bucket
 
     //copy to bucket
