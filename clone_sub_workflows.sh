@@ -11,7 +11,7 @@ jq -r 'to_entries[] | "\(.key) \(.value)"' ../pipeline_versions.json |
 while read repo identififer; do
   echo $repo $identififer
   rm -rf $repo
-  git clone https://github.com/GlobalPathogenAnalysisService/"$repo"
+  git clone git@github.com:"$repo"
   cd $repo
   git config advice.detachedHead false
   git checkout $identififer
