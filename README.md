@@ -88,9 +88,8 @@ You may need to reduce memory requirements for kraken2 if using smaller index e.
 
 In order to run the pipeline, you will need to clone subworkflows: `bash clone_sub_workflows.sh`.
 However, **sub_workflows should not be committed due to size and version ambiguity**!
-By default this script fetches the `main` branch of all defined subworkflows.
+By default this script fetches the branches, tags or commits in `pipeline_versions.json`.
 To fetch the latest releases instead, use `bash clone_sub_workflows.sh latest`.
-To fetch different branches, change the values from `main` in `includerepos.csv`.
 
 ### Running the Pipeline Locally
 
