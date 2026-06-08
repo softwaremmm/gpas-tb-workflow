@@ -1,3 +1,9 @@
+## 2.5.2
+
+- Refer to correct OCI tenancy when running on cloud.
+
+Note this release has not undergone testing of scientific outputs as no changes to scientific code.
+
 ## 2.5.1
 
 - Correct gnomonicus container version in tb-predict pipeline due to error in cotainer syncing. Version `2.5.0` should not be used.
