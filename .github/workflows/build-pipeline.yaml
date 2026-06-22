@@ -10,7 +10,7 @@ on:
       - '*.*.*-rc*'
 jobs:
   build-and-push-pipeline:
-    uses: GlobalPathogenAnalysisService/pipeline-builder/.github/workflows/build_pipeline.yaml@main
+    uses: softwaremmm/pipeline-builder/.github/workflows/build_pipeline.yaml@main
     with:
       pipeline_name: myco
       main_pipeline: gpas-tb-workflow
