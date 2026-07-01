@@ -1,3 +1,9 @@
+## 2.5.3
+
+- Update docs and makefile to make it easier for people outside the team to run the pipeline.
+
+Note this release has not undergone testing of scientific outputs as no changes to scientific code.
+
 ## 2.5.2
 
 - Refer to correct OCI tenancy when running on cloud.
