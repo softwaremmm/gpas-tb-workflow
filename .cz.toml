@@ -1,5 +1,5 @@
 [tool.commitizen]
-version = "2.5.2"
+version = "2.5.3"
 name = "cz_conventional_commits"
 update_changelog_on_bump = false
 tag_format = "$version"
