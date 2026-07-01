@@ -1,112 +1,59 @@
-# gpas-tb-workflow
+# gpas-myco
 
 ## Introduction
 
-Known as the "myco pipeline" or "mycobacteria pipeline", this is the repository that contains the core logic for processing mycobacterial
-sequencing data. The scientific aspects of the pipeline are detailled in Confluence 
-[Mycobacteria Pipeline](https://eit-oxford.atlassian.net/wiki/spaces/Science/pages/37552142/Mycobacteria+Pipeline) and
-[Multi Pipeline Tasks](https://eit-oxford.atlassian.net/wiki/spaces/Science/pages/37552153/Multi+Pipeline+Tasks).
+This repository that contains the core logic for processing mycobacterial sequencing data. It outputs [JSON files](https://github.com/softwaremmm/summary_pipeline#glossary--definitions) containing data on species, lineage, and AMR.
 
-For reference, here, the workflow consist of multiple steps:
+The workflow consist of multiple steps:
 
 | Step | Main Software | Notes | Repository(ies) |
 | --- | --- | --- | --- |
-| Gatekeeper | kraken2 | Quality checking and read filtering | [gatekeeper_pipeline](https://github.com/GlobalPathogenAnalysisService/gatekeeper_pipeline) |
-| Speciation | minimap2, samtools, mykrobe | Competitive Mapping and Lineage Calling (mykrobe) | [lineagecalling_pipeline](https://github.com/GlobalPathogenAnalysisService/lineagecalling_pipeline) [competitivemapping_pipeline](https://github.com/GlobalPathogenAnalysisService/competitivemapping_pipeline) |
-| Assembly | clockwork, minos, rundial | Variant calling | [clockwork_pipeline](https://github.com/GlobalPathogenAnalysisService/clockwork_pipeline) [rundial](https://github.com/GlobalPathogenAnalysisService/rundial) |
-| Resistance Prediction | gnomonicus | Variants, mutations and effects of a specified (minos) VCF file | [tb-predict-pipeline](https://github.com/GlobalPathogenAnalysisService/tb-predict-pipeline) |
-| Relatedness | Find Neighbour 5 | SNP distance calculation | [fn5_pipeline](https://github.com/GlobalPathogenAnalysisService/fn5_pipeline) |
-| Summary | *None* | Summarises outputs into a JSON file | [summary_pipeline](https://github.com/GlobalPathogenAnalysisService/summary_pipeline) |
+| Gatekeeper | kraken2 | Quality checking and read filtering | [gatekeeper_pipeline](https://github.com/softwaremmm/gatekeeper_pipeline) |
+| Speciation | minimap2, samtools, mykrobe | Competitive Mapping and Lineage Calling (mykrobe) | [lineagecalling_pipeline](https://github.com/softwaremmm/lineagecalling_pipeline) [competitivemapping_pipeline](https://github.com/softwaremmm/competitivemapping_pipeline) |
+| Assembly | clockwork, minos, rundial | Variant calling | [clockwork_pipeline](https://github.com/softwaremmm/clockwork_pipeline) [rundial](https://github.com/softwaremmm/rundial) |
+| Resistance Prediction | gnomonicus | Variants, mutations and effects of a specified (minos) VCF file | [tb-predict-pipeline](https://github.com/softwaremmm/tb-predict-pipeline) |
+| Relatedness | Find Neighbour 5 | SNP distance calculation | [fn5_pipeline](https://github.com/softwaremmm/fn5_pipeline) |
+| Summary | *None* | Summarises outputs into a JSON file | [summary_pipeline](https://github.com/softwaremmm/summary_pipeline) |
 
-A machine readable list of the repositories required to run the full pipeline is [included in this repository](./includerepos.txt).
+A machine readable list of the repositories required to run the full pipeline is [included in this repository](./pipeline_versions.json). Useful technical details, e.g. thresholds, may be found in the supplementary information to this paper [Characterizing the performance of an antibiotic resistance prediction tool, gnomonicus, using a diverse test set of 2,663 Mycobacterium tuberculosis samples](https://pmc.ncbi.nlm.nih.gov/articles/PMC12705075/).
 
-## The Pipeline in GPAS
+Pipeline [development and maintenance](./development.md) is conducted by an internal team. We can't accept Pull Requests at the moment.
+If you find a bug or have a feature suggestion, or have difficulty running the code please raise an [Issue](https://github.com/softwaremmm/gpas-tb-workflow/issues). Try and provide as much detail as possible, and be nice!
 
-Pipeline code is downloaded from an S3 compatible bucket just prior to run time, and then executed. The system
-that gathers and places all necessary code in the bucket is the [Pipeline Build System](https://github.com/GlobalPathogenAnalysisService/pipeline-builder).
-The Build System code is executed automatically by GitHub Actions ([Build Pipeline](.github/workflows/build-pipeline.yaml)) when a pull request to `main` or `develop` is
-made, or a new tag is pushed. The [pathogena-releases](https://github.com/GlobalPathogenAnalysisService/pathogena-releases) repository
-controls which version of the pipeline is deployed to what environment.
+## Prerequisites
 
-## Tags, Releases, and Committing
-
-Use conventional commits. This is enforced with commitizen validate action and pre-commit hooks:
-
-```bash
-pre-commit install
-```
-
-This repo uses a standard gitflow approach, so changes should be first merged into develop and then released to main.
-- In the develop branch semantic versioning is not used. Instead you can reference the commit hash to use it in a workflow.
-
-To make a release:
-- Create a release branch from `develop` named `release/a.b.c`
-- In the release branch you can create release candidates with `cz bump a.b.c-rcX`. This also creates a tag, and when that tag is pushed, 
-a build is made available for deployment to a GPAS environment.
-- When release branch is ready:
-    - Update the changelog, replacing the "New" heading with the version number "a.b.c"
-    - Run `cz bump a.b.c --files-only` (won't create a tag).
-    - Make a PR against `main` - this should be reviewed to confirm that the changelog is correct and the release process has been followed.
-    - Merge the PR.
-    - Create a release using the GitHub user interface. This ensures that the release tag points to the head of the `main` branch.
-    - Rebase `develop` on `main` (or merge).
-
-## Running the pipeline locally
-
-### Prerequisites
-
-- Docker
+- Linux or WSL2 (we use Ubuntu)
+- make (usually included with Linux)
+- [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) to make it easier to download reference data
+- [Docker](https://www.docker.com/get-started/)
 - [Nextflow](https://www.nextflow.io/docs/latest/getstarted.html)
 - Reference data
 - Mycobacterial read data
 
-You will also need to login to docker (`docker login lhr.ocir.io` and/or `sudo docker login lhr.ocir.io`) in order to be able to pull the containers.
-A "container prefix" param is used to specify which registry container images are pulled from. This can be overriden using: 
-`--container_prefix = "lhr.ocir.io/<namespace>"` (more detailed instructions below).
+## Installation
 
-### Reference data
+Doing this is going to require some knowledge of the command line and Nextflow. The code is intended to run on a Kubernetes cluster, and this complicates local running somewhat. We don't recommend trying to run this code on a non-local Executor.
+You will first need to clone this repository `https://github.com/softwaremmm/gpas-tb-workflow.git` and `cd gpas-tb-workflow`.
+We recommand running `git checkout 2.5.3` to fix the version being run to an [official release](CHANGELOG.md). `2.5.3` is the earliest version that will install neatly.
 
-The pipeline need substantial amounts of reference data in order to run. The most reliable way to ensure that all
-reference data required is present is to copy the contents of the `knowledge` bucket from a GPAS development or
-test environment into a a dir `data/knowledge` relative to the directory containing `main.nf`. The bucket is located 
-in the compartment `Pathogena/<env>/Portal`, and named `portal-<env>-knowledge`, when `<env>` is the environment name
-e.g. `sp3dev`.
+`make` is used to simplify installation. It will:
+- Clone all of the repositories needed for the full pipeline
+- Create a directory structure to hold reference data
+- Download the necessary reference data. There's over 1GB of this, plus the kraken2 index.
 
-If access to the bucket is problematic,
-files could be obtained from a colleague. The provenance of the data is described on Confluence
-[Reference Data Provenance](https://eit-oxford.atlassian.net/wiki/spaces/Science/pages/65863752/Reference+Data+Provenance).
+Use `make install-small-kraken` to install with an 8GB kraken2 index or `make install-big-kraken` to install with the full kraken2 index used in development. The computer used to run the software needs RAM in excess of the kraken2 index size.
 
-You may need to reduce memory requirements for kraken2 if using smaller index e.g.
+## Running the Pipeline
 
-```
---kraken2_mem 5GB
-```
+The pipeline has two Nextflow profiles, associated with running on a laptop or VM (`local`) or on Kubernetes (`kubernetes`).
+There are two ways of specifying input data - one is a conventional Nextflow
+approach, the other mimics the way in which input data is presented to the pipeline on Kubernetes.
+**For development the conventional approach is usually more useful.**
 
-> When running the pipeline, lack of a complete reference data set is often the reason for errors.
-
-### Cloning Subworkflows for Development
-
-In order to run the pipeline, you will need to clone subworkflows: `bash clone_sub_workflows.sh`.
-However, **sub_workflows should not be committed due to size and version ambiguity**!
-By default this script fetches the branches, tags or commits in `pipeline_versions.json`.
-To fetch the latest releases instead, use `bash clone_sub_workflows.sh latest`.
-
-### Running the Pipeline Locally
-
-The pipeline has two Nextflow profiles, associated with running on a laptop or VM (`local`) or on
-Kubernetes (`kubernetes`). There are two ways of specifying input data - one is a conventional Nextflow
-approach, the other mimics the way in which input data is presented to the pipeline on Kubernetes. **For
-development the conventional approach is usually more useful.**
-
-#### Normal Local Running
-
-Input and output directories are specified as shown below, which supports running batches of samples. Note that 
-the `--outdir` must be absolute. When running locally `-profile local` should be used. By default this will pull
-container images from the `lrbvkel2wjot` namespace which is SP3 / MMM. Use `--container_prefix = "lhr.ocir.io/lr3yhdniv6gu"`
-for the GPASLTD namespace.
+Input and output directories are specified as shown below, which supports running batches of samples. Note that the `--outdir` must be absolute. When running locally `-profile local` should be used.
 
 ```bash
-sudo nextflow run . -profile local --sample_input_dir <path/to/input_dir> --outdir </abs/path/to/output_dir> --seq_platform <illumina/ont>
+nextflow run . -profile local --sample_input_dir <path/to/input_dir> --outdir </abs/path/to/output_dir> --seq_platform <illumina/ont>
 ```
 
 By default it will look for files in the input directory based on the following params:
@@ -114,59 +61,29 @@ By default it will look for files in the input directory based on the following 
 - `params.input_single_suffix = "*.fastq.gz"`
 but these can be overriden. Note that file ending must be `.fastq.gz` or `.fq.gz`.
 
-```
+```bash
 nextflow run ... --input_paired_suffix "tb_sample*_{1,2}.fq.gz"
 ```
 
 You can also use `--publish_dir <directory>` to save all process outputs to provided directory. This is rarely needed.
 
-#### Platform-like Input and Output
-
-On Kubernetes, or for running with a Kubernees-like input pattern, sample fastqs need to be 
-in `data/input/<sample_id>/<run_id>` and outputs go to `data/outputs/<sample_id>/<run_id>`. Then run:
+You may need to reduce memory requirements for kraken2 if using smaller index e.g.
 
 ```bash
-sudo nextflow run . -profile local --sample_id <sample_id> --run_id <run_id> --seq_platform illumina
+--kraken2_mem 9GB
 ```
 
-This can also be run using makefiles. To download an example illumina and ont sample 
-to `data/inputs/1` and `data/inputs/2` run:
+If you're looking for data to try it out with, you could use `make get-example-inputs` to download some files from the ENA.
+
+A concrete example of a command to run the pipeline with this data would then be:
 
 ```bash
-bash setup_local_example.sh
+nextflow run . -profile local --sample_input_dir data/inputs/illumina --outdir `pwd`/output --seq_platform illumina --kraken2_mem 9GB
 ```
 
-and then check pipeline works with the following. `data/outputs` should then be populated.
+(The `` `pwd`/output `` is a trick to get round the need for an absolute path)
 
-```bash
-make run-illumina
-make run-ont
-```
+### Specifying clair3 Model (ONT Only)
 
-#### Specifying clair3 Model (ONT Only)
-
-To specify a clair3 model for ONT variant calling, set the param `basecalling_model` to a value from
-this list https://github.com/GlobalPathogenAnalysisService/rundial/blob/develop/src/dorado_to_clair3_model.rs
-(left side). If this parameter is not specified, `bcftools`, the default, is used for variant calling.
-
-### FN5
-
-FN5 is impossible to fully run locally as it relies on server-side components to compare accross all 
-samples, and so this is not recommended. By default the `-profile local` disables fn5. Deploy a version of 
-the pipeline to a dev environment to work with FN5.
-
-It is possible to run the pipeline locally with the FN5 step, but an API token for an active GPAS environment
-needs to be provided.
-
-## Testing
-
-Running the pipeline is computationally expensive, so testing is covered by the automated testing for the subworkflows (see
-each repository for details) and by the regression / integration tests that are run prior to releases:
-- https://github.com/GlobalPathogenAnalysisService/deployment-tests
-- https://github.com/GlobalPathogenAnalysisService/myco_relatedness_test
-
-There is only a single unit test for process logic in this repository. `nf-test` is required to run this.
-
-```
-nf-test test tests/gather_knowledge.nf.test
-```
+To specify a clair3 model for ONT variant calling, set the param `basecalling_model` to a value from this list https://github.com/softwaremmm/rundial/blob/develop/src/dorado_to_clair3_model.rs (left side).
+If this parameter is not specified, `bcftools`, the default, is used for variant calling.
