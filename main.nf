@@ -5,6 +5,7 @@ include { find_neighbour_5 } from "./sub_workflows/fn5_pipeline/main.nf"
 include { clockwork } from "./sub_workflows/clockwork_pipeline/main.nf"
 include { gatekeeper_myco } from "./sub_workflows/gatekeeper_pipeline/main.nf"
 include { competitive_mapping } from "./sub_workflows/competitivemapping_pipeline/main.nf"
+include { tie_break_multi_workflow } from "./sub_workflows/competitivemapping_pipeline/main.nf"
 include { lineagecalling } from "./sub_workflows/lineagecalling_pipeline/main.nf"
 include { gnomonicus_workflow } from "./sub_workflows/tb-predict-pipeline/main.nf"
 include { summary } from "./sub_workflows/summary_pipeline/main.nf"
@@ -31,8 +32,6 @@ workflow {
         params.manifest,
         params.species_list,
         params.name_mapping,
-        params.ref_files,
-        params.tb_ref_genome,
         params.tb_amr_cat,
         params.rundial_ref,
     )
@@ -46,7 +45,9 @@ workflow {
             .map { it -> [it.getName().replaceFirst(/(?i)\.(fastq|fq)\.gz$/, ""), it] }
     }
 
-    check_valid_input(clean_fastq_ch, params.seq_platform)
+    genbank_reference_dir = Channel.fromPath(params.genbank_reference_dir, checkIfExists: true).first()
+
+    //check_valid_input(clean_fastq_ch, params.seq_platform)
 
     // View first 3 so users can check if correct
     clean_fastq_ch.take(3).view()
@@ -71,10 +72,26 @@ workflow {
 
     // Speciation
     competitive_mapping_ch = competitive_mapping(gk_enough_reads_ch, params.manifest, params.species_list, params.seq_platform, params.reference_name)
+    tie_break_ch = tie_break_multi_workflow(gk_enough_reads_ch, params.manifest, params.species_list, params.seq_platform, params.reference_name, params.assembly_refs)
     lineagecalling_ch = lineagecalling(gk_enough_reads_ch, params.seq_platform)
 
+    mapped_reads_ch = tie_break_ch.mapped_reads.map { it ->
+        [
+            it[0],
+            it[1],
+            it[2],
+            it[3],
+            file(params.reference_genomes_dir + it[4] + params.reference_genome_suffix),
+        ]
+    }
+
+    mapped_reads_ch.view { "Tie break output: ${it}" }
+
+    //Filter out data without a reference to map against
+    mapped_reads_ch = mapped_reads_ch.filter { !it[4].name.endsWith("null.fasta.gz") }
+
     //Create a new channel if the condition to test (enough h37r-v reads) and the channel to use to proceed the execution (paths)
-    competitive_mapping_ch_output = competitive_mapping_ch.cm_tb_reads.join(competitive_mapping_ch.cm_enough_reads)
+    competitive_mapping_ch_output = competitive_mapping_ch.cm_enough_reads.join(competitive_mapping_ch.cm_enough_reads)
 
 
     cm_enough_reads_ch = competitive_mapping_ch_output
@@ -87,57 +104,75 @@ workflow {
         .view { "Competitive Mapping output sample does not have enough reads. END OF THE PIPELINE" }
 
 
-    // Clockwork/Rundial_ch is called only if cm_enough_reads_ch exists.
+    // Clockwork/Rundial
     if (params.seq_platform == 'illumina') {
         println("Will run clockwork")
-        clockwork_ch = clockwork(cm_enough_reads_ch, params.ref_files)
+        clockwork_ch = clockwork(mapped_reads_ch)
         final_fasta_ch = clockwork_ch.final_fasta
-        assemble_report = clockwork_ch.tb_clockwork_report_json
+        assemble_report = clockwork_ch.tb_clockwork_report_json.filter { it[2] == 'Mycobacterium tuberculosis' }.map { it -> [it[0], it[1]] }
+        assembled_species = clockwork_ch.final_fasta.map { it -> it[2].replace("Mycobacterium ", "M.") }.toList()
         assembler_files = clockwork_ch.final_fasta.concat(
-            clockwork_ch.variants_vcf,
+            clockwork_ch.final_vcf,
             clockwork_ch.cortex_vcf,
-            clockwork_ch.all_calls_vcf,
+            clockwork_ch.final_gvcf,
             clockwork_ch.samtools_vcf,
             clockwork_ch.map_bam,
             clockwork_ch.map_bam_bai,
             clockwork_ch.tb_clockwork_report_json,
             clockwork_ch.tb_clockwork_error_json,
         )
-        gnomonicus_input = clockwork_ch.variants_vcf.join(clockwork_ch.all_calls_vcf_decompressed)
+        println("Assembler files: ${assembled_species}")
+        gnomonicus_input = clockwork_ch.final_vcf.join(clockwork_ch.final_gvcf_decompressed)
     }
     else if (params.seq_platform == 'ont') {
         println("Will run rundial")
-        rundial_ch = rundial(cm_enough_reads_ch, params.rundial_ref, params.clair3_model_dir, params.basecalling_model)
+        rundial_ch = rundial(mapped_reads_ch, params.clair3_model_dir, params.basecalling_model)
         final_fasta_ch = rundial_ch.final_fasta
-        assemble_report = rundial_ch.creation_report_json
+        assemble_report = rundial_ch.creation_report_json.filter { it[2] == 'Mycobacterium tuberculosis' }.map { it -> [it[0], it[1]] }
+        assembled_species = rundial_ch.final_fasta.map { it -> it[2].replace("Mycobacterium ", "M.") }.toList()
         assembler_files = rundial_ch.alignment.concat(
             rundial_ch.gvcf,
             rundial_ch.final_fasta,
-            rundial_ch.variants_vcf,
-            rundial_ch.all_calls_vcf,
+            rundial_ch.final_vcf,
+            rundial_ch.full_vcf,
             rundial_ch.creation_report_json,
         )
-
-        gnomonicus_input = rundial_ch.variants_vcf.join(rundial_ch.all_calls_vcf)
+        println("Assembler files: ${assembled_species}")
+        gnomonicus_input = rundial_ch.final_vcf.join(rundial_ch.full_vcf)
     }
 
-    gnomonicus_ch = gnomonicus_workflow(gnomonicus_input, params.seq_platform, params.tb_ref_genome, params.tb_amr_cat, params.null_positions)
+    println("Assembler files: ${assembled_species}")
+
+
+    // Gnomonicus workflow tracks which species to process internally, mapping species names to genbank references
+    // simply skips the actual resistance prediction process if a species is not on the list
+    gnomonicus_ch = gnomonicus_workflow(gnomonicus_input, params.seq_platform, genbank_reference_dir, params.tb_amr_cat, params.null_positions)
+
+    if (params.seq_platform == "illumina") {
+        fn5_tb_input_ch = clockwork_ch.final_fasta.filter { it[2] == 'Mycobacterium tuberculosis' }.map { it -> [it[0], it[1]] }
+    }
+    else if (params.seq_platform == "ont") {
+        fn5_tb_input_ch = rundial_ch.final_fasta.filter { it[2] == 'Mycobacterium tuberculosis' }.map { it -> [it[0], it[1]] }
+    }
+    else {
+        fn5_tb_input_ch = Channel.empty()
+    }
 
     if (params.run_fn5 != "false") {
         // FN5 doesn't use tuple channels as not run locally
-        find_neighbour_5(final_fasta_ch.map {it[1]}, params.species, params.api_url, params.api_token, params.relatedness_bucket, params.tb_ref, params.tb_mask, 20)
+        find_neighbour_5(fn5_tb_input_ch.map { it[1] }, params.species, params.api_url, params.api_token, params.relatedness_bucket, params.tb_ref, params.tb_mask, 20)
     }
 
-
+    gnomonicus_tb_output_ch = gnomonicus_ch.gnomonicus_json.filter { it[2] == 'Mycobacterium tuberculosis' }.map { it -> [it[0], it[1]] }
 
     // Make summary
     // Rename mapping file so that summary python picks it up
     name_mapping_ch = rename_name_mapping(params.name_mapping)
     sample_reports = gatekeeper_ch.gatekeeper_report
         .mix(
-            competitive_mapping_ch.cm_report,
+            competitive_mapping_ch.report_json,
             lineagecalling_ch.json_report,
-            gnomonicus_ch.gnomonicus_json,
+            gnomonicus_tb_output_ch,
             assemble_report,
         )
         .groupTuple()
@@ -154,24 +189,31 @@ workflow {
     // Take cross product and combine lists
     // Should now have channel with elements like [sample_id, [report1, report2, ...]]
     all_reports_ch = sample_reports.combine(shared_reports).map { it -> [it[0], it[1] + it[2]] }
-    summary(all_reports_ch)
+    summary(all_reports_ch, assembled_species)
 
 
     // Copy to buckets
 
-    // copy species specific files to bucket
-    assembler_files.mix(
+    // copy mycobacterial species specific files to bucket
+    assembler_files.view { "Assembler files to write to bucket: ${it}" }
+    tie_break_ch.mapped_reads.mix(
+        assembler_files,
         gnomonicus_ch.gnomonicus_json,
-        gnomonicus_ch.gnomonicus_vcf,
-        ) | write_species_to_bucket
+        gnomonicus_ch.gnomonicus_variants_csv,
+        gnomonicus_ch.gnomonicus_mutations_csv,
+        gnomonicus_ch.gnomonicus_effects_csv,
+        gnomonicus_ch.gnomonicus_predictions_csv,
+    ) | write_myco_species_to_bucket
 
     //copy to bucket
     gatekeeper_ch.gatekeeper_report.mix(
         gatekeeper_ch.fastp_report,
         gatekeeper_ch.kraken2_outputs.map { it -> [it[0], it[1]] },
         gatekeeper_ch.kraken2_outputs.map { it -> [it[0], it[2]] },
-        competitive_mapping_ch.cm_report,
+        competitive_mapping_ch.report_json,
         lineagecalling_ch.json_report,
+        tie_break_ch.stats,
+        tie_break_ch.report_csv,
         summary.out.main_report,
     )
         | write_to_bucket
@@ -236,8 +278,6 @@ process gather_knowledge {
     path manifest
     path species_list
     path name_mapping
-    path ref_files
-    path tb_ref_genome
     path tb_amr_cat
     path rundial_ref
 
@@ -250,8 +290,6 @@ process gather_knowledge {
     echo '"manifest": "${manifest}",' >> knowledge.json
     echo '"species_list": "${species_list}",' >> knowledge.json
     echo '"name_mapping": "${name_mapping}",' >> knowledge.json
-    echo '"ref_files": "${ref_files}",' >> knowledge.json
-    echo '"tb_ref_genome": "${tb_ref_genome}",' >> knowledge.json
     echo '"tb_amr_cat": "${tb_amr_cat}",' >> knowledge.json
     echo '"rundial_ref": "${rundial_ref}"' >> knowledge.json
     echo '}' >> knowledge.json
@@ -316,6 +354,39 @@ process write_species_to_bucket {
         cp ${output_file} \${outdir}/${sample_name}_\$(basename ${output_file})
     else
         cp ${output_file} \${outdir}/${params.sample_id}_\$(basename ${output_file})
+    fi
+    """
+}
+
+process write_myco_species_to_bucket {
+    pod label: "name", value: "gpas-tb-workflow:write_myco_species_to_bucket"
+    pod label: "sample_id", value: "${params.sample_id}"
+    pod label: "run_id", value: "${params.run_id}"
+
+    input:
+    // upstream emits at least 3-tuple: sample_name, path(list), species
+    // maybe 4- with accession
+    // or 5 with ref for assembly
+    tuple val(sample_name), path(output_file), val(species)
+
+    script:
+    // sanitize species in Groovy so interpolation produces a single safe token
+    sanitised_species = species.toString().replaceAll(' ', '_')
+    """
+    echo "Writing Mycobacterial species specific files sample name ${sample_name}, path: ${output_file}, species: ${species} (sanitised: ${sanitised_species})"
+    outdir="${params.outdir}/${sanitised_species}"
+    mkdir -p \${outdir}
+    if [ "${params.sample_id}" == "LOCAL" ]
+    then
+        for f in ${output_file}
+        do
+            cp \${f} "\${outdir}/${sample_name}_${sanitised_species}_\$(basename "\${f}")"
+        done
+    else
+        for f in ${output_file}
+        do
+            cp \${f} "\${outdir}/${params.sample_id}_${sanitised_species}_\$(basename "\${f}")"
+        done
     fi
     """
 }
