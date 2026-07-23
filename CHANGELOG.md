@@ -1,3 +1,9 @@
+## 2.5.4
+
+- Further updates to docs and makefile (and update to local config) after semi-independant review.
+
+Note this release has not undergone testing of scientific outputs as no changes to scientific code.
+
 ## 2.5.3
 
 - Update docs and makefile to make it easier for people outside the team to run the pipeline.
