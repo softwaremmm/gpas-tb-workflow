@@ -24,6 +24,7 @@ If you find a bug or have a feature suggestion, or have difficulty running the c
 
 - Linux or WSL2 (we use Ubuntu)
 - make (usually included with Linux)
+- [jq](https://jqlang.org/download/)
 - [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) to make it easier to download reference data
 - [Docker](https://www.docker.com/get-started/)
 - [Nextflow](https://www.nextflow.io/docs/latest/getstarted.html)
