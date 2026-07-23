@@ -35,7 +35,7 @@ If you find a bug or have a feature suggestion, or have difficulty running the c
 
 Doing this is going to require some knowledge of the command line and Nextflow. The code is intended to run on a Kubernetes cluster, and this complicates local running somewhat. We don't recommend trying to run this code on a non-local Executor.
 You will first need to clone this repository `https://github.com/softwaremmm/gpas-tb-workflow.git` and `cd gpas-tb-workflow`.
-We recommand running `git checkout 2.5.4` to fix the version being run to an [official release](CHANGELOG.md). `2.5.4` is the earliest version that will install neatly.
+We recommand running `git checkout 2.5.3` to fix the version being run to an [official release](CHANGELOG.md). `2.5.3` is the earliest version that will install neatly.
 
 `make` is used to simplify installation. It will:
 - Clone all of the repositories needed for the full pipeline
@@ -43,6 +43,28 @@ We recommand running `git checkout 2.5.4` to fix the version being run to an [of
 - Download the necessary reference data. There's over 1GB of this, plus the kraken2 index.
 
 Use `make install-small-kraken` to install with an 8GB kraken2 index or `make install-big-kraken` to install with the full kraken2 index used in production. The computer used to run the software needs RAM in excess of the kraken2 index size.
+
+This pipeline is known to run with Nextflow `24.10.4`, may work with `25` and it known to not work with version `26`. The above install commands will set an "environment variable" to
+make Nextflow run in a compatible version. You can run `make set-nextflow-version` to fix the version in subsequent sessions. Alternatively, for a permanant fix,
+ you can add a line to your `.bashrc` or `.zshrc` something like:
+
+```{bash}
+echo 'export NXF_VER=24.10.4' >> ~/.bashrc
+```
+
+or
+
+```{zsh}
+echo 'export NXF_VER=24.10.4' >> ~/.zshrc
+```
+
+If you don't have the known compatible version, you will see a warning like this:
+
+```
+WARN: Nextflow version 26.04.6 does not match version required by pipeline: 24.10.4 -- execution will continue, but things might break!
+```
+
+If compatibility with more recent versions of nextflow is important to you, please [raise an issue](https://github.com/softwaremmm/gpas-tb-workflow/issues).
 
 ## Running the Pipeline
 
