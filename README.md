@@ -35,14 +35,14 @@ If you find a bug or have a feature suggestion, or have difficulty running the c
 
 Doing this is going to require some knowledge of the command line and Nextflow. The code is intended to run on a Kubernetes cluster, and this complicates local running somewhat. We don't recommend trying to run this code on a non-local Executor.
 You will first need to clone this repository `https://github.com/softwaremmm/gpas-tb-workflow.git` and `cd gpas-tb-workflow`.
-We recommand running `git checkout 2.5.3` to fix the version being run to an [official release](CHANGELOG.md). `2.5.3` is the earliest version that will install neatly.
+We recommand running `git checkout 2.5.4` to fix the version being run to an [official release](CHANGELOG.md). `2.5.4` is the earliest version that will install neatly.
 
 `make` is used to simplify installation. It will:
 - Clone all of the repositories needed for the full pipeline
 - Create a directory structure to hold reference data
 - Download the necessary reference data. There's over 1GB of this, plus the kraken2 index.
 
-Use `make install-small-kraken` to install with an 8GB kraken2 index or `make install-big-kraken` to install with the full kraken2 index used in development. The computer used to run the software needs RAM in excess of the kraken2 index size.
+Use `make install-small-kraken` to install with an 8GB kraken2 index or `make install-big-kraken` to install with the full kraken2 index used in production. The computer used to run the software needs RAM in excess of the kraken2 index size.
 
 ## Running the Pipeline
 
