@@ -24,6 +24,7 @@ If you find a bug or have a feature suggestion, or have difficulty running the c
 
 - Linux or WSL2 (we use Ubuntu)
 - make (usually included with Linux)
+- [jq](https://jqlang.org/download/)
 - [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) to make it easier to download reference data
 - [Docker](https://www.docker.com/get-started/)
 - [Nextflow](https://www.nextflow.io/docs/latest/getstarted.html)
@@ -34,14 +35,14 @@ If you find a bug or have a feature suggestion, or have difficulty running the c
 
 Doing this is going to require some knowledge of the command line and Nextflow. The code is intended to run on a Kubernetes cluster, and this complicates local running somewhat. We don't recommend trying to run this code on a non-local Executor.
 You will first need to clone this repository `https://github.com/softwaremmm/gpas-tb-workflow.git` and `cd gpas-tb-workflow`.
-We recommand running `git checkout 2.5.3` to fix the version being run to an [official release](CHANGELOG.md). `2.5.3` is the earliest version that will install neatly.
+We recommand running `git checkout 2.5.4` to fix the version being run to an [official release](CHANGELOG.md). `2.5.4` is the earliest version that will install neatly.
 
 `make` is used to simplify installation. It will:
 - Clone all of the repositories needed for the full pipeline
 - Create a directory structure to hold reference data
 - Download the necessary reference data. There's over 1GB of this, plus the kraken2 index.
 
-Use `make install-small-kraken` to install with an 8GB kraken2 index or `make install-big-kraken` to install with the full kraken2 index used in development. The computer used to run the software needs RAM in excess of the kraken2 index size.
+Use `make install-small-kraken` to install with an 8GB kraken2 index or `make install-big-kraken` to install with the full kraken2 index used in production. The computer used to run the software needs RAM in excess of the kraken2 index size.
 
 ## Running the Pipeline
 
@@ -50,10 +51,17 @@ There are two ways of specifying input data - one is a conventional Nextflow
 approach, the other mimics the way in which input data is presented to the pipeline on Kubernetes.
 **For development the conventional approach is usually more useful.**
 
+This pipeline is known to run with Nextflow `24.10.4`, may work with `25` and it known to not work with version `26`. The commands in the section below force Nextflow to use a compatible
+versions by prefixing with `NXF_VER=24.10.4 ...`. If you don't have the known compatible version, you will see a warning like this:
+
+```
+WARN: Nextflow version 26.04.6 does not match version required by pipeline: 24.10.4 -- execution will continue, but things might break!
+```
+
 Input and output directories are specified as shown below, which supports running batches of samples. Note that the `--outdir` must be absolute. When running locally `-profile local` should be used.
 
 ```bash
-nextflow run . -profile local --sample_input_dir <path/to/input_dir> --outdir </abs/path/to/output_dir> --seq_platform <illumina/ont>
+NXF_VER=24.10.4 nextflow run . -profile local --sample_input_dir <path/to/input_dir> --outdir </abs/path/to/output_dir> --seq_platform <illumina/ont>
 ```
 
 By default it will look for files in the input directory based on the following params:
@@ -62,7 +70,7 @@ By default it will look for files in the input directory based on the following 
 but these can be overriden. Note that file ending must be `.fastq.gz` or `.fq.gz`.
 
 ```bash
-nextflow run ... --input_paired_suffix "tb_sample*_{1,2}.fq.gz"
+NXF_VER=24.10.4 nextflow run ... --input_paired_suffix "tb_sample*_{1,2}.fq.gz"
 ```
 
 You can also use `--publish_dir <directory>` to save all process outputs to provided directory. This is rarely needed.
@@ -78,7 +86,7 @@ If you're looking for data to try it out with, you could use `make get-example-i
 A concrete example of a command to run the pipeline with this data would then be:
 
 ```bash
-nextflow run . -profile local --sample_input_dir data/inputs/illumina --outdir `pwd`/output --seq_platform illumina --kraken2_mem 9GB
+NXF_VER=24.10.4 nextflow run . -profile local --sample_input_dir data/inputs/illumina --outdir `pwd`/output --seq_platform illumina --kraken2_mem 9GB
 ```
 
 (The `` `pwd`/output `` is a trick to get round the need for an absolute path)
@@ -87,3 +95,20 @@ nextflow run . -profile local --sample_input_dir data/inputs/illumina --outdir `
 
 To specify a clair3 model for ONT variant calling, set the param `basecalling_model` to a value from this list https://github.com/softwaremmm/rundial/blob/develop/src/dorado_to_clair3_model.rs (left side).
 If this parameter is not specified, `bcftools`, the default, is used for variant calling.
+
+## Set Nextflow Version Globally
+
+For permanant setting of Nextflow version for all pipelines on your computer, which avoids having to run Nextflow with the
+`NXF_VER=24.10.4` prefix, you can add a line to your `.bashrc` or `.zshrc` something like:
+
+```{bash}
+echo 'export NXF_VER=24.10.4' >> ~/.bashrc
+```
+
+or
+
+```{zsh}
+echo 'export NXF_VER=24.10.4' >> ~/.zshrc
+```
+
+If compatibility with more recent versions of nextflow is important to you, please [raise an issue](https://github.com/softwaremmm/gpas-tb-workflow/issues).

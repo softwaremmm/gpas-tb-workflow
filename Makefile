@@ -31,10 +31,11 @@ get-ref-data:
 	mkdir -p data/
 	aws s3 sync s3://gpas_myco_reference_data/2.5.3/data/ data/ --no-sign-request --endpoint-url https://lrbvkel2wjot.compat.objectstorage.uk-london-1.oraclecloud.com
 
+
 install-big-kraken: clone-subworkflows \
 						get-ref-data \
 						get-big-kraken
 
 install-small-kraken: clone-subworkflows \
 						get-ref-data \
-						get-small-kraken 
+						get-small-kraken

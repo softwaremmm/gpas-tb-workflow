@@ -185,5 +185,5 @@ data
 
 .idea/
 
-outputs/
-results/
+output*/*
+result*/*
