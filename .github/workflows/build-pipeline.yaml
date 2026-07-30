@@ -46,6 +46,9 @@ jobs:
     - name: Trigger pipeline builder
       run: |
         curl -L \
+          # Cause action to fail if the request fails
+          # However this gives a worse error message than without, so comment and rerun if you get an error
+          --fail --show-error \
           -X POST \
           -H "Accept: application/vnd.github+json" \
           -H "Authorization: Bearer ${{ steps.app-token.outputs.token }}" \
