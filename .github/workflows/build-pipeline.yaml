@@ -19,7 +19,7 @@ jobs:
 
     - name: Get Short Commit SHA
       id: get-commit-hash
-      run: echo "COMMIT_HASH=$(git rev-parse --short ${{ github.event.pull_request.head.sha }})" >> $GITHUB_OUTPUT
+      run: echo "COMMIT_HASH=$(git log -1 --format='%H' | head -c 7)" >> $GITHUB_OUTPUT
 
     - name: Determine the tag
       id: pipeline-tag
