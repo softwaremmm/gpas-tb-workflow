@@ -10,11 +10,37 @@ on:
       - '*.*.*-rc*'
 jobs:
   build-and-push-pipeline:
-    uses: softwaremmm/pipeline-builder/.github/workflows/build_pipeline.yaml@main
-    with:
-      pipeline_name: myco
-      main_pipeline: gpas-tb-workflow
-    secrets: inherit
-    permissions:
-      contents: read
-      packages: write
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Get Short Commit SHA
+      id: get-commit-hash
+      run: echo "COMMIT_HASH=$(git rev-parse --short ${{ github.event.pull_request.head.sha }})" >> $GITHUB_OUTPUT
+
+    - name: Determine the tag
+      id: pipeline-tag
+      run: |
+        if [[ "${{ github.ref }}" == refs/tags/*.*.*-rc* ]] || [[ "${{ github.ref }}" == refs/tags/*.*.* ]]; then
+          echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+        else
+          echo "tag=${{ steps.get-commit-hash.outputs.COMMIT_HASH }}" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Generate GitHub App token
+      id: app-token
+      uses: actions/create-github-app-token@v1
+      with:
+        app-id: ${{ secrets.APP_ID }}
+        private-key: ${{ secrets.APP_PRIVATE_KEY }}
+        owner: softwaremmm
+
+    - name: Trigger pipeline builder
+      run: |
+        curl -L \
+          -X POST \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${{ steps.app-token.outputs.token }}" \
+          -H "X-GitHub-Api-Version: 2026-03-10" \
+          https://api.github.com/repos/softwaremmm/pipeline-builder/actions/workflows/build_pipeline_workflow_dispatch.yaml/dispatches \
+          -d '{"ref":"main","inputs":{"pipeline_name":"myco", "main_pipeline":"gpas-tb-workflow", "pipeline_repo":"softwaremmm/gpas-tb-workflow", "pipeline_tag":"${{ steps.pipeline-tag.outputs.tag }}"}}'
+

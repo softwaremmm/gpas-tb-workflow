@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 
 // sub workflows import
-include { find_neighbour_5 } from "./sub_workflows/fn5_pipeline/main.nf"
+include { find_neighbour_6 } from "./sub_workflows/fn5_pipeline/main.nf"
 include { clockwork } from "./sub_workflows/clockwork_pipeline/main.nf"
 include { gatekeeper_myco } from "./sub_workflows/gatekeeper_pipeline/main.nf"
 include { competitive_mapping } from "./sub_workflows/competitivemapping_pipeline/main.nf"
@@ -123,9 +123,9 @@ workflow {
 
     gnomonicus_ch = gnomonicus_workflow(gnomonicus_input, params.seq_platform, params.tb_ref_genome, params.tb_amr_cat, params.null_positions)
 
-    if (params.run_fn5 != "false") {
-        // FN5 doesn't use tuple channels as not run locally
-        find_neighbour_5(final_fasta_ch.map {it[1]}, params.species, params.api_url, params.api_token, params.relatedness_bucket, params.tb_ref, params.tb_mask, 20)
+    if (params.run_fn6 != "false") {
+        // FN6 doesn't use tuple channels as not run locally
+        find_neighbour_6(final_fasta_ch.map {it[1]}, params.relatedness_species, params.api_url, params.api_token, params.relatedness_bucket, params.tb_ref, params.tb_mask, 20)
     }
 
 
