@@ -1,3 +1,13 @@
+## Unreleased
+
+### Breaking
+- FN5 --> FN6
+- FN4's mask --> masquerade mask
+
+### Feat
+- Rework pipeline build action to work with public repo
+
+
 ## 2.5.4
 
 - Further updates to docs and makefile (and update to local config) after semi-independant review.

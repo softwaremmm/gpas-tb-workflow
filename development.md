@@ -63,13 +63,13 @@ make run-illumina
 make run-ont
 ```
 
-## FN5
+## FN6
 
-FN5 is impossible to fully run locally as it relies on server-side components to compare accross all samples, and so this is not recommended.
-By default the `-profile local` disables fn5.
-Deploy a version of the pipeline to a dev environment to work with FN5.
+FN6 is impossible to fully run locally as it relies on server-side components to compare accross all samples, and so this is not recommended.
+By default the `-profile local` disables fn6.
+Deploy a version of the pipeline to a dev environment to work with FN6.
 
-It is possible to run the pipeline locally with the FN5 step, but an API token for an active GPAS environment needs to be provided.
+It is possible to run the pipeline locally with the FN6 step, but an API token for an active GPAS environment needs to be provided.
 
 ## Testing
 
