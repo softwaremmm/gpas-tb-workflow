@@ -79,24 +79,30 @@ workflow {
     )
     lineagecalling_ch = lineagecalling(gk_enough_reads_ch, params.seq_platform)
 
-    //Create a new channel if the condition to test (enough h37r-v reads) and the channel to use to proceed the execution (paths)
-    competitive_mapping_ch_output = competitive_mapping_ch.ref_reads.join(competitive_mapping_ch.cm_enough_reads)
-
-
-    cm_enough_reads_ch = competitive_mapping_ch_output
-        .filter { it -> it[2] == "true" }
-        .map { it -> [it[0], it[1]] }
+    // (sample_name, ref_id, fastqs)
+    cm_enough_reads_ch = competitive_mapping_ch.ref_reads
+        .filter { it -> it[3] == "true" }
+        .map { it -> [it[0], it[1], it[2]] }
         .view { "Competitive Mapping output sample has enough reads" }
 
-    cm_not_enough_reads = competitive_mapping_ch_output
-        .filter { it -> it[2] != "true" }
+    cm_not_enough_reads = competitive_mapping_ch.ref_reads
+        .filter { it -> it[3] != "true" }
         .view { "Competitive Mapping output sample does not have enough reads. END OF THE PIPELINE" }
 
 
     // Clockwork/Rundial_ch is called only if cm_enough_reads_ch exists.
     if (params.seq_platform == 'illumina') {
         println("Will run clockwork")
-        clockwork_ch = clockwork(cm_enough_reads_ch, params.ref_files)
+        clockwork_ch = clockwork(
+            cm_enough_reads_ch.map { it ->
+                tuple(
+                    it[0],
+                    it[1],
+                    params.ref_files,
+                    it[2],
+                )
+            }
+        )
         final_fasta_ch = clockwork_ch.final_fasta
         assemble_report = clockwork_ch.tb_clockwork_report_json
         assembler_files = clockwork_ch.final_fasta.concat(
@@ -109,11 +115,22 @@ workflow {
             clockwork_ch.tb_clockwork_report_json,
             clockwork_ch.tb_clockwork_error_json,
         )
-        gnomonicus_input = clockwork_ch.variants_vcf.join(clockwork_ch.all_calls_vcf_decompressed)
+        gnomonicus_input = clockwork_ch.variants_vcf.join(clockwork_ch.all_calls_vcf_decompressed, by: [0, 1])
     }
     else if (params.seq_platform == 'ont') {
         println("Will run rundial")
-        rundial_ch = rundial(cm_enough_reads_ch, params.rundial_ref, params.clair3_model_dir, params.basecalling_model)
+        rundial_ch = rundial(
+            cm_enough_reads_ch.map { it ->
+                tuple(
+                    it[0],
+                    it[1],
+                    params.rundial_ref,
+                    it[2],
+                )
+            },
+            params.clair3_model_dir,
+            params.basecalling_model,
+        )
         final_fasta_ch = rundial_ch.final_fasta
         assemble_report = rundial_ch.creation_report_json
         assembler_files = rundial_ch.alignment.concat(
@@ -124,14 +141,14 @@ workflow {
             rundial_ch.creation_report_json,
         )
 
-        gnomonicus_input = rundial_ch.variants_vcf.join(rundial_ch.all_calls_vcf)
+        gnomonicus_input = rundial_ch.variants_vcf.join(rundial_ch.all_calls_vcf, by: [0, 1])
     }
 
     gnomonicus_ch = gnomonicus_workflow(gnomonicus_input, params.seq_platform, params.tb_ref_genome, params.tb_amr_cat, params.null_positions)
 
     if (params.run_fn6 != "false") {
         // FN6 doesn't use tuple channels as not run locally
-        find_neighbour_6(final_fasta_ch.map {it[1]}, params.relatedness_species, params.api_url, params.api_token, params.relatedness_bucket, params.relatedness_pvc_saves, params.tb_ref, params.tb_mask, 20)
+        find_neighbour_6(final_fasta_ch.map { it[1] }, params.relatedness_species, params.api_url, params.api_token, params.relatedness_bucket, params.relatedness_pvc_saves, params.tb_ref, params.tb_mask, 20)
     }
 
 
