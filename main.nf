@@ -163,6 +163,10 @@ workflow {
     assembler_files.mix(
         gnomonicus_ch.gnomonicus_json,
         gnomonicus_ch.gnomonicus_vcf,
+        gnomonicus_ch.variants_table,
+        gnomonicus_ch.mutations_table,
+        gnomonicus_ch.effects_table,
+        gnomonicus_ch.predictions_table,
         ) | write_species_to_bucket
 
     //copy to bucket
