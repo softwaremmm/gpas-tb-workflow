@@ -7,6 +7,9 @@
 ### Feat
 - Rework pipeline build action to work with public repo
 
+### Fix
+- Always output gnomonicus parquet files
+
 
 ## 2.5.4
 
