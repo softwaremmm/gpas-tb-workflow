@@ -1,7 +1,7 @@
 {
     "gatekeeper_pipeline": "2.2.3",
     "lineagecalling_pipeline": "1.1.1",
-    "competitivemapping_pipeline": "2.2.3",
+    "competitivemapping_pipeline": "4.0.1",
     "clockwork_pipeline": "1.1.0",
     "rundial": "0.7.0",
     "tb-predict-pipeline": "1.6.2",
