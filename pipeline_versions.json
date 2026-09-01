@@ -3,7 +3,7 @@
     "lineagecalling_pipeline": "1.1.1",
     "competitivemapping_pipeline": "4.0.1",
     "clockwork_pipeline": "1.1.0",
-    "rundial": "0.7.0",
+    "rundial": "1.1.4",
     "tb-predict-pipeline": "1.6.2",
     "fn5_pipeline": "3.0.0",
     "summary_pipeline": "2.5.3"
