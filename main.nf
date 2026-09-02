@@ -4,7 +4,7 @@
 include { find_neighbour_6 } from "./sub_workflows/fn5_pipeline/main.nf"
 include { clockwork } from "./sub_workflows/clockwork_pipeline/main.nf"
 include { gatekeeper_myco } from "./sub_workflows/gatekeeper_pipeline/main.nf"
-include { competitive_mapping } from "./sub_workflows/competitivemapping_pipeline/main.nf"
+include { dynamic_competitive_mapping_wf } from "./sub_workflows/competitivemapping_pipeline/main.nf"
 include { lineagecalling } from "./sub_workflows/lineagecalling_pipeline/main.nf"
 include { gnomonicus_workflow } from "./sub_workflows/tb-predict-pipeline/main.nf"
 include { summary } from "./sub_workflows/summary_pipeline/main.nf"
@@ -22,9 +22,8 @@ params.input_single_suffix = "*.fastq.gz"
 workflow {
 
     // metadata
-    pipeline_versions_file = Channel
-        .fromPath("${projectDir}/PIPELINE_BUILD")
-        .filter { file(it).exists() == true }
+    pipeline_versions_file = channel.fromPath("${projectDir}/PIPELINE_BUILD")
+        .filter { it -> file(it).exists() == true }
 
     // This step is for provenance tracking only
     knowledge_ch = gather_knowledge(
@@ -38,11 +37,10 @@ workflow {
     )
 
     if (params.seq_platform == 'illumina') {
-        clean_fastq_ch = Channel.fromFilePairs("${params.sample_input_dir}/${params.input_paired_suffix}", checkIfExists: true, flat: false)
+        clean_fastq_ch = channel.fromFilePairs("${params.sample_input_dir}/${params.input_paired_suffix}", checkIfExists: true, flat: false)
     }
     else if (params.seq_platform == 'ont') {
-        clean_fastq_ch = Channel
-            .fromPath("${params.sample_input_dir}/${params.input_single_suffix}", checkIfExists: true)
+        clean_fastq_ch = channel.fromPath("${params.sample_input_dir}/${params.input_single_suffix}", checkIfExists: true)
             .map { it -> [it.getName().replaceFirst(/(?i)\.(fastq|fq)\.gz$/, ""), it] }
     }
 
@@ -59,38 +57,52 @@ workflow {
     gatekeeper_ch_output = gatekeeper_ch.kraken2_filtered_samples.join(gatekeeper_ch.kraken2_enough_reads)
 
     gk_enough_reads_ch = gatekeeper_ch_output
-        .filter { it[2] == "true" }
+        .filter { it -> it[2] == "true" }
         .map { it -> [it[0], it[1]] }
         .view { "Gatekeeper output sample has enough reads" }
 
     gk_not_enough_reads_ch = gatekeeper_ch_output
-        .filter { it[2] != "true" }
+        .filter { it -> it[2] != "true" }
         .view { "Gatekeeper output sample does not have enough reads. END OF THE PIPELINE" }
 
     //Pipeline proceeds only if gk_enough_reads_ch exists.
 
     // Speciation
-    competitive_mapping_ch = competitive_mapping(gk_enough_reads_ch, params.manifest, params.species_list, params.seq_platform, params.reference_name)
+    competitive_mapping_ch = dynamic_competitive_mapping_wf(
+        gk_enough_reads_ch,
+        params.ref_genome_dirs,
+        params.sylph_dbs,
+        params.taxonomy_files,
+        params.fixed_refs,
+        params.ref_for_fastqs,
+        params.seq_platform,
+    )
     lineagecalling_ch = lineagecalling(gk_enough_reads_ch, params.seq_platform)
 
-    //Create a new channel if the condition to test (enough h37r-v reads) and the channel to use to proceed the execution (paths)
-    competitive_mapping_ch_output = competitive_mapping_ch.cm_tb_reads.join(competitive_mapping_ch.cm_enough_reads)
-
-
-    cm_enough_reads_ch = competitive_mapping_ch_output
-        .filter { it[2] == "true" }
-        .map { it -> [it[0], it[1]] }
+    // (sample_name, ref_id, fastqs)
+    cm_enough_reads_ch = competitive_mapping_ch.ref_reads
+        .filter { it -> it[3] == "true" }
+        .map { it -> [it[0], it[1], it[2]] }
         .view { "Competitive Mapping output sample has enough reads" }
 
-    cm_not_enough_reads = competitive_mapping_ch_output
-        .filter { it[2] != "true" }
+    cm_not_enough_reads = competitive_mapping_ch.ref_reads
+        .filter { it -> it[3] != "true" }
         .view { "Competitive Mapping output sample does not have enough reads. END OF THE PIPELINE" }
 
 
     // Clockwork/Rundial_ch is called only if cm_enough_reads_ch exists.
     if (params.seq_platform == 'illumina') {
         println("Will run clockwork")
-        clockwork_ch = clockwork(cm_enough_reads_ch, params.ref_files)
+        clockwork_ch = clockwork(
+            cm_enough_reads_ch.map { it ->
+                tuple(
+                    it[0],
+                    it[1],
+                    params.ref_files,
+                    it[2],
+                )
+            }
+        )
         final_fasta_ch = clockwork_ch.final_fasta
         assemble_report = clockwork_ch.tb_clockwork_report_json
         assembler_files = clockwork_ch.final_fasta.concat(
@@ -103,11 +115,22 @@ workflow {
             clockwork_ch.tb_clockwork_report_json,
             clockwork_ch.tb_clockwork_error_json,
         )
-        gnomonicus_input = clockwork_ch.variants_vcf.join(clockwork_ch.all_calls_vcf_decompressed)
+        gnomonicus_input = clockwork_ch.variants_vcf.join(clockwork_ch.all_calls_vcf_decompressed, by: [0, 1])
     }
     else if (params.seq_platform == 'ont') {
         println("Will run rundial")
-        rundial_ch = rundial(cm_enough_reads_ch, params.rundial_ref, params.clair3_model_dir, params.basecalling_model)
+        rundial_ch = rundial(
+            cm_enough_reads_ch.map { it ->
+                tuple(
+                    it[0],
+                    it[1],
+                    params.rundial_ref,
+                    it[2],
+                )
+            },
+            params.clair3_model_dir,
+            params.basecalling_model,
+        )
         final_fasta_ch = rundial_ch.final_fasta
         assemble_report = rundial_ch.creation_report_json
         assembler_files = rundial_ch.alignment.concat(
@@ -118,14 +141,14 @@ workflow {
             rundial_ch.creation_report_json,
         )
 
-        gnomonicus_input = rundial_ch.variants_vcf.join(rundial_ch.all_calls_vcf)
+        gnomonicus_input = rundial_ch.variants_vcf.join(rundial_ch.all_calls_vcf, by: [0, 1])
     }
 
     gnomonicus_ch = gnomonicus_workflow(gnomonicus_input, params.seq_platform, params.tb_ref_genome, params.tb_amr_cat, params.null_positions)
 
     if (params.run_fn6 != "false") {
         // FN6 doesn't use tuple channels as not run locally
-        find_neighbour_6(final_fasta_ch.map {it[1]}, params.relatedness_species, params.api_url, params.api_token, params.relatedness_bucket, params.relatedness_pvc_saves, params.tb_ref, params.tb_mask, 20)
+        find_neighbour_6(final_fasta_ch.map { it[1] }, params.relatedness_species, params.api_url, params.api_token, params.relatedness_bucket, params.relatedness_pvc_saves, params.tb_ref, params.tb_mask, 20)
     }
 
 
@@ -135,7 +158,7 @@ workflow {
     name_mapping_ch = rename_name_mapping(params.name_mapping)
     sample_reports = gatekeeper_ch.gatekeeper_report
         .mix(
-            competitive_mapping_ch.cm_report,
+            competitive_mapping_ch.report_json,
             lineagecalling_ch.json_report,
             gnomonicus_ch.gnomonicus_json,
             assemble_report,
@@ -174,11 +197,15 @@ workflow {
         gatekeeper_ch.fastp_report,
         gatekeeper_ch.kraken2_outputs.map { it -> [it[0], it[1]] },
         gatekeeper_ch.kraken2_outputs.map { it -> [it[0], it[2]] },
-        competitive_mapping_ch.cm_report,
+        competitive_mapping_ch.report_csv,
+        competitive_mapping_ch.report_json,
+        competitive_mapping_ch.sylph_report,
+        competitive_mapping_ch.sylph_query,
+        competitive_mapping_ch.sylph_taxonomy_report,
+        competitive_mapping_ch.depth_plot,
         lineagecalling_ch.json_report,
         summary.out.main_report,
-    )
-        | write_to_bucket
+    ) | write_to_bucket
 
     // copy fastq files to bucket
     write_samples_to_bucket(
