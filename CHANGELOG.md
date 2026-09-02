@@ -1,14 +1,16 @@
-## Unreleased
-
-### Breaking
-- FN5 --> FN6
-- FN4's mask --> masquerade mask
+## 2.6.0
 
 ### Feat
-- Rework pipeline build action to work with public repo
+- Update competitive mapping to use the GTDB+ Manifest (which is GTDBs mycobacteria, plus the new species from the NTM speciation study), naming becomes GTDB based. This will adopt Sylph-based dynamic competitive mapping which gives reliable outputs for NTMs and mixed infections.
+- Update rundial from `0.7.0` to `1` - brings code, in particular thresholds, in line with preprint https://www.biorxiv.org/content/10.64898/2026.04.08.717216v1
+- Update from FN5 to FN6 (performance and maintainability improvements).
+- Update relatedness mask as per preprint https://www.biorxiv.org/content/10.64898/2026.04.08.717216v1 
 
 ### Fix
 - Always output gnomonicus parquet files
+
+### Chore
+- Rework pipeline build action to work with public repo
 
 
 ## 2.5.4
