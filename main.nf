@@ -4,7 +4,7 @@
 include { find_neighbour_6 } from "./sub_workflows/fn5_pipeline/main.nf"
 include { clockwork } from "./sub_workflows/clockwork_pipeline/main.nf"
 include { gatekeeper_myco } from "./sub_workflows/gatekeeper_pipeline/main.nf"
-include { competitive_mapping } from "./sub_workflows/competitivemapping_pipeline/main.nf"
+include { dynamic_competitive_mapping_wf } from "./sub_workflows/competitivemapping_pipeline/main.nf"
 include { lineagecalling } from "./sub_workflows/lineagecalling_pipeline/main.nf"
 include { gnomonicus_workflow } from "./sub_workflows/tb-predict-pipeline/main.nf"
 include { summary } from "./sub_workflows/summary_pipeline/main.nf"
@@ -22,9 +22,8 @@ params.input_single_suffix = "*.fastq.gz"
 workflow {
 
     // metadata
-    pipeline_versions_file = Channel
-        .fromPath("${projectDir}/PIPELINE_BUILD")
-        .filter { file(it).exists() == true }
+    pipeline_versions_file = channel.fromPath("${projectDir}/PIPELINE_BUILD")
+        .filter { it -> file(it).exists() == true }
 
     // This step is for provenance tracking only
     knowledge_ch = gather_knowledge(
@@ -38,11 +37,10 @@ workflow {
     )
 
     if (params.seq_platform == 'illumina') {
-        clean_fastq_ch = Channel.fromFilePairs("${params.sample_input_dir}/${params.input_paired_suffix}", checkIfExists: true, flat: false)
+        clean_fastq_ch = channel.fromFilePairs("${params.sample_input_dir}/${params.input_paired_suffix}", checkIfExists: true, flat: false)
     }
     else if (params.seq_platform == 'ont') {
-        clean_fastq_ch = Channel
-            .fromPath("${params.sample_input_dir}/${params.input_single_suffix}", checkIfExists: true)
+        clean_fastq_ch = channel.fromPath("${params.sample_input_dir}/${params.input_single_suffix}", checkIfExists: true)
             .map { it -> [it.getName().replaceFirst(/(?i)\.(fastq|fq)\.gz$/, ""), it] }
     }
 
@@ -59,31 +57,39 @@ workflow {
     gatekeeper_ch_output = gatekeeper_ch.kraken2_filtered_samples.join(gatekeeper_ch.kraken2_enough_reads)
 
     gk_enough_reads_ch = gatekeeper_ch_output
-        .filter { it[2] == "true" }
+        .filter { it -> it[2] == "true" }
         .map { it -> [it[0], it[1]] }
         .view { "Gatekeeper output sample has enough reads" }
 
     gk_not_enough_reads_ch = gatekeeper_ch_output
-        .filter { it[2] != "true" }
+        .filter { it -> it[2] != "true" }
         .view { "Gatekeeper output sample does not have enough reads. END OF THE PIPELINE" }
 
     //Pipeline proceeds only if gk_enough_reads_ch exists.
 
     // Speciation
-    competitive_mapping_ch = competitive_mapping(gk_enough_reads_ch, params.manifest, params.species_list, params.seq_platform, params.reference_name)
+    competitive_mapping_ch = dynamic_competitive_mapping_wf(
+        gk_enough_reads_ch,
+        params.ref_genome_dirs,
+        params.sylph_dbs,
+        params.taxonomy_files,
+        params.fixed_refs,
+        params.ref_for_fastqs,
+        params.seq_platform,
+    )
     lineagecalling_ch = lineagecalling(gk_enough_reads_ch, params.seq_platform)
 
     //Create a new channel if the condition to test (enough h37r-v reads) and the channel to use to proceed the execution (paths)
-    competitive_mapping_ch_output = competitive_mapping_ch.cm_tb_reads.join(competitive_mapping_ch.cm_enough_reads)
+    competitive_mapping_ch_output = competitive_mapping_ch.ref_reads.join(competitive_mapping_ch.cm_enough_reads)
 
 
     cm_enough_reads_ch = competitive_mapping_ch_output
-        .filter { it[2] == "true" }
+        .filter { it -> it[2] == "true" }
         .map { it -> [it[0], it[1]] }
         .view { "Competitive Mapping output sample has enough reads" }
 
     cm_not_enough_reads = competitive_mapping_ch_output
-        .filter { it[2] != "true" }
+        .filter { it -> it[2] != "true" }
         .view { "Competitive Mapping output sample does not have enough reads. END OF THE PIPELINE" }
 
 
@@ -135,7 +141,7 @@ workflow {
     name_mapping_ch = rename_name_mapping(params.name_mapping)
     sample_reports = gatekeeper_ch.gatekeeper_report
         .mix(
-            competitive_mapping_ch.cm_report,
+            competitive_mapping_ch.report_json,
             lineagecalling_ch.json_report,
             gnomonicus_ch.gnomonicus_json,
             assemble_report,
@@ -167,18 +173,21 @@ workflow {
         gnomonicus_ch.gnomonicus_mutations,
         gnomonicus_ch.gnomonicus_effects,
         gnomonicus_ch.gnomonicus_predictions,
-        ) | write_species_to_bucket
+    ) | write_species_to_bucket
 
     //copy to bucket
     gatekeeper_ch.gatekeeper_report.mix(
         gatekeeper_ch.fastp_report,
         gatekeeper_ch.kraken2_outputs.map { it -> [it[0], it[1]] },
         gatekeeper_ch.kraken2_outputs.map { it -> [it[0], it[2]] },
-        competitive_mapping_ch.cm_report,
+        competitive_mapping_ch.report_csv,
+        competitive_mapping_ch.report_json,
+        competitive_mapping_ch.sylph_report,
+        competitive_mapping_ch.sylph_query,
+        competitive_mapping_ch.sylph_taxonomy_report,
         lineagecalling_ch.json_report,
         summary.out.main_report,
-    )
-        | write_to_bucket
+    ) | write_to_bucket
 
     // copy fastq files to bucket
     write_samples_to_bucket(
