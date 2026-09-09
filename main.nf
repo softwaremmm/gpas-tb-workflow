@@ -185,6 +185,7 @@ workflow {
         competitive_mapping_ch.sylph_report,
         competitive_mapping_ch.sylph_query,
         competitive_mapping_ch.sylph_taxonomy_report,
+        competitive_mapping_ch.depth_plot,
         lineagecalling_ch.json_report,
         summary.out.main_report,
     ) | write_to_bucket
