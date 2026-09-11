@@ -86,8 +86,7 @@ If you're looking for data to try it out with, you could use `make get-example-i
 A concrete example of a command to run the pipeline with this data would then be:
 
 ```bash
-NXF_VER=24.10.4 nextflow run . -profile local --sample_input_dir data/inputs/mix/illumina --outdir `pwd`/output/mix/ill --seq_platform illumina --kraken2_mem 9GB -resume
-NXF_VER=24.10.4 nextflow run . -profile local --sample_input_dir data/inputs/mix/ont --outdir `pwd`/output/mix/ont --seq_platform ont --kraken2_mem 9GB -resume
+NXF_VER=24.10.4 nextflow run . -profile local --sample_input_dir data/inputs/illumina --outdir `pwd`/output --seq_platform illumina --kraken2_mem 9GB
 ```
 
 (The `` `pwd`/output `` is a trick to get round the need for an absolute path)
