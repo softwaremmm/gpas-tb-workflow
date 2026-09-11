@@ -6,6 +6,8 @@
 
 ### Feat
 - Rework pipeline build action to work with public repo
+- Selected NTMs will get assembled and run through gnomonicus (using the same read count thresholds as TB)
+- Each ref has a folder in knowledge_bucket/reference_genomes with all the files for assembly and gnomonicus
 
 ### Fix
 - Always output gnomonicus parquet files

@@ -1,10 +1,10 @@
 {
-    "gatekeeper_pipeline": "develop",
+    "gatekeeper_pipeline": "3.0.0",
     "lineagecalling_pipeline": "1.1.1",
-    "competitivemapping_pipeline": "develop",
-    "clockwork_pipeline": "1.1.0",
-    "rundial": "1.1.3",
-    "tb-predict-pipeline": "1.6.2",
+    "competitivemapping_pipeline": "feat/fastqs_for_all_refs",
+    "clockwork_pipeline": "feat/multiple_refs",
+    "rundial": "feat/multiple_refs",
+    "tb-predict-pipeline": "feat/multiple_refs",
     "fn5_pipeline": "3.0.0",
-    "summary_pipeline": "2.5.3"
+    "summary_pipeline": "2.6.0"
 }
