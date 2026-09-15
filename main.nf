@@ -140,8 +140,9 @@ workflow {
     gnomonicus_ch = gnomonicus_workflow(gnomonicus_input, params.seq_platform)
 
     if (params.run_fn6 != "false") {
+        tb_final_fasta_ch = final_fasta_ch.filter { it -> it[1] == "Mycobacterium_tuberculosis" }
         // FN6 doesn't use tuple channels as not run locally
-        find_neighbour_6(final_fasta_ch.map { it -> it[2] }, params.relatedness_species, params.api_url, params.api_token, params.relatedness_bucket, params.relatedness_pvc_saves, params.tb_ref, params.tb_mask, 20)
+        find_neighbour_6(tb_final_fasta_ch.map { it -> it[2] }, params.relatedness_species, params.api_url, params.api_token, params.relatedness_bucket, params.relatedness_pvc_saves, params.tb_ref, params.tb_mask, 20)
     }
 
 
