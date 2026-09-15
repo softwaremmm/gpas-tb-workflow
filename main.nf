@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 
 // sub workflows import
-include { find_neighbour_6 } from "./sub_workflows/fn5_pipeline/main.nf"
+include { find_neighbour_6; local_find_neighbour_6 } from "./sub_workflows/fn5_pipeline/main.nf"
 include { clockwork } from "./sub_workflows/clockwork_pipeline/main.nf"
 include { gatekeeper_myco } from "./sub_workflows/gatekeeper_pipeline/main.nf"
 include { dynamic_competitive_mapping_wf } from "./sub_workflows/competitivemapping_pipeline/main.nf"
@@ -139,9 +139,15 @@ workflow {
     gnomonicus_input = gnomonicus_input.join(pick_reference.out.genbank, by: [0, 1])
     gnomonicus_ch = gnomonicus_workflow(gnomonicus_input, params.seq_platform)
 
-    if (params.run_fn6 != "false") {
-        tb_final_fasta_ch = final_fasta_ch.filter { it -> it[1] == "Mycobacterium_tuberculosis" }
-        // FN6 doesn't use tuple channels as not run locally
+    tb_final_fasta_ch = final_fasta_ch.filter { it -> it[1] == "Mycobacterium_tuberculosis" }
+    if (params.local_fn6 == "true") {
+        ref_fasta = channel.fromPath("${params.tb_ref}", checkIfExists: true).first()
+        mask = channel.fromPath("${params.tb_mask}", checkIfExists: true).first()
+        existing_saves = channel.fromPath("${params.existing_relatedness}", checkIfExists: true).first()
+
+        local_find_neighbour_6(tb_final_fasta_ch, ref_fasta, mask, 20, existing_saves)
+    } else {
+        // FN6 doesn't use tuple channels for this workflow
         find_neighbour_6(tb_final_fasta_ch.map { it -> it[2] }, params.relatedness_species, params.api_url, params.api_token, params.relatedness_bucket, params.relatedness_pvc_saves, params.tb_ref, params.tb_mask, 20)
     }
 
