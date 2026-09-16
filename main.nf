@@ -150,9 +150,11 @@ workflow {
     // Make summary
     // Rename mapping file so that summary python picks it up
     name_mapping_ch = rename_name_mapping(params.name_mapping)
-    tb_gnomonicus_json = gnomonicus_ch.gnomonicus_json.filter { it -> it[1] == "Mycobacterium_tuberculosis" }
+    tb_gnomonicus_json = gnomonicus_ch.gnomonicus_json
+        .filter { it -> it[1] == "Mycobacterium_tuberculosis" }
         .map { it -> [it[0], it[2]] }
-    tb_assembly_report = assembly_report.filter { it -> it[1] == "Mycobacterium_tuberculosis" }
+    tb_assembly_report = assembly_report
+        .filter { it -> it[1] == "Mycobacterium_tuberculosis" }
         .map { it -> [it[0], it[2]] }
     sample_reports = gatekeeper_ch.gatekeeper_report
         .mix(
@@ -197,7 +199,7 @@ workflow {
     // add fastqs to output list by flattening if needed
     output_files = output_files.mix(
         gatekeeper_ch.kraken2_filtered_samples.mix(
-            gatekeeper_ch.fastp_fastqs,
+            gatekeeper_ch.fastp_fastqs
         ).flatMap { reads, files ->
             def fileList = files instanceof List ? files : [files]
 
@@ -211,14 +213,16 @@ workflow {
 
 
     // copy species specific files to bucket
-    species_output_files = assembler_files.mix(
-        gnomonicus_ch.gnomonicus_json,
-        gnomonicus_ch.gnomonicus_vcf,
-        gnomonicus_ch.gnomonicus_variants,
-        gnomonicus_ch.gnomonicus_mutations,
-        gnomonicus_ch.gnomonicus_effects,
-        gnomonicus_ch.gnomonicus_predictions,
-    ).map { it -> [it[0], it[1], it[2], "true"] }
+    species_output_files = assembler_files
+        .mix(
+            gnomonicus_ch.gnomonicus_json,
+            gnomonicus_ch.gnomonicus_vcf,
+            gnomonicus_ch.gnomonicus_variants,
+            gnomonicus_ch.gnomonicus_mutations,
+            gnomonicus_ch.gnomonicus_effects,
+            gnomonicus_ch.gnomonicus_predictions,
+        )
+        .map { it -> [it[0], it[1], it[2], "true"] }
 
     // add fastqs to output list by flattening if needed
     species_output_files = species_output_files.mix(
@@ -325,6 +329,7 @@ process rename_name_mapping {
     """
 }
 
+// Copies the correct set of reference files for a given ref_id
 process pick_reference {
     publishDir "${params.publish_dir}", enabled: params.publish_dir != "", mode: "copy", saveAs: { filename -> sample_name + "_" + filename }
     cpus 1
