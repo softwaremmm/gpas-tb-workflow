@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 mkdir -p sub_workflows
 
 #Args
@@ -11,8 +12,8 @@ jq -r 'to_entries[] | "\(.key) \(.value)"' ../pipeline_versions.json |
 while read repo identififer; do
   echo $repo $identififer
   rm -rf $repo
-  echo "Running git@github.com:softwaremmm/"$repo".git"
-  git clone git@github.com:softwaremmm/"$repo".git
+  echo "Running https://github.com/softwaremmm/${repo}.git"
+  git clone https://github.com/softwaremmm/${repo}.git
   cd $repo
   git config advice.detachedHead false
   git checkout $identififer
