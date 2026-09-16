@@ -1,15 +1,20 @@
 ## Unreleased
 
 ### Breaking
-- FN5 --> FN6
-- FN4's mask --> masquerade mask
+- FN5 --> FN6 (performance and maintainability improvements)
+- FN4's mask --> masquerade mask (as per preprint https://www.biorxiv.org/content/10.64898/2026.04.08.717216v1)
 
 ### Feat
-- Rework pipeline build action to work with public repo
+- Selected NTMs will get assembled and run through gnomonicus (using the same read count thresholds as TB)
+- Update competitive mapping to use the GTDB references (So naming will become GTDB based). This will adopt Sylph-based dynamic competitive mapping which gives reliable outputs for NTMs and mixed infections. Sylph is used to select which Mycobacterial references to map against.
+- Update rundial from `0.7.0` to `2.0.0`. In particular this brings thresholds in line with preprint https://www.biorxiv.org/content/10.64898/2026.04.08.717216v1
+- Each ref has a folder in knowledge_bucket/reference_genomes with all the files for assembly and gnomonicus
 
 ### Fix
 - Always output gnomonicus parquet files
 
+### Chore
+- Rework pipeline build action to work with public repo
 
 ## 2.5.4
 
