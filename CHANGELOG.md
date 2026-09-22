@@ -12,6 +12,7 @@
 
 ### Fix
 - Always output gnomonicus parquet files
+- Always add space after "M." when reporting
 
 ### Chore
 - Rework pipeline build action to work with public repo
