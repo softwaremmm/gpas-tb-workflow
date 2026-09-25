@@ -4,12 +4,14 @@ clean:
 	find . -type f -regex '.*\.nextflow\.log.*' | xargs rm -f
 	find . -type f -name 'trace*.txt' | xargs rm -f
 	find . -type d -name .nf-test | xargs rm -rf
+	find . -type f -name '*.fn6' | xargs rm -f
 
 get-example-inputs:
 	# Download example inputs
 	bash setup_local_example.sh
 
 clone-subworkflows:
+	mkdir -p data/relatedness/tuberculosis
 	bash clone_sub_workflows.sh
 
 get-big-kraken:
