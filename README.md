@@ -96,6 +96,11 @@ NXF_VER=24.10.4 nextflow run . -profile local --sample_input_dir data/inputs/ill
 To specify a clair3 model for ONT variant calling, set the param `basecalling_model` to a value from this list https://github.com/softwaremmm/rundial/blob/develop/src/dorado_to_clair3_model.rs (left side).
 If this parameter is not specified, `bcftools`, the default, is used for variant calling.
 
+### Relatedness
+By default when running locally, relatedness will be carried out on all sample in your batch. There is a further cache at `data/relatedness/tuberculosis` which will enable incremental relatedness results. For example, processing samples in batch 1 populates `distances.txt` with all distances within batch 1, then processing samples in batch 2 will populate `distances.txt` with all distances in batch 2, as well as all distances between batch 1 and 2. To keep the relatedness to just within batch, please remove existing data from `data/relatedness/tuberculosis` between each run.
+
+If you have existing fastas you would like to add for comparison to your batches, please follow the instructions to reference compress your samples [here](https://github.com/oxfordmmm/FN6#reference-compress) then copy each `.fn6` file to `data/relatedness/tuberculosis`.
+
 ## Set Nextflow Version Globally
 
 For permanant setting of Nextflow version for all pipelines on your computer, which avoids having to run Nextflow with the
