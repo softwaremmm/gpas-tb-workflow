@@ -145,7 +145,7 @@ workflow {
         mask = channel.fromPath("${params.tb_mask}", checkIfExists: true).first()
         existing_saves = channel.fromPath("${params.existing_relatedness}", checkIfExists: true).first()
 
-        local_find_neighbour_6(tb_final_fasta_ch, ref_fasta, mask, 20, existing_saves)
+        local_find_neighbour_6(tb_final_fasta_ch.map { it -> [it[0], it[2]] }, ref_fasta, mask, 20, existing_saves)
     } else {
         // FN6 doesn't use tuple channels for this workflow
         find_neighbour_6(tb_final_fasta_ch.map { it -> it[2] }, params.relatedness_species, params.api_url, params.api_token, params.relatedness_bucket, params.relatedness_pvc_saves, params.tb_ref, params.tb_mask, 20)
