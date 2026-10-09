@@ -11,7 +11,6 @@ get-example-inputs:
 	bash setup_local_example.sh
 
 clone-subworkflows:
-	mkdir -p data/relatedness/tuberculosis
 	bash clone_sub_workflows.sh
 
 get-big-kraken:
