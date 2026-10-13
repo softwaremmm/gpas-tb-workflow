@@ -1,4 +1,13 @@
-## Unreleased
+## 2.6.1
+
+### Feat
+- Enable local relatedness running
+
+### Fix
+- FN6 correctly outputs all distances when writing to a file.
+
+
+## 2.6.0
 
 ### Breaking
 - FN5 --> FN6 (performance and maintainability improvements)
