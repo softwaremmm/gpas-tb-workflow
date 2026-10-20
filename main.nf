@@ -69,13 +69,18 @@ workflow {
     //Pipeline proceeds only if gk_enough_reads_ch exists.
 
     // Speciation
+    log.info "Assembling NTMs: ${params.assemble_ntms}"
+    ref_for_fastqs = params.assemble_ntms
+                    ? params.tb_plus_ref_for_fastqs
+                    : params.tb_only_ref_for_fastqs
+    log.info "References to use for competitive mapping: ${ref_for_fastqs}"
     competitive_mapping_ch = dynamic_competitive_mapping_wf(
         gk_enough_reads_ch,
         params.ref_genome_dirs,
         params.sylph_dbs,
         params.taxonomy_files,
         params.fixed_refs,
-        params.ref_for_fastqs,
+        ref_for_fastqs,
         params.seq_platform,
     )
     lineagecalling_ch = lineagecalling(gk_enough_reads_ch, params.seq_platform)
