@@ -101,6 +101,10 @@ By default when running locally, relatedness will be carried out on all sample i
 
 If you have existing fastas you would like to add for comparison to your batches, please follow the instructions to reference compress your samples [here](https://github.com/oxfordmmm/FN6#reference-compress) then copy each `.fn6` file to `data/relatedness/tuberculosis`.
 
+### Assembly of NTMs
+
+The pipeline as of version `2.6.0` is capable of reference-based assembly for a small range of NTMs, where enough reads are found. This is not routinely tested and is mainly intended for internal development use. To turn on, use `-profile local,ntms` instead of `-profile local`.
+
 ## Set Nextflow Version Globally
 
 For permanant setting of Nextflow version for all pipelines on your computer, which avoids having to run Nextflow with the
