@@ -2,6 +2,7 @@
 
 ### Feat
 - Enable local relatedness running
+- Stop assembling Chelonae. Instead assemble Gwanakae against CP031516.1 (This involved updating ref data)
 
 ### Fix
 - FN6 correctly outputs all distances when writing to a file.
