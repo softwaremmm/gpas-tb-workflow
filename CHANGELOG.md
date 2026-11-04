@@ -1,3 +1,10 @@
+## New
+
+### Breaking
+- Update to nextflow 26.10.5
+- Use publish and output directives to save files
+- add "reduced_output" profile which avoids saving intermediate fastqs/bams/large vcfs
+
 ## 2.6.1
 
 ### Feat
