@@ -102,6 +102,9 @@ If you have existing fastas you would like to add for comparison to your batches
 
 The pipeline as of version `2.6.0` is capable of reference-based assembly for a small range of NTMs, where enough reads are found. This is not routinely tested and is mainly intended for internal development use. To turn on, use `-profile local,ntms` instead of `-profile local`.
 
+### Control of Outputs
+
+The pipeline outputs several large files and FASTQ files by default. To reduce the amount of large files and stop output of FASTQs use `-profile local,reduced_outputs`.
 ## Set Nextflow Version Globally
 
 For permanant setting of Nextflow version for all pipelines on your computer, which avoids having to run Nextflow with the
