@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 
 // sub workflows import
-include { find_neighbour_6 } from "./sub_workflows/fn5_pipeline/main.nf"
+include { find_neighbour_6 ; local_find_neighbour_6 } from "./sub_workflows/fn5_pipeline/main.nf"
 include { clockwork } from "./sub_workflows/clockwork_pipeline/main.nf"
 include { gatekeeper_myco } from "./sub_workflows/gatekeeper_pipeline/main.nf"
 include { dynamic_competitive_mapping_wf } from "./sub_workflows/competitivemapping_pipeline/main.nf"
@@ -21,6 +21,7 @@ params.input_single_suffix = "*.fastq.gz"
 
 workflow {
 
+    main:
     // metadata
     pipeline_versions_file = channel.fromPath("${projectDir}/PIPELINE_BUILD")
         .filter { it -> file(it).exists() == true }
@@ -46,6 +47,13 @@ workflow {
 
     check_valid_input(clean_fastq_ch, params.seq_platform)
 
+    if (params.sample_id != "LOCAL") {
+        // Replace sample name with sample_id in channel for downstream processes
+        clean_fastq_ch = clean_fastq_ch.map { _sample_name, fastqs ->
+            tuple(params.sample_id, fastqs)
+        }
+    }
+
     // View first 3 so users can check if correct
     clean_fastq_ch.take(3).view()
 
@@ -69,13 +77,18 @@ workflow {
     //Pipeline proceeds only if gk_enough_reads_ch exists.
 
     // Speciation
+    log.info("Assembling NTMs: ${params.assemble_ntms}")
+    ref_for_fastqs = params.assemble_ntms
+        ? params.tb_plus_ref_for_fastqs
+        : params.tb_only_ref_for_fastqs
+    log.info("References to use for competitive mapping: ${ref_for_fastqs}")
     competitive_mapping_ch = dynamic_competitive_mapping_wf(
         gk_enough_reads_ch,
         params.ref_genome_dirs,
         params.sylph_dbs,
         params.taxonomy_files,
         params.fixed_refs,
-        params.ref_for_fastqs,
+        ref_for_fastqs,
         params.seq_platform,
     )
     lineagecalling_ch = lineagecalling(gk_enough_reads_ch, params.seq_platform)
@@ -97,27 +110,29 @@ workflow {
     // Clockwork/Rundial is called only if cm_enough_reads_ch exists.
     if (params.seq_platform == 'illumina') {
         println("Will run clockwork")
-        reads_to_assemble = cm_enough_reads_ch.join(pick_reference.out.clockwork, by: [0, 1]).view()
+        reads_to_assemble = cm_enough_reads_ch.join(pick_reference.out.clockwork, by: [0, 1])
         clockwork_ch = clockwork(
             reads_to_assemble
         )
         final_fasta_ch = clockwork_ch.final_fasta
         assembly_report = clockwork_ch.tb_clockwork_report_json
-        assembler_files = clockwork_ch.final_fasta.concat(
+        gnomonicus_input = clockwork_ch.variants_vcf.join(clockwork_ch.all_calls_vcf_decompressed, by: [0, 1])
+
+        assembly_main_files = clockwork_ch.final_fasta.concat(
             clockwork_ch.variants_vcf,
-            clockwork_ch.cortex_vcf,
+            clockwork_ch.tb_clockwork_report_json,
+        )
+        assembly_bam = clockwork_ch.map_bam.concat(
+            clockwork_ch.map_bam_bai,
+        )
+        assembly_large_vcfs = clockwork_ch.cortex_vcf.concat(
             clockwork_ch.all_calls_vcf,
             clockwork_ch.samtools_vcf,
-            clockwork_ch.map_bam,
-            clockwork_ch.map_bam_bai,
-            clockwork_ch.tb_clockwork_report_json,
-            clockwork_ch.tb_clockwork_error_json,
         )
-        gnomonicus_input = clockwork_ch.variants_vcf.join(clockwork_ch.all_calls_vcf_decompressed, by: [0, 1])
     }
     else if (params.seq_platform == 'ont') {
         println("Will run rundial")
-        reads_to_assemble = cm_enough_reads_ch.join(pick_reference.out.fasta, by: [0, 1]).view()
+        reads_to_assemble = cm_enough_reads_ch.join(pick_reference.out.fasta, by: [0, 1])
         rundial_ch = rundial(
             reads_to_assemble,
             params.clair3_model_dir,
@@ -125,23 +140,32 @@ workflow {
         )
         final_fasta_ch = rundial_ch.final_fasta
         assembly_report = rundial_ch.creation_report_json
-        assembler_files = rundial_ch.alignment.concat(
-            rundial_ch.gvcf,
-            rundial_ch.final_fasta,
+        gnomonicus_input = rundial_ch.variants_vcf.join(rundial_ch.all_calls_vcf, by: [0, 1])
+
+        assembly_main_files = rundial_ch.final_fasta.concat(
             rundial_ch.variants_vcf,
-            rundial_ch.all_calls_vcf,
             rundial_ch.creation_report_json,
         )
+        assembly_bam = rundial_ch.alignment
+        assembly_large_vcfs = rundial_ch.gvcf.concat(
+            rundial_ch.all_calls_vcf,
+        )
 
-        gnomonicus_input = rundial_ch.variants_vcf.join(rundial_ch.all_calls_vcf, by: [0, 1])
     }
 
     gnomonicus_input = gnomonicus_input.join(pick_reference.out.genbank, by: [0, 1])
     gnomonicus_ch = gnomonicus_workflow(gnomonicus_input, params.seq_platform)
 
-    if (params.run_fn6 != "false") {
-        tb_final_fasta_ch = final_fasta_ch.filter { it -> it[1] == "Mycobacterium_tuberculosis" }
-        // FN6 doesn't use tuple channels as not run locally
+    tb_final_fasta_ch = final_fasta_ch.filter { it -> it[1] == "Mycobacterium_tuberculosis" }
+    if (params.local_fn6 == "true") {
+        ref_fasta = channel.fromPath("${params.tb_ref}", checkIfExists: true).first()
+        mask = channel.fromPath("${params.tb_mask}", checkIfExists: true).first()
+        existing_saves = channel.fromPath("${params.existing_relatedness}", checkIfExists: true).first()
+
+        local_find_neighbour_6(tb_final_fasta_ch.map { it -> [it[0], it[2]] }, ref_fasta, mask, 20, existing_saves)
+    }
+    else {
+        // FN6 doesn't use tuple channels for this workflow
         find_neighbour_6(tb_final_fasta_ch.map { it -> it[2] }, params.relatedness_species, params.api_url, params.api_token, params.relatedness_bucket, params.relatedness_pvc_saves, params.tb_ref, params.tb_mask, 20)
     }
 
@@ -180,12 +204,14 @@ workflow {
     summary(all_reports_ch)
 
 
-    // Copy to buckets
+    // Collate output files for publishing
 
-    output_files = gatekeeper_ch.gatekeeper_report.mix(
+    kraken2_reports = gatekeeper_ch.kraken2_outputs.map { it -> [it[0], it[1]] }
+    kraken2_full_table = gatekeeper_ch.kraken2_outputs.map { it -> [it[0], it[2]] }
+
+    output_reports = gatekeeper_ch.gatekeeper_report.mix(
         gatekeeper_ch.fastp_report,
-        gatekeeper_ch.kraken2_outputs.map { it -> [it[0], it[1]] },
-        gatekeeper_ch.kraken2_outputs.map { it -> [it[0], it[2]] },
+        kraken2_reports,
         competitive_mapping_ch.report_csv,
         competitive_mapping_ch.report_json,
         competitive_mapping_ch.sylph_report,
@@ -197,45 +223,95 @@ workflow {
     )
 
     // add fastqs to output list by flattening if needed
-    output_files = output_files.mix(
-        gatekeeper_ch.kraken2_filtered_samples.mix(
+    sample_fastqs = gatekeeper_ch.kraken2_filtered_samples
+        .mix(
             gatekeeper_ch.fastp_fastqs
-        ).flatMap { reads, files ->
+        )
+        .flatMap { sample, files ->
             def fileList = files instanceof List ? files : [files]
 
             fileList.collect { file ->
-                tuple(reads, file)
+                tuple(sample, file)
             }
         }
-    )
 
-    write_to_bucket(output_files)
-
-
-    // copy species specific files to bucket
-    species_output_files = assembler_files
+    gnomonicus_outputs = gnomonicus_ch.gnomonicus_json
         .mix(
-            gnomonicus_ch.gnomonicus_json,
             gnomonicus_ch.gnomonicus_vcf,
             gnomonicus_ch.gnomonicus_variants,
             gnomonicus_ch.gnomonicus_mutations,
             gnomonicus_ch.gnomonicus_effects,
             gnomonicus_ch.gnomonicus_predictions,
         )
-        .map { it -> [it[0], it[1], it[2], "true"] }
+        .map { it -> [it[0], it[1], it[2]] }
 
-    // add fastqs to output list by flattening if needed
-    species_output_files = species_output_files.mix(
-        cm_enough_reads_ch.flatMap { reads, ref_id, files ->
-            def fileList = files instanceof List ? files : [files]
+    species_fastqs = cm_enough_reads_ch.flatMap { sample, ref_id, files ->
+        def fileList = files instanceof List ? files : [files]
 
-            fileList.collect { file ->
-                tuple(reads, ref_id, file, "false")
-            }
+        fileList.collect { file ->
+            tuple(sample, ref_id, file)
         }
-    )
+    }
 
-    write_species_to_bucket(species_output_files)
+    publish:
+    output_reports = output_reports
+    kraken2_full_table = kraken2_full_table
+    sample_fastqs = sample_fastqs
+    gnomonicus_outputs = gnomonicus_outputs
+    species_fastqs = species_fastqs
+    assembly_main_files = assembly_main_files
+    assembly_bam = assembly_bam
+    assembly_large_vcfs = assembly_large_vcfs
+}
+
+output {
+    output_reports {
+        path { sample_name, output_file ->
+            output_file >> "${sample_name}_${output_file.name}"
+        }
+    }
+    kraken2_full_table {
+        enabled params.output_large_files
+        path { sample_name, output_file ->
+            output_file >> "${sample_name}_${output_file.name}"
+        }
+    }
+    sample_fastqs {
+        enabled params.output_fastqs
+        path { sample_name, output_file ->
+            output_file >> "${sample_name}_${output_file.name}"
+        }
+    }
+
+    // Per species outputs
+    gnomonicus_outputs {
+        path { sample_name, ref_id, output_file ->
+            output_file >> "${ref_id}/${sample_name}_${ref_id}_${output_file.name}"
+        }
+    }
+    species_fastqs {
+        enabled params.output_fastqs
+        path { sample_name, ref_id, output_file ->
+            output_file >> "${ref_id}/${sample_name}_${output_file.name}"
+        }
+    }
+    assembly_main_files {
+        path { sample_name, ref_id, output_file ->
+            output_file >> "${ref_id}/${sample_name}_${ref_id}_${output_file.name}"
+        }
+    }
+    assembly_bam {
+        enabled params.output_large_files
+        path { sample_name, ref_id, output_file ->
+            output_file >> "${ref_id}/${sample_name}_${ref_id}_${output_file.name}"
+        }
+    }
+    assembly_large_vcfs {
+        enabled params.output_large_files
+        path { sample_name, ref_id, output_file ->
+            output_file >> "${ref_id}/${sample_name}_${ref_id}_${output_file.name}"
+        }
+    }
 }
 
 workflow check_valid_input {
@@ -270,7 +346,7 @@ workflow check_valid_input {
     else if (seq_platform == 'illumina') {
         fastq_files
             .filter { it ->
-                it[1] instanceof Collection && it[1].size() == 2
+                it[1] instanceof Iterable && it[1].size() == 2
             }
             .ifEmpty {
                 throw new Exception("invalid fastqs ~ illumina expects 2 fastq files provided as a tuple")
@@ -358,56 +434,5 @@ process pick_reference {
     fi
 
     cp -r ${reference_genomes_dir}/${ref_id}/* .
-    """
-}
-
-process write_to_bucket {
-    pod label: "name", value: "gpas-tb-workflow:write_to_bucket"
-    pod label: "sample_id", value: "${params.sample_id}"
-    pod label: "run_id", value: "${params.run_id}"
-
-    input:
-    tuple val(sample_name), path(output_file)
-
-    script:
-    """
-    mkdir -p ${params.outdir}
-    if [ "${params.sample_id}" == "LOCAL" ]
-    then
-        cp ${output_file} ${params.outdir}/${sample_name}_\$(basename ${output_file})
-    else
-        cp ${output_file} ${params.outdir}/${params.sample_id}_\$(basename ${output_file})
-    fi
-    """
-}
-
-
-
-process write_species_to_bucket {
-    pod label: "name", value: "gpas-tb-workflow:write_species_to_bucket"
-    pod label: "sample_id", value: "${params.sample_id}"
-    pod label: "run_id", value: "${params.run_id}"
-
-    input:
-    tuple val(sample_name), val(ref_id), path(output_file), val(add_ref_prefix)
-
-    script:
-    """
-    outdir=${params.outdir}/${ref_id}
-    mkdir -p \${outdir}
-
-    if [ "${params.sample_id}" == "LOCAL" ]
-    then
-        file_prefix=${sample_name}
-    else
-        file_prefix=${params.sample_id}
-    fi
-
-    if [ "${add_ref_prefix}" == "true" ]
-    then
-        file_prefix=\${file_prefix}_${ref_id}
-    fi
-
-    cp ${output_file} \${outdir}/\${file_prefix}_\$(basename ${output_file})
     """
 }
