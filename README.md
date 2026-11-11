@@ -55,10 +55,10 @@ This pipeline is known to run with Nextflow `26.10.5`.
 A specific version can be used for running by prefixing the command with `NXF_VER=26.10.5 nextflow run ...`.
 If you don't have the known compatible version, you will see a warning.
 
-Input and output directories are specified as shown below, which supports running batches of samples. Note that the `--outdir` must be absolute. When running locally `-profile local` should be used.
+Input and output directories are specified as shown below, which supports running batches of samples. When running locally `-profile local` should be used.
 
 ```bash
-nextflow run . -profile local --sample_input_dir <path/to/input_dir> --outdir </abs/path/to/output_dir> --seq_platform <illumina/ont>
+nextflow run . -profile local --sample_input_dir <path/to/input_dir> --seq_platform <illumina/ont> -output-dir </abs/path/to/output_dir>
 ```
 
 By default it will look for files in the input directory based on the following params:
@@ -83,7 +83,7 @@ If you're looking for data to try it out with, you could use `make get-example-i
 A concrete example of a command to run the pipeline with this data would then be:
 
 ```bash
-NXF_VER=26.10.5 nextflow run . -profile local --sample_input_dir data/inputs/illumina --outdir `pwd`/output --seq_platform illumina --kraken2_mem 9GB
+NXF_VER=26.10.5 nextflow run . -profile local --sample_input_dir data/inputs/illumina --seq_platform illumina --kraken2_mem 9GB -output-dir output/
 ```
 
 (The `` `pwd`/output `` is a trick to get round the need for an absolute path)
