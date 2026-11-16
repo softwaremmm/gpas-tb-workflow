@@ -157,7 +157,7 @@ workflow {
     gnomonicus_ch = gnomonicus_workflow(gnomonicus_input, params.seq_platform)
 
     tb_final_fasta_ch = final_fasta_ch.filter { it -> it[1] == "Mycobacterium_tuberculosis" }
-    if (params.local_fn6 == "true") {
+    if (params.local_fn6 == true) {
         ref_fasta = channel.fromPath("${params.tb_ref}", checkIfExists: true).first()
         mask = channel.fromPath("${params.tb_mask}", checkIfExists: true).first()
         existing_saves = channel.fromPath("${params.existing_relatedness}", checkIfExists: true).first()
