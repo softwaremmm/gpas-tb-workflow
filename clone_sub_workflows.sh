@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+mkdir -p data/relatedness/tuberculosis
 mkdir -p sub_workflows
 
 #Args

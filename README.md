@@ -35,7 +35,7 @@ If you find a bug or have a feature suggestion, or have difficulty running the c
 
 Doing this is going to require some knowledge of the command line and Nextflow. The code is intended to run on a Kubernetes cluster, and this complicates local running somewhat. We don't recommend trying to run this code on a non-local Executor.
 You will first need to clone this repository `https://github.com/softwaremmm/gpas-tb-workflow.git` and `cd gpas-tb-workflow`.
-We recommand running `git checkout 2.5.4` to fix the version being run to an [official release](CHANGELOG.md). `2.5.4` is the earliest version that will install neatly.
+We recommand running `git checkout 2.6.1` to fix the version being run to an [official release](CHANGELOG.md). `2.5.4` is the earliest version that will install neatly.
 
 `make` is used to simplify installation. It will:
 - Clone all of the repositories needed for the full pipeline
@@ -51,17 +51,14 @@ There are two ways of specifying input data - one is a conventional Nextflow
 approach, the other mimics the way in which input data is presented to the pipeline on Kubernetes.
 **For development the conventional approach is usually more useful.**
 
-This pipeline is known to run with Nextflow `24.10.4`, may work with `25` and it known to not work with version `26`. The commands in the section below force Nextflow to use a compatible
-versions by prefixing with `NXF_VER=24.10.4 ...`. If you don't have the known compatible version, you will see a warning like this:
+This pipeline is known to run with Nextflow `26.10.5`.
+A specific version can be used for running by prefixing the command with `NXF_VER=26.10.5 nextflow run ...`.
+If you don't have the known compatible version, you will see a warning.
 
-```
-WARN: Nextflow version 26.04.6 does not match version required by pipeline: 24.10.4 -- execution will continue, but things might break!
-```
-
-Input and output directories are specified as shown below, which supports running batches of samples. Note that the `--outdir` must be absolute. When running locally `-profile local` should be used.
+Input and output directories are specified as shown below, which supports running batches of samples. When running locally `-profile local` should be used.
 
 ```bash
-NXF_VER=24.10.4 nextflow run . -profile local --sample_input_dir <path/to/input_dir> --outdir </abs/path/to/output_dir> --seq_platform <illumina/ont>
+nextflow run . -profile local --sample_input_dir <path/to/input_dir> --seq_platform <illumina/ont> -output-dir </abs/path/to/output_dir>
 ```
 
 By default it will look for files in the input directory based on the following params:
@@ -70,7 +67,7 @@ By default it will look for files in the input directory based on the following 
 but these can be overriden. Note that file ending must be `.fastq.gz` or `.fq.gz`.
 
 ```bash
-NXF_VER=24.10.4 nextflow run ... --input_paired_suffix "tb_sample*_{1,2}.fq.gz"
+nextflow run ... --input_paired_suffix "tb_sample*_{1,2}.fq.gz"
 ```
 
 You can also use `--publish_dir <directory>` to save all process outputs to provided directory. This is rarely needed.
@@ -86,7 +83,7 @@ If you're looking for data to try it out with, you could use `make get-example-i
 A concrete example of a command to run the pipeline with this data would then be:
 
 ```bash
-NXF_VER=24.10.4 nextflow run . -profile local --sample_input_dir data/inputs/illumina --outdir `pwd`/output --seq_platform illumina --kraken2_mem 9GB
+NXF_VER=26.10.5 nextflow run . -profile local --sample_input_dir data/inputs/illumina --seq_platform illumina --kraken2_mem 9GB -output-dir output/
 ```
 
 (The `` `pwd`/output `` is a trick to get round the need for an absolute path)
@@ -96,6 +93,18 @@ NXF_VER=24.10.4 nextflow run . -profile local --sample_input_dir data/inputs/ill
 To specify a clair3 model for ONT variant calling, set the param `basecalling_model` to a value from this list https://github.com/softwaremmm/rundial/blob/develop/src/dorado_to_clair3_model.rs (left side).
 If this parameter is not specified, `bcftools`, the default, is used for variant calling.
 
+### Relatedness
+By default when running locally, relatedness will be carried out on all sample in your batch. There is a further cache at `data/relatedness/tuberculosis` which will enable incremental relatedness results. For example, processing samples in batch 1 populates `distances.txt` with all distances within batch 1, then processing samples in batch 2 will populate `distances.txt` with all distances in batch 2, as well as all distances between batch 1 and 2. To keep the relatedness to just within batch, please remove existing data from `data/relatedness/tuberculosis` between each run.
+
+If you have existing fastas you would like to add for comparison to your batches, please follow the instructions to reference compress your samples [here](https://github.com/oxfordmmm/FN6#reference-compress) then copy each `.fn6` file to `data/relatedness/tuberculosis`.
+
+### Assembly of NTMs
+
+The pipeline as of version `2.6.0` is capable of reference-based assembly for a small range of NTMs, where enough reads are found. This is not routinely tested and is mainly intended for internal development use. To turn on, use `-profile local,ntms` instead of `-profile local`.
+
+### Control of Outputs
+
+The pipeline outputs several large files and FASTQ files by default. To reduce the amount of large files and stop output of FASTQs use `-profile local,reduced_outputs`.
 ## Set Nextflow Version Globally
 
 For permanant setting of Nextflow version for all pipelines on your computer, which avoids having to run Nextflow with the

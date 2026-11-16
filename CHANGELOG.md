@@ -1,3 +1,17 @@
+## 2.6.1
+
+### Breaking
+- Update to nextflow 26.10.5
+
+### Feat
+- Enable local relatedness running
+- (When enabled) stop assembling Chelonae. Instead assemble Gwanakae against CP031516.1 (This involved updating ref data).
+- Use publish and output directives to save files
+- add "reduced_output" profile which avoids saving intermediate fastqs/bams/large vcfs
+
+### Fix
+- FN6 correctly outputs all distances when writing to a file.
+
 ## 2.6.0
 
 ### Breaking
