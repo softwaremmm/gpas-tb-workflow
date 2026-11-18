@@ -1,0 +1,127 @@
+---
+title: "Resistance Prediction"
+---
+
+Resistance prediction utilises a set of tools developed by MMM - `gnomonicus`, `gumpy` (now `grumpy`), and `piezo`.
+
+# Thresholds
+
+Merges in rows from the GVCF which don’t always share the clockwork threshold, so reinforces the MIN\_DP of 3 reads for a call. Anything below this is given a null call
+
+For ONT this is 5 reads.
+
+# Gumpy
+
+Parses a reference file (genbank) and a VCF file to produce mutations at both genome and gene level. 
+
+Genbank files contain data about the reference sequence, as well as positions (and other data) about genes within the genome. Genes have assumed promoter regions which precede the gene start. These are somewhat arbitrary, but `gumpy` assumes that these have a maximum length of 100 bases and cannot overlap with upstream genes. There are some cases of other software assuming a much larger promoter regions, but `gumpy` ignores these; preferring to give the mutations at the level of the gene which they do lie in (if existing).
+
+```
+     gene            759807..763325
+                     /gene="rpoB"
+                     /locus_tag="Rv0667"
+                     /db_xref="GeneID:888164"
+     CDS             759807..763325
+                     /gene="rpoB"
+                     /locus_tag="Rv0667"
+                     /experiment="DESCRIPTION: Mutation
+                     analysis[PMID:11146248]"
+                     /experiment="DESCRIPTION:Gene expression, mutation
+                     analysis[PMID:8031050]"
+                     /experiment="EXISTENCE:Mass spectrometry[PMID:20429878]"
+                     /experiment="EXISTENCE:Mass spectrometry[PMID:21920479]"
+                     /note="transcriptase beta chain (RNA polymerase beta
+                     subunit)"
+                     /codon_start=1
+                     /transl_table=11
+                     /product="DNA-directed RNA polymerase subunit beta"
+                     /protein_id="NP_215181.1"
+                     /db_xref="GeneID:888164"
+                     /translation="MADSRQSKTAASPSPSRPQSSSNNSVPGAPNRVSFAKLREPLEV
+                     PGLLDVQTDSFEWLIGSPRWRESAAERGDVNPVGGLEEVLYELSPIEDFSGSMSLSFS
+                     DPRFDDVKAPVDECKDKDMTYAAPLFVTAEFINNNTGEIKSQTVFMGDFPMMTEKGTF
+                     IINGTERVVVSQLVRSPGVYFDETIDKSTDKTLHSVKVIPSRGAWLEFDVDKRDTVGV
+                     RIDRKRRQPVTVLLKALGWTSEQIVERFGFSEIMRSTLEKDNTVGTDEALLDIYRKLR
+```
+
+
+VCF files contain data about how a given sample differs from a reference genome. This includes fields such as the number of reads which map to this call (COV here) which are used for identifying minor alleles
+
+```
+NC_000962.3	16119	.	C	A,G	225.4	PASS	CALLER=bcftools	GT:DP:ADF:ADR:COV	1/1:145:0,61,1:0,70,0:0,131,1
+NC_000962.3	17654	.	T	G,A	225.4	PASS	CALLER=bcftools	GT:DP:ADF:ADR:COV	1/1:147:0,73,0:0,61,1:0,134,1
+NC_000962.3	17657	.	T	C	228.4	PASS	CALLER=bcftools	GT:DP:ADF:ADR:COV	1/1:142:0,66:2,59:2,125
+NC_000962.3	17896	.	AGGGG	AGG,AG,A	107.2	MIN_FRS	CALLER=bcftools	GT:DP:ADF:ADR:COV	1/1:149:11,9,8,1:10,13,6,4:21,22,14,5
+NC_000962.3	21795	.	G	A	225.4	PASS	CALLER=bcftools	GT:DP:ADF:ADR:COV	1/1:136:0,64:0,55:0,119
+NC_000962.3	25610	.	G	C	228.4	PASS	CALLER=bcftools	GT:DP:ADF:ADR:COV	1/1:123:1,51:0,48:1,99
+NC_000962.3	26959	.	C	G	225.4	PASS	CALLER=bcftools	GT:DP:ADF:ADR:COV	1/1:129:0,56:0,57:0,113
+NC_000962.3	28366	.	AT	A	196.4	PASS	CALLER=bcftools	GT:DP:ADF:ADR:COV	1/1:123:2,36:1,37:3,73
+NC_000962.3	33994	.	G	C	225.4	PASS	CALLER=bcftools	GT:DP:ADF:ADR:COV	1/1:137:0,52:0,54:0,106
+NC_000962.3	34044	.	T	C,A	228.4	PASS	CALLER=bcftools	GT:DP:ADF:ADR:COV	1/1:147:0,70,1:1,57,0:1,127,1
+```
+
+
+General code flow for using `gumpy`:
+
+```py
+import gumpy
+
+reference = gumpy.Genome("some/genbank/file")
+vcf = gumpy.VCFFile("some/vcf/file")
+sample = reference + vcf
+
+# `diff` is an object which has genome level differences
+diff = reference - sample
+
+for gene_name in reference.genes.keys():
+  ref_gene = reference.build_gene(gene_name)
+  sample_gene = sample.build_gene(gene_name)
+  
+  # `gene_diff` is an object which has these specific gene level differences
+  gene_diff = ref_gene - sample_gene
+```
+
+Note that gene level differences account for amino acid translations and reverse complementing of genes too (where applicable)
+
+
+
+# Piezo
+
+Piezo takes a resistance catalogue in the correct format, and will predict the effect of given mutations based on the rows of the catalogue. We currently use a converted version of the WHO TB resistance cataloguev2 (Catalogue of mutations in *Mycobacterium tuberculosis* complex and their association with resistance, 2nd ed World Health Organisation, 2023.)
+
+Note that the catalogue conversion is also performed by MMM, and could theoretically be extended in future, or swapped to use a different catalogue
+
+
+Catalogues contain several required fields such as gene, mutation, prediction, and evidence.
+
+```
+GENBANK_REFERENCE,CATALOGUE_NAME,CATALOGUE_VERSION,CATALOGUE_GRAMMAR,PREDICTION_VALUES,DRUG,MUTATION,PREDICTION,SOURCE,EVIDENCE,OTHER
+NC_000962.3,WHO-UCN-GTB-PCI-2023.5,2.0,GARC1,RFUS,MXF,gyrB@A2S,U,{},"{""Observed_samples"": {""Present_SOLO_SR"": 2, ""Present_SOLO_R"": 1, ""Present_SOLO_S"": 1}, ""Additional grading criteria applied"": null, ""FINAL CONFIDENCE GRADING"": ""3) Uncertain significance"", ""INITIAL CONFIDENCE GRADING"": ""3) Uncertain significance"", ""WHO HGVS"": ""gyrB_p.Ala2Ser""}",{}
+NC_000962.3,WHO-UCN-GTB-PCI-2023.5,2.0,GARC1,RFUS,LEV,gyrB@Q9H,U,{},"{""Observed_samples"": {""Present_SOLO_SR"": 3, ""Present_SOLO_R"": 1, ""Present_SOLO_S"": 2}, ""Additional grading criteria applied"": null, ""FINAL CONFIDENCE GRADING"": ""3) Uncertain significance"", ""INITIAL CONFIDENCE GRADING"": ""3) Uncertain significance"", ""WHO HGVS"": ""gyrB_p.Gln9His""}",{}
+NC_000962.3,WHO-UCN-GTB-PCI-2023.5,2.0,GARC1,RFUS,LEV,gyrB@P94L,S,{},"{""Observed_samples"": {""Present_SOLO_SR"": 0, ""Present_SOLO_R"": 0, ""Present_SOLO_S"": 0}, ""Additional grading criteria applied"": null, ""FINAL CONFIDENCE GRADING"": ""5) Not assoc w R"", ""INITIAL CONFIDENCE GRADING"": ""5) Not assoc w R"", ""WHO HGVS"": ""gyrB_p.Pro94Leu""}",{}
+NC_000962.3,WHO-UCN-GTB-PCI-2023.5,2.0,GARC1,RFUS,MXF,gyrB@P94L,S,{},"{""Observed_samples"": {""Present_SOLO_SR"": 0, ""Present_SOLO_R"": 0, ""Present_SOLO_S"": 0}, ""Additional grading criteria applied"": null, ""FINAL CONFIDENCE GRADING"": ""5) Not assoc w R"", ""INITIAL CONFIDENCE GRADING"": ""5) Not assoc w R"", ""WHO HGVS"": ""gyrB_p.Pro94Leu""}",{}
+```
+
+The grammar used by the catalogue is designed to be flexible and includes wildcard matching (e.g ‘any non-synonymous mutation in rpoB’). Piezo applies the rules in a cascading manner from least specific to most specific. i.e if the catalogue contains a rule `rpoB@*?` meaning ‘any non-synonymous mutation in rpoB’, as well as `rpoB@S450L` meaning ‘mutation of serine to leucine at position 450 of rpoB’, asking for a prediction of `rpoB@S450L` would hit both rules but only report hitting the more specific.
+
+
+General code flow for using `piezo`:
+
+```py
+import piezo
+
+cat = piezo.ResistanceCatalogue("path/to/some/catalogue")
+
+# Returns predictions
+cat.predict("rpoB@S450L")
+cat.predict("katG@12_del_3")
+
+# Returns predictions along with the evidence field from the catalogue
+# This gives the statistical basis for the prediction
+cat.predict("rrs@a1401g", show_evidence=True)
+```
+
+
+# Gnomonicus
+
+Combines the outputs of both `gumpy` and `piezo` to allow a flow from VCF file → resistance prediction

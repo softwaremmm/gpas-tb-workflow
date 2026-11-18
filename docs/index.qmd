@@ -1,0 +1,17 @@
+---
+title: "GPAS Myco"
+---
+
+Documentation for the GPAS Myco workflow, which is used to analyze Mycobacterium tuberculosis sequencing data.
+
+# Overview of the pipeline
+
+The pipeline begins with the "[gatekeeper](gatekeeper.qmd)" step: checks are made on the
+quality of the reads and only reads in the _Mycobacteriacae_ family, and unknown reads, are retained. The
+species present is determined by [competitively mapping](competitive_mapping.qmd) the reads against a manifest of 186 manually-curated
+reference genomes of different _Mycobacterial_ species. If the species belongs to a complex, then [mykrobe](lineage_calling.qmd) is
+used to assign lineage (in the case of MBTC) or subspecies (e.g. in the case of _Mycobacterium avium_ complex). If the sample
+has sufficient reads belonging to the _Mycobacterium tuberculosis_ complex then variants are called to inform
+antibiotic [resistance prediction](resistance_prediction.qmd) and the degree of [relatedness](relatedness.qmd) between the sample and others in the database.
+Data to be reported to the user is drawn together in the "[Summary](summary.qmd)" step, which determines the full species
+name to report.

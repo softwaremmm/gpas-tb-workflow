@@ -1,0 +1,67 @@
+---
+title: "Gatekeeper (Initial Filtering)"
+---
+
+The “Gatekeeper” task has several subtasks:
+
+- Filter reads using fastp
+- Detect which species have reads within the input FASTQ files (Kraken 2 <https://genomebiology.biomedcentral.com/articles/10.1186/s13059-019-1891-0>)
+- Identify the subset of reads in the taxon of interest (Myco pipeline only. Used to select mycobacteriaceae from Kraken 2 results)
+
+# Thresholds
+
+## Fastp
+
+There are several options used for the filtering with fastp, explained here [gatekeeper\_pipeline/README.md at main · GlobalPathogenAnalysisService/gatekeeper\_pipeline (github.com)](https://github.com/GlobalPathogenAnalysisService/gatekeeper_pipeline/blob/main/README.md#fastp-default-parameters). Main one to note is that reads with length less than 50 (100 for ONT) are removed.
+
+## kraken2
+
+Within the myco option for gatekeeper, a threshold of 10,000 Mycobacteriaceae reads (or 1000 for ONT) is used. Only samples with equal or greater number of reads classed as Mycobacteriaceae proceed to the rest of the pipeline.
+
+
+# Detection of species
+
+Kraken 2 maps *k*-mers from FASTQ reads against a hash table of *k*-mers of known taxonomic classification, resulting in a table showing assignments of fragments to taxa. It will then assign each read to a taxa individually based on the *k*-mers. Generally it will take the most common taxa, but should use the Lowest Common Ancestor in cases like ties between species in same genus. Unsure of exact rules here.
+
+*Extract from example Kraken 2 output (cloumn definitions: *<https://github.com/DerrickWood/kraken2/blob/master/docs/MANUAL.markdown#sample-report-output-format>*)*
+
+```
+  0.22	314	314	U	0	unclassified
+ 99.78	142895	0	R	1	root
+ 99.78	142895	0	R1	131567	  cellular organisms
+ 99.77	142878	21	D	2	    Bacteria
+ 99.75	142844	1	D1	1783272	      Terrabacteria group
+ 99.71	142799	0	P	201174	        Actinomycetota
+ 99.71	142799	13	C	1760	          Actinomycetes
+ 99.69	142772	3	O	85007	            Mycobacteriales
+ 99.69	142767	15	F	1762	              Mycobacteriaceae
+ 99.67	142740	111	G	1763	                Mycobacterium
+ 99.57	142594	51920	G1	77643	                  Mycobacterium tuberculosis complex
+ 50.89	72876	51024	S	1773	                    Mycobacterium tuberculosis
+  3.93	5625	4382	S1	1765	                      Mycobacterium tuberculosis variant bovis
+  0.82	1173	735	S2	33892	                        Mycobacterium tuberculosis variant bovis BCG 
+```
+
+ 
+
+### Performance
+
+Kraken2 is used widely and does seem to be the best performing, but highly dependent of databases, parameters and use of bracken.
+
+- [Benchmarking taxonomic classifiers with Illumina and Nanopore sequence data for clinical metagenomic diagnostic applications | Microbiology Society (microbiologyresearch.org)](https://www.microbiologyresearch.org/content/journal/mgen/10.1099/mgen.0.000886)
+- Paper comparing parameters within Kraken2: [From defaults to databases: parameter and database choice dramatically impact the performance of metagenomic taxonomic classification tools | Microbiology Society (microbiologyresearch.org)](https://www.microbiologyresearch.org/content/journal/mgen/10.1099/mgen.0.000949?crawler=true)
+- Another comparing parameters with simulated data, includes standard database. But does not consider bracken: [Impact of database choice and confidence score on the performance of taxonomic classification using Kraken2 | aBIOTECH (springer.com)](https://link.springer.com/article/10.1007/s42994-024-00178-0)
+
+### Confidence Scoring (currently not used for production)
+
+Kraken2 assigns each read to a taxa independently. The confidence score can be used to require that a read had a sufficiently good match by requiring `x%` of k-mers to be assigned to the taxa label (or a descendent) to actually assign the read. If not it will continue up the taxa hierarchy until it reaches the required threshold. Settings described in full [here](https://github.com/DerrickWood/kraken2/blob/master/docs/MANUAL.markdown#confidence-scoring).
+
+Currently we use the default cut-off which is 0. Recommendations online range drastically. The best comparison I (Matthew) found was a paper comparing Kraken2 and MetPhlAn 3 along with various databases and settings ([paper](https://www.microbiologyresearch.org/content/journal/mgen/10.1099/mgen.0.000949?crawler=true)). They don’t give any hard rules. But for the standard database we use and preference for recall (instead of precision) it looks like 0.1 to 0.15 would be best.
+
+There is also some discussion on a github thread [here](https://github.com/DerrickWood/kraken2/issues/265)
+
+### Distinct Minimizers
+
+Kraken2 can report the number of **distinct k-mers** associated with each taxa from the input reads. This is an experimental feature, but could be helpful. In the kraken2 output report it add a column telling you the total number of distinct minimizers (compact k-mer representation) used. This could tell you that all hits for species X only came from a small number of minimizers and so might be dubious. Details [here](https://github.com/DerrickWood/kraken2/blob/master/docs/MANUAL.markdown#distinct-minimizer-count-information)
+
+Current experiments suggest this would be difficult to use automatically.

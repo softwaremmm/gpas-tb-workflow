@@ -1,0 +1,12 @@
+---
+title: "Summary"
+---
+
+The Summary task mainly brings together data from other taks in the pipeline into a single file. Some of the contents of this file are copied into a database, which is used to populate the user interface and form the basis of reports downloaded by users.
+
+Data is typically unmodified by the summary process, but for species naming the summary code draws together information from [Competitive Mapping](competitive_mapping.qmd) and [Lineage Calling](lineage_calling.qmd) (mykrobe) to assign a species name and, as appropriate, a lineage or subspecies. The code also accomodates situations where mixed M. tuberculosis complex lineages are identified.
+
+The details of this are documented in the Summary Pipeline readme ([README.md](https://github.com/softwaremmm/summary_pipeline/blob/main/README.md)) and a seperate document covering species calling ([speciation.md](https://github.com/softwaremmm/summary_pipeline/blob/main/speciation.md)). It is helpful to store this documentation under the same version control system as the code it pertains to, to avoid divergence.
+
+# Thresholds
+If TB was found at high enough levels to process it will always be displayed as the top hit, ahead of NTMs. Otherwise is ordered based on mean-depth, which is how competitive mapping orders them.

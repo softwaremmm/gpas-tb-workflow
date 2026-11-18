@@ -1,0 +1,57 @@
+---
+title: "Rundial"
+---
+
+Sundial is the variant calling step for ONT. It uses Minimap2 for alignment, BCFTools for pileup and then python for filtering the the VCF and producing a consensus fasta.
+
+Rundial is a rust upgrade which replaces the python code with rust.
+
+github: [GlobalPathogenAnalysisService/sundial ](https://github.com/GlobalPathogenAnalysisService/sundial) and [GlobalPathogenAnalysisService/rundial](https://github.com/GlobalPathogenAnalysisService/rundial)
+
+# Thresholds
+
+Main parameters summarised below. See code for details.
+
+## Minimap2
+
+The alignment is produced with no secondary alignments but otherwise using default ont settings
+
+## BCFTools
+
+BCFTools mpileup is used for the initial variant calling. It is run with ploidy 1 (so GT is a single value) and the multiallelic caller mode (`-m`)
+
+All sites with depth==0 are filtered for the gvcf for consistency
+
+## Clair3
+
+As an alternative, the machine learning approach for variant calling can be done with Clair3. This also produces a VCF (like bcftools). It requires that an appropriate Clair3 model is selected based on the basecaller used during sequencing.
+
+Clair3 does not produce a gvcf and so BCFTools is still run in order to call nulls at other sites as appropriate.
+
+## Filtering the VCF
+
+Various filters are applied to the VCF before making a consensus. These are determined by the `filter_params.yml` or `clair3_filter_params.yml` files. These are used to mark sites which are low quality for various reasons:
+
+- Low depth / Low high quality read depth
+- Low mapping quality
+- Strand bias - When almost all read support is on just one strand
+- Strand mismatch - When the different strands support different base calls.
+- Min fractional support - when not a high enough proportion of the reads support the call.
+- Min idv - min number of reads supporting an indel call
+- min imf - min fraction of reads supporting an indel, as bcftools calculates (seems a little different to simply allele depth)
+
+During this step, the GT for each row is set based on the high quality read depth (rather than bcftools internal logic), and converted to a ploidy 2 format for consistency and to allow het calls (where read support allows).
+
+## Consensus
+
+The filtered VCF is then used to make the consensus fasta, and a simplified VCF file.
+
+- Filtered sites are set to N
+- Passed SNPs are applied
+- Het SNPs are set to Z in the fasta
+- Passed indels are only used if they don’t overlap with snps or higher quality indels
+    - NOTE: they currently still get output to the vcf for transparency
+- Deletions are applied by converting deleted bases to `-`
+- Insertions are applied to the indel.fasta only.
+
+The resulting main VCF contains all variants, all passed indels (even if not applied due to overlaps), and all null sites.
