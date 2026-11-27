@@ -13,7 +13,6 @@ Depending on locally running the pipeline, or whether it is running on the sp4 p
 2. Load a mask (for ignoring repetitive or highly variable regions). Full detail on the specifics can be found within our mask making tool, [masquerade](https://github.com/oxfordmmm/masquerade).
 3. Parse the sample’s FASTA file, comparing with the reference genome.   
 If a sample != reference at an unmasked base (and the sample is also not N) FASTA file, comparing with the reference genome.   
-If a sample != reference at an unmasked base (and the sample is also not N) FASTA file, comparing with the reference genome.   
 If a sample != reference at an unmasked base, the position is stored (as well as what the sample was). For simplicity, we use 1 list for each nucleotide, including N
 4. A save file of these positions (arranged by nucleotide) is saved to disk. This save file is '_reference compressed_' as it is storing where the sample differs from the reference.
 5. Each pre-existing sample’s saves is then loaded from disk, comparing against the new sample’s save. If the distance is above a user definable cutoff, the distance calculation stops early (for efficiency)
