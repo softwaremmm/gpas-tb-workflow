@@ -2,7 +2,7 @@
 title: "Resistance Prediction"
 ---
 
-Resistance prediction utilises a set of tools developed by MMM - `gnomonicus`, `gumpy` (now `grumpy`), and `piezo`.
+Resistance prediction utilises a set of tools developed by MMM - `gnomonicus`, `grumpy`, and `piezo`.
 
 # Thresholds
 
@@ -10,11 +10,11 @@ Merges in rows from the GVCF which don’t always share the clockwork threshold,
 
 For ONT this is 5 reads.
 
-# Gumpy
+# Grumpy
 
 Parses a reference file (genbank) and a VCF file to produce mutations at both genome and gene level. 
 
-Genbank files contain data about the reference sequence, as well as positions (and other data) about genes within the genome. Genes have assumed promoter regions which precede the gene start. These are somewhat arbitrary, but `gumpy` assumes that these have a maximum length of 100 bases and cannot overlap with upstream genes. There are some cases of other software assuming a much larger promoter regions, but `gumpy` ignores these; preferring to give the mutations at the level of the gene which they do lie in (if existing).
+Genbank files contain data about the reference sequence, as well as positions (and other data) about genes within the genome. Genes have assumed promoter regions which precede the gene start. These are somewhat arbitrary, but `grumpy` assumes that these have a maximum length of 100 bases and cannot overlap with upstream genes. There are some cases of other software assuming a much larger promoter regions, but `grumpy` ignores these; preferring to give the mutations at the level of the gene which they do lie in (if existing).
 
 ```
      gene            759807..763325
@@ -61,24 +61,24 @@ NC_000962.3	34044	.	T	C,A	228.4	PASS	CALLER=bcftools	GT:DP:ADF:ADR:COV	1/1:147:0
 ```
 
 
-General code flow for using `gumpy`:
+General code flow for using `grumpy`:
 
 ```py
-import gumpy
+import grumpy
 
-reference = gumpy.Genome("some/genbank/file")
-vcf = gumpy.VCFFile("some/vcf/file")
-sample = reference + vcf
+reference = grumpy.parse_genbank("some/genbank/file")[0]
+vcf = grumpy.VCFFile("some/vcf/file", False, 3)
+sample = grumpy.mutate(reference, vcf)
 
 # `diff` is an object which has genome level differences
-diff = reference - sample
+diff = grumpy.GenomeDifference(reference, sample, grumpy.MinorType.COV)
 
-for gene_name in reference.genes.keys():
-  ref_gene = reference.build_gene(gene_name)
-  sample_gene = sample.build_gene(gene_name)
+for gene_name in reference.genes:
+  ref_gene = reference.get_gene(gene_name)
+  sample_gene = sample.get_gene(gene_name)
   
   # `gene_diff` is an object which has these specific gene level differences
-  gene_diff = ref_gene - sample_gene
+  gene_diff = grumpy.GeneDifference(ref_gene, sample_gene, grumpy.MinorType.COV)
 ```
 
 Note that gene level differences account for amino acid translations and reverse complementing of genes too (where applicable)
@@ -124,4 +124,4 @@ cat.predict("rrs@a1401g", show_evidence=True)
 
 # Gnomonicus
 
-Combines the outputs of both `gumpy` and `piezo` to allow a flow from VCF file → resistance prediction
+Combines the outputs of both `grumpy` and `piezo` to allow a flow from VCF file → resistance prediction
