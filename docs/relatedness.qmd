@@ -2,26 +2,48 @@
 title: "Relatedness"
 ---
 
-For relatedness we use `findNeighbour5`, an MMM developed and maintained project. The basis of this software is SNP distance calculation from a fixed length FASTA file.
+For relatedness we use [FN6](https://github.com/oxfordmmm/FN6), an MMM developed and maintained project. The basis of this software is SNP distance calculation from a fixed length FASTA file.
 
-### For each sample processed
+Depending on locally running the pipeline, or whether it is running on the sp4 platform, the pipeline works slightly differently, although the core computation remains the same.
+
+
+# For each sample processed
 
 1. Load a reference genome’s FASTA file
-2. Load a mask (for ignoring repetitive or highly variable regions)
+2. Load a mask (for ignoring repetitive or highly variable regions). Full detail on the specifics can be found within our mask making tool, [masquerade](https://github.com/oxfordmmm/masquerade).
 3. Parse the sample’s FASTA file, comparing with the reference genome.   
 If a sample != reference at an unmasked base (and the sample is also not N) FASTA file, comparing with the reference genome.   
 If a sample != reference at an unmasked base (and the sample is also not N) FASTA file, comparing with the reference genome.   
 If a sample != reference at an unmasked base, the position is stored (as well as what the sample was). For simplicity, we use 1 list for each nucleotide, including N
-4. A save file of these positions (arranged by nucleotide) is saved to disk
+4. A save file of these positions (arranged by nucleotide) is saved to disk. This save file is '_reference compressed_' as it is storing where the sample differs from the reference.
 5. Each pre-existing sample’s saves is then loaded from disk, comparing against the new sample’s save. If the distance is above a user definable cutoff, the distance calculation stops early (for efficiency)
 6. The new sample’s save is then moved into the list of samples to compare about
 
-# Thresholds
+## Thresholds
 
 - QC threshold of 80% ACGT within FASTA file regardless of species
 - Computational threshold of max SNPs depends on species. This is driven from epidemiologically important thresholds. A little extra headroom is given for clustering
 - TB: calculated to 20 SNPs, reported within portal column to 12 SNPs (up to 20 is reported within relatedness section)
 
-##  In more detail
+
+# Local running
+
+For each sample in a batch run through the pipeline locally, it is reference compressed, then once all samples have reference compressed themselves, it is combined into a single set and SNP distances are calculated. An output file called _distances.txt_ will then be produced in your output directory, detailing the pairwise distances within 20 SNPs.
+
+### Existing saves
+To include pre-existing samples to compare against within your pipeline runs, populate `data/relatedness/tuberculosis` with FN6 saves of those samples. Details on how to make these saves can be found in the [FN6 README](https://github.com/oxfordmmm/FN6#reference-compress).
+
+If you run multiple samples through the pipeline locally, each run the saves are automatically added to the existing saves directory - enabling cross-run SNP calculation as you continue to run samples.
+
+
+# SP4 platform
+
+Due to multiple runs happening at the same time, we have to be slightly more careful with how we compute distances to ensure that we definitely catch all pairwise comparisons.
+Without this extra orchestration, it would be possible for a new sample to be added to the existing saves while another is already mid-computation, which would lead to a missing comparison.
+
+
+A side effect of this mechanism is that we often end up batching the SNP calculation across runs to save on time. As such, it is entirely possible that a sample has entered the `Complete` state without actually recieving it's neighbours. 
+
+A breakdown of this asynchronous process can be found in the flow chart below.
 
 ![Relatedness](assets/relatedness.png)
